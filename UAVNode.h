@@ -43,7 +43,6 @@ class UAVNode : public MobileNode
     // configuration
     WaypointVector waypoints;
 
-    double speed;
     double  waypointProximity;
     double angularSpeed;
     int targetPointIndex;
@@ -58,9 +57,12 @@ class UAVNode : public MobileNode
   protected:
     virtual void initialize(int stage) override;
     virtual int numInitStages() const override { return 2; }
-    virtual void move() override;
-    virtual double getArrivalTime() override;
     void readWaypointsFromFile(const char *fileName);
+    virtual void move() override;
+    virtual void updateState() override;
+    virtual bool commandCompleted();
+    virtual void updateCommand();
+    virtual double getNextStepSize() override;
 };
 
 #endif

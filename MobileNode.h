@@ -34,10 +34,13 @@ class IMobileNode
     virtual double getLongitude() const = 0;
     virtual double getAltitude() const = 0;
     virtual double getTxRange() const  = 0;
+    virtual double getYaw() const  = 0;
+    virtual double getPitch() const  = 0;
+    virtual double getSpeed() const  = 0;
 };
 
 /**
- * A mobile node (with a 3D model) moving around . A range indicator, and the
+ * A mobile node (with a 3D model) moving around. A range indicator, and the
  * model's track can be shown along with its label.
  */
 class MobileNode : public cSimpleModule, public IMobileNode
@@ -45,6 +48,7 @@ class MobileNode : public cSimpleModule, public IMobileNode
   protected:
     // configuration
     double timeStep;
+    simtime_t lastUpdate;
     unsigned int trailLength;
     std::string labelColor;
     std::string rangeColor;
@@ -52,6 +56,13 @@ class MobileNode : public cSimpleModule, public IMobileNode
     std::string modelURL;
     bool showTxRange;
     double txRange;
+
+    // state
+    double x, y, z;  // in meters, relative to playground origin
+    double yaw;  // in degrees
+    double pitch;  // in degrees
+    double speed; // in meters per second
+    //osg::Vec3d currentPath;
 
     // the node containing the osgEarth data
     osg::observer_ptr<osgEarth::MapNode> mapNode = nullptr;
@@ -64,11 +75,6 @@ class MobileNode : public cSimpleModule, public IMobileNode
     osgEarth::Style trailStyle;
     osgEarth::Vec3dVector trail;  // recently visited points
 
-    // node position and heading (speed is constant in this model)
-    double yaw;  // in degrees
-    double pitch;  // in degrees
-    double x, y, z;  // in meters, relative to playground origin
-
   public:
     MobileNode();
     virtual ~MobileNode();
@@ -80,6 +86,9 @@ class MobileNode : public cSimpleModule, public IMobileNode
     double getLongitude() const override { return OsgEarthScene::getInstance()->toLongitude(x); }
     double getAltitude() const override { return getZ(); }
     double getTxRange() const override { return txRange; }
+    double getYaw() const override { return yaw; }
+    double getPitch() const override { return pitch; }
+    double getSpeed() const override { return speed; }
 
   protected:
     virtual void initialize(int stage) override;
@@ -87,7 +96,8 @@ class MobileNode : public cSimpleModule, public IMobileNode
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
     virtual void move() = 0;
-    virtual double getArrivalTime() = 0;
+    virtual void updateState() = 0;
+    virtual double getNextStepSize() = 0;
 };
 
 #endif

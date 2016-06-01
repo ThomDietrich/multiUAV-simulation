@@ -45,6 +45,7 @@ void MobileNode::initialize(int stage)
         labelColor = par("labelColor").stringValue();
         rangeColor = par("rangeColor").stringValue();
         trailColor = par("trailColor").stringValue();
+        speed = par("speed");
         break;
 
     case 1:
@@ -115,7 +116,7 @@ void MobileNode::initialize(int stage)
         mapNode->getModelLayerGroup()->addChild(locatorNode);
 
         // schedule first move
-        cMessage *timer = new cMessage("move");
+        cMessage *timer = new cMessage("initialize");
         scheduleAt(par("startTime"), timer);
         break;
     }
@@ -130,7 +131,7 @@ void MobileNode::refreshDisplay() const
     double altitude = getAltitude();
 
     // update the 3D position of the model node
-    locatorNode->getLocator()->setPosition(osg::Vec3d(longitude, latitude, altitude));  // set altitude mode instead of fixed altitude
+    locatorNode->getLocator()->setPosition(osg::Vec3d(longitude, latitude, altitude));
     locatorNode->getLocator()->setOrientation(osg::Vec3d(modelheading, 0, pitch));
 
     // re-position the range indicator node
@@ -153,8 +154,18 @@ void MobileNode::refreshDisplay() const
 
 void MobileNode::handleMessage(cMessage *msg)
 {
-    // update the node position
-    move();
+    if (msg->isName("initialize")) {
+        msg->setName("move");
+        lastUpdate = simTime();
+    } else if (msg->isName("move")) {
+        // update current position to represent position at simTime()
+        move();
+    } else {
+        throw cRuntimeError("Unknown message name encountered");
+    }
+
+    // update state of node (current command, current functionality)
+    updateState();
 
     // update the trail data based on the new position
     if (trailNode) {
@@ -166,11 +177,12 @@ void MobileNode::handleMessage(cMessage *msg)
             trail.erase(trail.begin());
     }
 
-    double remainingTime = getArrivalTime();
-    double stepSize = (remainingTime < timeStep) ? remainingTime : timeStep;
-    EV_INFO << "remaining Time: " << remainingTime << " stepsize: " << stepSize << endl;
-    // schedule next movement
-    scheduleAt(simTime() + stepSize, msg);
+    // let the node decide when the next simulation step should happen
+    double stepSize = getNextStepSize();
+
+    // schedule next update
+    lastUpdate = simTime();
+    scheduleAt(lastUpdate + stepSize, msg);
 }
 
 #endif // WITH_OSG
