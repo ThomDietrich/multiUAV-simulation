@@ -18,7 +18,6 @@
 Command::Command() {
     // TODO Auto-generated constructor stub
 }
-
 Command::~Command() {
     // TODO Auto-generated destructor stub
 }
@@ -32,12 +31,16 @@ void Command::setY(double value) {
 void Command::setZ(double value) {
     this->z = value;
 }
+void Command::setMessageName(std::string name) {
+    this->messageName = name;
+}
 
 
 WaypointCommand::WaypointCommand(double x, double y, double z) {
     this->setX(x);
     this->setY(y);
     this->setZ(z);
+    this->setMessageName("waypoint");
 }
 
 void WaypointCommand::setSpeed(double value) {
@@ -50,6 +53,7 @@ TakeoffCommand::TakeoffCommand(double altitude) {
     this->setY(0);
     this->setZ(0);
     this->setAltitude(altitude);
+    this->setMessageName("takeoff");
 }
 
 void TakeoffCommand::setAltitude(double value) {
@@ -59,6 +63,7 @@ void TakeoffCommand::setAltitude(double value) {
 
 HoldPositionCommand::HoldPositionCommand(int seconds) {
     this->setHoldSeconds(seconds);
+    this->setMessageName("holdPosition");
 }
 
 void HoldPositionCommand::setHoldSeconds(int value) {

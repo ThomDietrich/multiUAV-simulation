@@ -16,13 +16,17 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
+#include <string>
+
 class Command {
 protected:
+    std::string messageName;
+    void setMessageName(std::string);
     double x, y, z;  // in meters, relative to playground origin
-
 public:
     Command();
     virtual ~Command();
+    std::string getMessageName() const { return messageName; }
     void setX(double);
     void setY(double);
     void setZ(double);
@@ -64,7 +68,6 @@ public:
 class HoldPositionCommand :public Command {
 protected:
     int holdSeconds;
-
 public:
     HoldPositionCommand(int seconds);
     //HoldPositionCommand(Date till);
