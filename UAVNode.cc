@@ -32,14 +32,15 @@ void UAVNode::initialize(int stage)
     switch (stage) {
     case 0:
         // fill the track
-        readWaypointsFromFile(par("trackFile"));
-        // initial location
-        targetPointIndex = 0;
-        x = waypoints[targetPointIndex].x;
-        y = waypoints[targetPointIndex].y;
-        z = waypoints[targetPointIndex].z;
+        for (int _ = 0; _ < 100; ++_) {
+            //Dirty little hack for enough waypoints
+            readWaypointsFromFile(par("trackFile"));
+        }
+        // initial position
+        x = par("startX");
+        y = par("startY");
+        z = 2;
         speed = par("speed");
-        waypointProximity = par("waypointProximity");
         angularSpeed = 0;
         break;
     }
@@ -51,23 +52,16 @@ void UAVNode::readWaypointsFromFile(const char *fileName)
     while (true) {
        double longitude, latitude, altitude;
        inputFile >> longitude >> latitude >> altitude;
-       if (!inputFile.fail())
-           waypoints.push_back(Waypoint(OsgEarthScene::getInstance()->toX(latitude), OsgEarthScene::getInstance()->toY(longitude), altitude, 0.0));
-       else
+       if (!inputFile.fail()) {
+           commands.push_back(WaypointCommand(OsgEarthScene::getInstance()->toX(latitude), OsgEarthScene::getInstance()->toY(longitude), altitude));
+       } else {
            break;
+       }
     }
 }
 
 void UAVNode::move()
 {
-    //Waypoint target = waypoints[targetPointIndex];
-    //absolute distance to next waypoint, in meters
-    //double dx = target.x - x;
-    //double dy = target.y - y;
-    //double dz = target.z - z;
-    //double totalDistance = sqrt(dx*dx + dy*dy + dz*dz);
-    //EV_INFO << "dx=" << dx << " dy=" << dy << " dz=" << dz << " totalDistance=" << totalDistance << endl;
-
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     double stepDistance = speed * stepSize;
@@ -82,45 +76,63 @@ void UAVNode::move()
     z += stepZ;
 }
 
-void UAVNode::updateState() {
-    //TODO handle waypoint commands as well as hold position commands
-    if (commandCompleted()) {
-        EV_INFO << "Current command completed! Selecting next command." << endl;
-        updateCommand();
+bool UAVNode::commandCompleted() {
+    Command cmd = commands.front();
+    if (cmd.getMessageName() == "waypoint") {
+        double distanceSum = fabs(cmd.getX() - x) + fabs(cmd.getY() - y) + fabs(cmd.getZ() - z);
+        return (distanceSum < 1.e-10);
+    } else if (cmd.getMessageName() == "takeoff") {
+        double distanceSum = fabs(cmd.getZ() - z);
+        return (distanceSum < 1.e-10);
+    } else if (cmd.getMessageName() == "holdPosition") {
+        return 0;
+    } else {
+        EV_INFO << "command: " << cmd.getMessageName() << endl;
+        throw cRuntimeError("commandCompleted(): Unknown command type");
     }
 }
 
-bool UAVNode::commandCompleted() {
-    // TODO: adopt for other command types
-
-    //move command completed if "very close" to waypoint
-    Waypoint target = waypoints[targetPointIndex];
-    double distanceSum = fabs(target.x - x) + fabs(target.y - y) + fabs(target.z - z);
-    return (distanceSum < 1.e-10);
+void UAVNode::updateCommand() {
+    if (commandCompleted()) {
+        EV_INFO << "UAV #" << this->getIndex() << " completed its current command! Selecting next command." << endl;
+        commands.pop_front();
+        if (commands.size() == 0) {
+            throw cRuntimeError("updateCommand(): UAV has no commands left. TODO: holdPosition?");
+        }
+    }
 }
 
-void UAVNode::updateCommand() {
-    //TODO: adopt for other command types
+void UAVNode::updateState() {
+    Command cmd = commands.front();
 
-    //update next waypoint
-    targetPointIndex = (targetPointIndex+1) % waypoints.size();
-    Waypoint target = waypoints[targetPointIndex];
+    if (cmd.getMessageName() == "waypoint") {
+        //absolute distance to next waypoint, in meters
+        double dx = cmd.getX() - x;
+        double dy = cmd.getY() - y;
+        double dz = cmd.getZ() - z;
 
-    //absolute distance to next waypoint, in meters
-    double dx = target.x - x;
-    double dy = target.y - y;
-    double dz = target.z - z;
+        //update and store yaw and pitch angles
+        yaw = atan2(dx, -dy) / M_PI * 180;
+        pitch = atan2(dz, sqrt(dx*dx + dy*dy)) / M_PI * 180;
 
-    //update and store yaw and pitch angles
-    yaw = atan2(dx, -dy) / M_PI * 180;
-    pitch = atan2(dz, sqrt(dx*dx + dy*dy)) / M_PI * 180;
+    } else if (cmd.getMessageName() == "takeoff") {
+        yaw = this->yaw;
+        pitch = 0;
+
+    } else if (cmd.getMessageName() == "holdPosition") {
+        yaw = this->yaw;
+        pitch = 0;
+
+    } else {
+        throw cRuntimeError("updateCommand(): Unknown command type");
+    }
 }
 
 double UAVNode::getNextStepSize() {
-    Waypoint target = waypoints[targetPointIndex];
-    double dx = target.x - x;
-    double dy = target.y - y;
-    double dz = target.z - z;
+    Command cmd = commands.front();
+    double dx = cmd.getX() - x;
+    double dy = cmd.getY() - y;
+    double dz = cmd.getZ() - z;
     double remainingTime = sqrt(dx*dx + dy*dy + dz*dz) / speed;
     return (timeStep == 0 || remainingTime < timeStep) ? remainingTime : timeStep;
 }

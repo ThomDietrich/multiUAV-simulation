@@ -96,6 +96,7 @@ class MobileNode : public cSimpleModule, public IMobileNode
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
     virtual void move() = 0;
+    virtual void updateCommand() = 0;
     virtual void updateState() = 0;
     virtual double getNextStepSize() = 0;
 };

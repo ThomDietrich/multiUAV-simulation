@@ -115,8 +115,8 @@ void MobileNode::initialize(int stage)
         // add the locator node to the scene
         mapNode->getModelLayerGroup()->addChild(locatorNode);
 
-        // schedule first move
-        cMessage *timer = new cMessage("initialize");
+        // schedule takeoff
+        cMessage *timer = new cMessage("takeoff");
         scheduleAt(par("startTime"), timer);
         break;
     }
@@ -154,9 +154,10 @@ void MobileNode::refreshDisplay() const
 
 void MobileNode::handleMessage(cMessage *msg)
 {
-    if (msg->isName("initialize")) {
+    if (msg->isName("takeoff")) {
         msg->setName("move");
         lastUpdate = simTime();
+        updateState();
     } else if (msg->isName("move")) {
         // update current position to represent position at simTime()
         move();
@@ -165,6 +166,7 @@ void MobileNode::handleMessage(cMessage *msg)
     }
 
     // update state of node (current command, current functionality)
+    updateCommand();
     updateState();
 
     // update the trail data based on the new position

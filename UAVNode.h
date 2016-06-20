@@ -14,25 +14,11 @@
 #include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
+#include "Command.h"
 
 using namespace omnetpp;
 
-// a structure to store time coded waypoints
-struct Waypoint
-{
-    Waypoint(double x, double y, double z, double timestamp) {
-        this->x = x;
-        this->y = y;
-        this->z = z;
-        this->timestamp = timestamp;
-    }
-    double x;
-    double y;
-    double z;
-    double timestamp;
-};
-
-typedef std::vector<Waypoint> WaypointVector;
+typedef std::deque<Command> CommandQueue;
 
 /**
  * A mobile node that follows a predefined track.
@@ -40,8 +26,7 @@ typedef std::vector<Waypoint> WaypointVector;
 class UAVNode : public MobileNode
 {
   protected:
-    // configuration
-    WaypointVector waypoints;
+    CommandQueue commands;
 
     double  waypointProximity;
     double angularSpeed;
@@ -59,9 +44,9 @@ class UAVNode : public MobileNode
     virtual int numInitStages() const override { return 2; }
     void readWaypointsFromFile(const char *fileName);
     virtual void move() override;
-    virtual void updateState() override;
     virtual bool commandCompleted();
-    virtual void updateCommand();
+    virtual void updateCommand() override;
+    virtual void updateState() override;
     virtual double getNextStepSize() override;
 };
 
