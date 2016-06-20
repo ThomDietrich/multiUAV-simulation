@@ -16,6 +16,7 @@ simple UAVNode extends MobileNode
         @class(UAVNode);
         @display("i=block/broadcast");
         double speed @unit("mps") = default(10mps);  // the speed of the mobile nodes
-        double waypointProximity @unit("m") = default(5m);      // switch to the next waypoint if the current waypoint target is closer than this
+        double startX @unit("m") = default(0m);      // the starting coordinates in meter
+        double startY @unit("m") = default(0m);      // the starting coordinates in meter
         string trackFile;                            // a file with longitude latitude pairs
 }

@@ -41,7 +41,13 @@ PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
-OBJS = $O/ChannelController.o $O/fallback.o $O/MobileNode.o $O/OsgEarthScene.o $O/UAVNode.o
+OBJS = \
+    $O/ChannelController.o \
+    $O/Command.o \
+    $O/fallback.o \
+    $O/MobileNode.o \
+    $O/OsgEarthScene.o \
+    $O/UAVNode.o
 
 # Message files
 MSGFILES =
@@ -161,6 +167,8 @@ $O/ChannelController.o: ChannelController.cc \
 	ChannelController.h \
 	MobileNode.h \
 	OsgEarthScene.h
+$O/Command.o: Command.cc \
+	Command.h
 $O/MobileNode.o: MobileNode.cc \
 	ChannelController.h \
 	MobileNode.h \
@@ -169,6 +177,7 @@ $O/OsgEarthScene.o: OsgEarthScene.cc \
 	OsgEarthScene.h
 $O/UAVNode.o: UAVNode.cc \
 	ChannelController.h \
+	Command.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h
