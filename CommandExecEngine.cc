@@ -75,7 +75,7 @@ bool HoldPositionCEE::commandCompleted() {
 }
 
 void HoldPositionCEE::initializeState() {
-    node->yaw = node->yaw;
+    //node->yaw = node->yaw;
     node->pitch = 0;
 }
 
@@ -96,7 +96,7 @@ bool TakeoffCEE::commandCompleted() {
 }
 
 void TakeoffCEE::initializeState() {
-    node->yaw = node->yaw;
+    //node->yaw = node->yaw;
     node->pitch = 90;
 }
 

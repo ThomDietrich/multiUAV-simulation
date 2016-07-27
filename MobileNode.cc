@@ -36,89 +36,87 @@ MobileNode::~MobileNode()
 void MobileNode::initialize(int stage)
 {
     switch (stage) {
-    case 0:
-        timeStep = par("timeStep");
-        trailLength = par("trailLength");
-        modelURL = par("modelURL").stringValue();
-        showTxRange = par("showTxRange");
-        txRange = par("txRange");
-        labelColor = par("labelColor").stringValue();
-        rangeColor = par("rangeColor").stringValue();
-        trailColor = par("trailColor").stringValue();
-        speed = par("speed");
-        break;
+        case 0:
+            timeStep = par("timeStep");
+            trailLength = par("trailLength");
+            modelURL = par("modelURL").stringValue();
+            showTxRange = par("showTxRange");
+            txRange = par("txRange");
+            labelColor = par("labelColor").stringValue();
+            rangeColor = par("rangeColor").stringValue();
+            trailColor = par("trailColor").stringValue();
+            speed = par("speed");
+            break;
 
-    case 1:
-        ChannelController::getInstance()->addMobileNode(this);
+        case 1:
+            ChannelController::getInstance()->addMobileNode(this);
 
-        auto scene = OsgEarthScene::getInstance()->getScene(); // scene is initialized in stage 0 so we have to do our init in stage 1
-        mapNode = osgEarth::MapNode::findMapNode(scene);
+            auto scene = OsgEarthScene::getInstance()->getScene(); // scene is initialized in stage 0 so we have to do our init in stage 1
+            mapNode = osgEarth::MapNode::findMapNode(scene);
 
-        // build up the node representing this module
-        // an ObjectLocatorNode allows positioning a model using world coordinates
-        locatorNode = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
-        auto modelNode = osgDB::readNodeFile(modelURL);
-        if (!modelNode)
-            throw cRuntimeError("Model file \"%s\" not found", modelURL.c_str());
+            // build up the node representing this module
+            // an ObjectLocatorNode allows positioning a model using world coordinates
+            locatorNode = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
+            auto modelNode = osgDB::readNodeFile(modelURL);
+            if (!modelNode)
+                throw cRuntimeError("Model file \"%s\" not found", modelURL.c_str());
 
-        // disable shader and lighting on the model so textures are correctly shown
-        modelNode->getOrCreateStateSet()->setAttributeAndModes(
-                            new osg::Program(),
-                            osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-        modelNode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+            // disable shader and lighting on the model so textures are correctly shown
+            modelNode->getOrCreateStateSet()->setAttributeAndModes(new osg::Program(), osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+            modelNode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
-        const char *modelColor = par("modelColor");
-        if (*modelColor != '\0') {
-            auto color = osgEarth::Color(modelColor);
-            auto material = new osg::Material();
-            material->setAmbient(osg::Material::FRONT_AND_BACK, color);
-            material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
-            material->setAlpha(osg::Material::FRONT_AND_BACK, 1.0);
-            modelNode->getOrCreateStateSet()->setAttribute(material, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-        }
+            const char *modelColor = par("modelColor");
+            if (*modelColor != '\0') {
+                auto color = osgEarth::Color(modelColor);
+                auto material = new osg::Material();
+                material->setAmbient(osg::Material::FRONT_AND_BACK, color);
+                material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
+                material->setAlpha(osg::Material::FRONT_AND_BACK, 1.0);
+                modelNode->getOrCreateStateSet()->setAttribute(material, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+            }
 
-        auto objectNode = new cObjectOsgNode(this);  // make the node selectable in Qtenv
-        objectNode->addChild(modelNode);
-        locatorNode->addChild(objectNode);
+            auto objectNode = new cObjectOsgNode(this); // make the node selectable in Qtenv
+            objectNode->addChild(modelNode);
+            locatorNode->addChild(objectNode);
 
-        // set the name label if the color is specified
-        if (!labelColor.empty()) {
-            Style labelStyle;
-            labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_TOP;
-            labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
-            labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0,50);
-            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
-            locatorNode->addChild(new LabelNode(getFullName(), labelStyle));
-        }
+            // set the name label if the color is specified
+            if (!labelColor.empty()) {
+                Style labelStyle;
+                labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_TOP;
+                labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
+                labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 50);
+                labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
+                locatorNode->addChild(new LabelNode(getFullName(), labelStyle));
+            }
 
-        // create a node showing the transmission range
-        if (showTxRange) {
-            Style rangeStyle;
-            rangeStyle.getOrCreate<PolygonSymbol>()->fill()->color() = osgEarth::Color(rangeColor);
-            rangeStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;
-            rangeStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
-            rangeNode = new CircleNode(mapNode.get(), GeoPoint::INVALID, Linear(txRange, Units::METERS), rangeStyle);
-            locatorNode->addChild(rangeNode);
-        }
+            // create a node showing the transmission range
+            if (showTxRange) {
+                Style rangeStyle;
+                rangeStyle.getOrCreate<PolygonSymbol>()->fill()->color() = osgEarth::Color(rangeColor);
+                rangeStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;
+                rangeStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
+                rangeNode = new CircleNode(mapNode.get(), GeoPoint::INVALID, Linear(txRange, Units::METERS), rangeStyle);
+                locatorNode->addChild(rangeNode);
+            }
 
-        // create a node containing a track showing the past trail of the model
-        if (trailLength > 0) {
-            trailStyle.getOrCreate<LineSymbol>()->stroke()->color() = osgEarth::Color(trailColor);
-            trailStyle.getOrCreate<LineSymbol>()->stroke()->width() = 50.0f;
-            trailStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_RELATIVE_TO_TERRAIN;
-            trailStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
-            auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
-            trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
-            locatorNode->addChild(trailNode);
-        }
+            // create a node containing a track showing the past trail of the model
+            if (trailLength > 0) {
+                trailStyle.getOrCreate<LineSymbol>()->stroke()->color() = osgEarth::Color(trailColor);
+                trailStyle.getOrCreate<LineSymbol>()->stroke()->width() = 50.0f;
+                trailStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_RELATIVE_TO_TERRAIN;
+                trailStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
+                auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
+                trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
+                locatorNode->addChild(trailNode);
+            }
 
-        // add the locator node to the scene
-        mapNode->getModelLayerGroup()->addChild(locatorNode);
+            // add the locator node to the scene
+            mapNode->getModelLayerGroup()->addChild(locatorNode);
 
-        // schedule takeoff
-        cMessage *timer = new cMessage("takeoff");
-        scheduleAt(par("startTime"), timer);
-        break;
+            // schedule start of the mission for each uav (may be delayed by ned parameter)
+            cMessage *timer = new cMessage("startMission");
+            scheduleAt(par("startTime"), timer);
+            break;
     }
 }
 
@@ -154,15 +152,18 @@ void MobileNode::refreshDisplay() const
 
 void MobileNode::handleMessage(cMessage *msg)
 {
-    if (msg->isName("takeoff")) {
-        msg->setName("update");
+    if (msg->isName("startMission")) {
+        //only at the beginning in the simulation, after a delayed 'startTime' in ned file
         loadNextCommand();
         lastUpdate = simTime();
         initializeState();
-    } else if (msg->isName("update")) {
+        msg->setName("update");
+    }
+    else if (msg->isName("update")) {
         // update current position to represent position at simTime()
         move();
-    } else {
+    }
+    else {
         throw cRuntimeError("Unknown message name encountered");
     }
 

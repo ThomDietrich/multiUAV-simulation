@@ -34,7 +34,9 @@ protected:
     //SpecializedCommand *command;
 public:
     //CommandExecEngine(SubclassNode &node, SpecializedCommand &command) { };
-    virtual ~CommandExecEngine() { };
+    virtual ~CommandExecEngine() {
+    }
+    ;
     virtual bool commandCompleted() = 0;
     virtual void initializeState() = 0;
     virtual void updateState(double stepSize) = 0;

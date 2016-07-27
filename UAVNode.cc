@@ -18,16 +18,13 @@ using namespace omnetpp;
 
 Define_Module(UAVNode);
 
-UAVNode::UAVNode()
-{
+UAVNode::UAVNode() {
 }
 
-UAVNode::~UAVNode()
-{
+UAVNode::~UAVNode() {
 }
 
-void UAVNode::initialize(int stage)
-{
+void UAVNode::initialize(int stage) {
     MobileNode::initialize(stage);
     switch (stage) {
     case 0:
@@ -45,8 +42,7 @@ void UAVNode::initialize(int stage)
     }
 }
 
-void UAVNode::readWaypointsFromFile(const char *fileName)
-{
+void UAVNode::readWaypointsFromFile(const char *fileName) {
     std::ifstream inputFile(fileName);
     while (true) {
         std::string commandName;
@@ -56,7 +52,10 @@ void UAVNode::readWaypointsFromFile(const char *fileName)
             break;
         }
         if (commandName == "WAYPOINT") {
-            commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(param2), OsgEarthScene::getInstance()->toY(param1), param3));
+            commands.push_back(
+                    new WaypointCommand(
+                            OsgEarthScene::getInstance()->toX(param2),
+                            OsgEarthScene::getInstance()->toY(param1), param3));
         } else if (commandName == "TAKEOFF") {
             commands.push_back(new TakeoffCommand(param3));
         } else if (commandName == "HOLDPOSITION") {
@@ -68,7 +67,6 @@ void UAVNode::readWaypointsFromFile(const char *fileName)
 }
 
 void UAVNode::loadNextCommand() {
-    commands.pop_front();
     if (commands.size() == 0) {
         throw cRuntimeError("updateCommand(): UAV has no commands left.");
     }
@@ -76,9 +74,11 @@ void UAVNode::loadNextCommand() {
     WaypointCommand *wpcommand;
     Command *tempCmd = commands.front();
     wpcommand = dynamic_cast<WaypointCommand*>(tempCmd);
-    if (wpcommand == nullptr) throw cRuntimeError("updateCommand(): invalid cast.");
+    if (wpcommand == nullptr)
+        throw cRuntimeError("updateCommand(): invalid cast.");
     delete commandExecEngine;
     commandExecEngine = new WaypointCEE(*this, *wpcommand);
+    commands.pop_front();
 }
 
 void UAVNode::initializeState() {
@@ -88,8 +88,7 @@ void UAVNode::initializeState() {
     commandExecEngine->initializeState();
 }
 
-void UAVNode::move()
-{
+void UAVNode::move() {
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     updateState(stepSize);
@@ -108,16 +107,18 @@ double UAVNode::getNextStepSize() {
     double dx = command->getX() - x;
     double dy = command->getY() - y;
     double dz = command->getZ() - z;
-    double remainingTime = sqrt(dx*dx + dy*dy + dz*dz) / speed;
-    return (timeStep == 0 || remainingTime < timeStep) ? remainingTime : timeStep;
+    double remainingTime = sqrt(dx * dx + dy * dy + dz * dz) / speed;
+    return (timeStep == 0 || remainingTime < timeStep) ?
+            remainingTime : timeStep;
 }
 
 //obsolete
-int UAVNode::normalizeAngle(int angle)
-{
+int UAVNode::normalizeAngle(int angle) {
     int newAngle = angle;
-    while (newAngle <= -180) newAngle += 360;
-    while (newAngle > 180) newAngle -= 360;
+    while (newAngle <= -180)
+        newAngle += 360;
+    while (newAngle > 180)
+        newAngle -= 360;
     return newAngle;
 }
 

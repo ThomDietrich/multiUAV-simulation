@@ -15,6 +15,9 @@
 
 #include <Command.h>
 
+/**
+ *
+ */
 Command::Command() {
     // TODO Auto-generated constructor stub
 }
@@ -35,7 +38,9 @@ void Command::setMessageName(std::string name) {
     this->messageName = name;
 }
 
-
+/**
+ *
+ */
 WaypointCommand::WaypointCommand(double x, double y, double z) {
     this->setX(x);
     this->setY(y);
@@ -47,7 +52,9 @@ void WaypointCommand::setSpeed(double value) {
     this->speed = value;
 }
 
-
+/**
+ *
+ */
 TakeoffCommand::TakeoffCommand(double altitude) {
     this->setX(0);
     this->setY(0);
@@ -60,7 +67,9 @@ void TakeoffCommand::setAltitude(double value) {
     this->setZ(value);
 }
 
-
+/**
+ *
+ */
 HoldPositionCommand::HoldPositionCommand(int seconds) {
     this->setHoldSeconds(seconds);
     this->setMessageName("holdPosition");
