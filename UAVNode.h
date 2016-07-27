@@ -14,22 +14,19 @@
 #include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
-#include "Command.h"
 
 using namespace omnetpp;
-
-typedef std::deque<Command> CommandQueue;
 
 /**
  * A mobile node that follows a predefined track.
  */
 class UAVNode : public MobileNode
 {
+    friend class CommandExecEngine;
+    friend class WaypointCEE;
+    friend class HoldPositionCEE;
+    friend class TakeoffCEE;
   protected:
-    CommandQueue commands;
-
-    double  waypointProximity;
-    double angularSpeed;
     int targetPointIndex;
 
   private:
@@ -44,9 +41,10 @@ class UAVNode : public MobileNode
     virtual int numInitStages() const override { return 2; }
     void readWaypointsFromFile(const char *fileName);
     virtual void move() override;
-    virtual bool commandCompleted();
-    virtual void updateCommand() override;
-    virtual void updateState() override;
+    virtual bool commandCompleted() override;
+    virtual void loadNextCommand() override;
+    virtual void initializeState() override;
+    virtual void updateState(double stepSize) override;
     virtual double getNextStepSize() override;
 };
 

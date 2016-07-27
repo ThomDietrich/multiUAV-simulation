@@ -44,6 +44,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 OBJS = \
     $O/ChannelController.o \
     $O/Command.o \
+    $O/CommandExecEngine.o \
     $O/fallback.o \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
@@ -165,12 +166,22 @@ depend:
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 $O/ChannelController.o: ChannelController.cc \
 	ChannelController.h \
+	Command.h \
+	CommandExecEngine.h \
 	MobileNode.h \
 	OsgEarthScene.h
 $O/Command.o: Command.cc \
 	Command.h
+$O/CommandExecEngine.o: CommandExecEngine.cc \
+	Command.h \
+	CommandExecEngine.h \
+	MobileNode.h \
+	OsgEarthScene.h \
+	UAVNode.h
 $O/MobileNode.o: MobileNode.cc \
 	ChannelController.h \
+	Command.h \
+	CommandExecEngine.h \
 	MobileNode.h \
 	OsgEarthScene.h
 $O/OsgEarthScene.o: OsgEarthScene.cc \
@@ -178,6 +189,7 @@ $O/OsgEarthScene.o: OsgEarthScene.cc \
 $O/UAVNode.o: UAVNode.cc \
 	ChannelController.h \
 	Command.h \
+	CommandExecEngine.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h

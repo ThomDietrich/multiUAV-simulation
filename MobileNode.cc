@@ -155,19 +155,22 @@ void MobileNode::refreshDisplay() const
 void MobileNode::handleMessage(cMessage *msg)
 {
     if (msg->isName("takeoff")) {
-        msg->setName("move");
+        msg->setName("update");
+        loadNextCommand();
         lastUpdate = simTime();
-        updateState();
-    } else if (msg->isName("move")) {
+        initializeState();
+    } else if (msg->isName("update")) {
         // update current position to represent position at simTime()
         move();
     } else {
         throw cRuntimeError("Unknown message name encountered");
     }
 
-    // update state of node (current command, current functionality)
-    updateCommand();
-    updateState();
+    if (commandCompleted()) {
+        EV_INFO << "UAV #" << this->getIndex() << " completed its current command! Selecting next command." << endl;
+        loadNextCommand();
+        initializeState();
+    }
 
     // update the trail data based on the new position
     if (trailNode) {

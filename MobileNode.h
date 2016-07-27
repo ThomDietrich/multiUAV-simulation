@@ -17,6 +17,8 @@
 
 #include <omnetpp.h>
 #include "OsgEarthScene.h"
+#include "Command.h"
+#include "CommandExecEngine.h"
 
 using namespace omnetpp;
 
@@ -39,12 +41,18 @@ class IMobileNode
     virtual double getSpeed() const  = 0;
 };
 
+typedef std::deque<Command*> CommandQueue;
+
 /**
  * A mobile node (with a 3D model) moving around. A range indicator, and the
  * model's track can be shown along with its label.
  */
 class MobileNode : public cSimpleModule, public IMobileNode
 {
+  friend class CommandExecEngine;
+  friend class WaypointCEE;
+  friend class HoldPositionCEE;
+  friend class TakeoffCEE;
   protected:
     // configuration
     double timeStep;
@@ -56,6 +64,9 @@ class MobileNode : public cSimpleModule, public IMobileNode
     std::string modelURL;
     bool showTxRange;
     double txRange;
+
+    CommandQueue commands;
+    CommandExecEngine *commandExecEngine = nullptr;
 
     // state
     double x, y, z;  // in meters, relative to playground origin
@@ -96,8 +107,10 @@ class MobileNode : public cSimpleModule, public IMobileNode
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
     virtual void move() = 0;
-    virtual void updateCommand() = 0;
-    virtual void updateState() = 0;
+    virtual bool commandCompleted() = 0;
+    virtual void loadNextCommand() = 0;
+    virtual void initializeState() = 0;
+    virtual void updateState(double stepSize) = 0;
     virtual double getNextStepSize() = 0;
 };
 
