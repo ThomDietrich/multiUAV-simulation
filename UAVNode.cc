@@ -122,17 +122,7 @@ bool UAVNode::commandCompleted()
  */
 double UAVNode::nextNeededUpdate()
 {
-    if (WaypointCEE *cce = dynamic_cast<WaypointCEE *>(this->commandExecEngine)) {
-        return cce->getRemainingTime();
-    }
-    else if (TakeoffCEE *cce = dynamic_cast<TakeoffCEE *>(this->commandExecEngine)) {
-        return timeStep;
-    }
-    else if (HoldPositionCEE *cce = dynamic_cast<HoldPositionCEE *>(this->commandExecEngine)) {
-        return timeStep;
-    }
-    else
-        throw cRuntimeError("getNextStepSize(): Unsupported CCE.");
+    return commandExecEngine->getRemainingTime();
 }
 
 //obsolete

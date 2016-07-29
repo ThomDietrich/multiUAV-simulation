@@ -90,16 +90,24 @@ bool TakeoffCEE::commandCompleted()
 void TakeoffCEE::initializeState()
 {
     //node->yaw = node->yaw;
-    node->pitch = 90;
+    node->pitch = 0;
 }
 
 void TakeoffCEE::updateState(double stepSize)
 {
+    double stepDistance = node->speed * stepSize;
+    if (command->getZ() > node->z)
+        node->z += stepDistance;
+    else
+        node->z -= stepDistance;
+
+    //some animation, remove if irritating
+    node->yaw = node->yaw + 5;
 }
 
 double TakeoffCEE::getRemainingTime()
 {
-    return 1;
+    return fabs(command->getZ() - node->z) / this->node->speed;
 }
 
 /**
@@ -114,7 +122,7 @@ HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command)
 
 bool HoldPositionCEE::commandCompleted()
 {
-    return (simTime() >= this->holdPositionTill) ? true : false;
+    return (simTime() == this->holdPositionTill) ? true : false;
 }
 
 void HoldPositionCEE::initializeState()
@@ -125,6 +133,8 @@ void HoldPositionCEE::initializeState()
 
 void HoldPositionCEE::updateState(double stepSize)
 {
+    //some animation, remove if irritating
+    node->yaw = node->yaw + 5;
 }
 
 double HoldPositionCEE::getRemainingTime()

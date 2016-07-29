@@ -87,7 +87,8 @@ void MobileNode::initialize(int stage)
                 labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
                 labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 50);
                 labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
-                locatorNode->addChild(new LabelNode(getFullName(), labelStyle));
+                labelNode = new LabelNode(getFullName(), labelStyle);
+                locatorNode->addChild(labelNode);
             }
 
             // create a node showing the transmission range

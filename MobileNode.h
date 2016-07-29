@@ -12,6 +12,7 @@
 
 #include <osgEarth/MapNode>
 #include <osgEarthAnnotation/CircleNode>
+#include <osgEarthAnnotation/LabelNode>
 #include <osgEarthAnnotation/FeatureNode>
 #include <osgEarthUtil/ObjectLocator>
 
@@ -81,6 +82,8 @@ protected:
     osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> locatorNode = nullptr;
     // range indicator node
     osg::ref_ptr<osgEarth::Annotation::CircleNode> rangeNode = nullptr;
+    // label visible next to node
+    osg::ref_ptr<osgEarth::Annotation::LabelNode> labelNode = nullptr;
     // trail annotation
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> trailNode = nullptr;
     osgEarth::Style trailStyle;
