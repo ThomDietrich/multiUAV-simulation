@@ -18,31 +18,35 @@ using namespace omnetpp;
 
 Define_Module(UAVNode);
 
-UAVNode::UAVNode() {
+UAVNode::UAVNode()
+{
 }
 
-UAVNode::~UAVNode() {
+UAVNode::~UAVNode()
+{
 }
 
-void UAVNode::initialize(int stage) {
+void UAVNode::initialize(int stage)
+{
     MobileNode::initialize(stage);
     switch (stage) {
-    case 0:
-        // fill the track
-        for (int _ = 0; _ < 100; ++_) {
-            //Dirty little hack for enough waypoints
-            readWaypointsFromFile(par("trackFile"));
-        }
-        // initial position
-        x = par("startX");
-        y = par("startY");
-        z = 2;
-        speed = par("speed");
-        break;
+        case 0:
+            // fill the track
+            for (int _ = 0; _ < 100; ++_) {
+                //Dirty little hack for enough waypoints
+                readWaypointsFromFile(par("trackFile"));
+            }
+            // initial position
+            x = par("startX");
+            y = par("startY");
+            z = 2;
+            speed = par("speed");
+            break;
     }
 }
 
-void UAVNode::readWaypointsFromFile(const char *fileName) {
+void UAVNode::readWaypointsFromFile(const char *fileName)
+{
     std::ifstream inputFile(fileName);
     while (true) {
         std::string commandName;
@@ -52,68 +56,88 @@ void UAVNode::readWaypointsFromFile(const char *fileName) {
             break;
         }
         if (commandName == "WAYPOINT") {
-            commands.push_back(
-                    new WaypointCommand(
-                            OsgEarthScene::getInstance()->toX(param2),
-                            OsgEarthScene::getInstance()->toY(param1), param3));
-        } else if (commandName == "TAKEOFF") {
+            commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(param2), OsgEarthScene::getInstance()->toY(param1), param3));
+        }
+        else if (commandName == "TAKEOFF") {
             commands.push_back(new TakeoffCommand(param3));
-        } else if (commandName == "HOLDPOSITION") {
-            commands.push_back(new TakeoffCommand(param3));
-        } else {
-            break;
+        }
+        else if (commandName == "HOLDPOSITION") {
+            commands.push_back(new HoldPositionCommand(param3));
+        }
+        else {
+            throw cRuntimeError("readWaypointsFromFile(): Unexpected file content.");
         }
     }
 }
 
-void UAVNode::loadNextCommand() {
-    if (commands.size() == 0) {
-        throw cRuntimeError("updateCommand(): UAV has no commands left.");
-    }
-    //TODO allow other command types
-    WaypointCommand *wpcommand;
-    Command *tempCmd = commands.front();
-    wpcommand = dynamic_cast<WaypointCommand*>(tempCmd);
-    if (wpcommand == nullptr)
-        throw cRuntimeError("updateCommand(): invalid cast.");
+void UAVNode::loadNextCommand()
+{
     delete commandExecEngine;
-    commandExecEngine = new WaypointCEE(*this, *wpcommand);
+
+    if (commands.size() == 0) {
+        throw cRuntimeError("loadNextCommand(): UAV has no commands left.");
+    }
+
+    if (WaypointCommand *command = dynamic_cast<WaypointCommand *>(commands.front())) {
+        commandExecEngine = new WaypointCEE(*this, *command);
+    }
+    else if (TakeoffCommand *command = dynamic_cast<TakeoffCommand *>(commands.front())) {
+        commandExecEngine = new TakeoffCEE(*this, *command);
+    }
+    else if (HoldPositionCommand *command = dynamic_cast<HoldPositionCommand *>(commands.front())) {
+        commandExecEngine = new HoldPositionCEE(*this, *command);
+    }
+    else
+        throw cRuntimeError("loadNextCommand(): invalid cast.");
     commands.pop_front();
 }
 
-void UAVNode::initializeState() {
+void UAVNode::initializeState()
+{
     if (commandExecEngine == nullptr) {
         throw cRuntimeError("initializeState(): Command Engine missing.");
     }
     commandExecEngine->initializeState();
 }
 
-void UAVNode::move() {
+void UAVNode::updateState()
+{
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     updateState(stepSize);
 }
 
-void UAVNode::updateState(double stepSize) {
+void UAVNode::updateState(double stepSize)
+{
     commandExecEngine->updateState(stepSize);
 }
 
-bool UAVNode::commandCompleted() {
+bool UAVNode::commandCompleted()
+{
     return commandExecEngine->commandCompleted();
 }
 
-double UAVNode::getNextStepSize() {
-    Command *command = commands.front();
-    double dx = command->getX() - x;
-    double dy = command->getY() - y;
-    double dz = command->getZ() - z;
-    double remainingTime = sqrt(dx * dx + dy * dy + dz * dz) / speed;
-    return (timeStep == 0 || remainingTime < timeStep) ?
-            remainingTime : timeStep;
+/**
+ * Get the time in seconds till the end of current command
+ */
+double UAVNode::nextNeededUpdate()
+{
+    if (WaypointCEE *cce = dynamic_cast<WaypointCEE *>(this->commandExecEngine)) {
+        return cce->getRemainingTime();
+    }
+    else if (TakeoffCEE *cce = dynamic_cast<TakeoffCEE *>(this->commandExecEngine)) {
+        return timeStep;
+    }
+    else if (HoldPositionCEE *cce = dynamic_cast<HoldPositionCEE *>(this->commandExecEngine)) {
+        return timeStep;
+    }
+    else
+        throw cRuntimeError("getNextStepSize(): Unsupported CCE.");
 }
 
 //obsolete
-int UAVNode::normalizeAngle(int angle) {
+int UAVNode::normalizeAngle(int angle)
+{
     int newAngle = angle;
     while (newAngle <= -180)
         newAngle += 360;

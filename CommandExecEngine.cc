@@ -21,20 +21,21 @@ using namespace omnetpp;
 /**
  * Waypoint Command Execution Engine
  */
-WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command) {
+WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command)
+{
     this->node = &node;
     this->command = &command;
 }
 
-bool WaypointCEE::commandCompleted() {
-    double distanceSum = fabs(command->getX() - node->getX())
-            + fabs(command->getY() - node->getY())
-            + fabs(command->getZ() - node->getZ());
+bool WaypointCEE::commandCompleted()
+{
+    double distanceSum = fabs(command->getX() - node->getX()) + fabs(command->getY() - node->getY()) + fabs(command->getZ() - node->getZ());
+    EV_INFO << "UAV #" << this->node->getIndex() << " distance: " << distanceSum << endl;
     return (distanceSum < 1.e-10);
-    return false;
 }
 
-void WaypointCEE::initializeState() {
+void WaypointCEE::initializeState()
+{
     //absolute distance to next waypoint, in meters
     if (this->command == nullptr) {
         throw cRuntimeError("initializeState(): Command missing.");
@@ -48,7 +49,8 @@ void WaypointCEE::initializeState() {
     node->pitch = atan2(dz, sqrt(dx * dx + dy * dy)) / M_PI * 180;
 }
 
-void WaypointCEE::updateState(double stepSize) {
+void WaypointCEE::updateState(double stepSize)
+{
     //distance to move, based on simulation time passed since last update
     double stepDistance = node->speed * stepSize;
 
@@ -61,44 +63,71 @@ void WaypointCEE::updateState(double stepSize) {
     node->y += stepY;
     node->z += stepZ;
 }
-
-/**
- * HoldPosition Command Execution Engine
- */
-HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command) {
-    this->node = &node;
-    this->command = &command;
-}
-
-bool HoldPositionCEE::commandCompleted() {
-    return false;
-}
-
-void HoldPositionCEE::initializeState() {
-    //node->yaw = node->yaw;
-    node->pitch = 0;
-}
-
-void HoldPositionCEE::updateState(double stepSize) {
+double WaypointCEE::getRemainingTime()
+{
+    double dx = command->getX() - node->x;
+    double dy = command->getY() - node->y;
+    double dz = command->getZ() - node->z;
+    double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    return distance / this->node->speed;
 }
 
 /**
  * Takeoff Command Execution Engine
  */
-TakeoffCEE::TakeoffCEE(UAVNode& node, TakeoffCommand& command) {
+TakeoffCEE::TakeoffCEE(UAVNode& node, TakeoffCommand& command)
+{
     this->node = &node;
     this->command = &command;
 }
 
-bool TakeoffCEE::commandCompleted() {
+bool TakeoffCEE::commandCompleted()
+{
     double distanceSum = fabs(command->getZ() - node->z);
     return (distanceSum < 1.e-10);
 }
 
-void TakeoffCEE::initializeState() {
+void TakeoffCEE::initializeState()
+{
     //node->yaw = node->yaw;
     node->pitch = 90;
 }
 
-void TakeoffCEE::updateState(double stepSize) {
+void TakeoffCEE::updateState(double stepSize)
+{
+}
+
+double TakeoffCEE::getRemainingTime()
+{
+    return 1;
+}
+
+/**
+ * HoldPosition Command Execution Engine
+ */
+HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command)
+{
+    this->node = &node;
+    this->command = &command;
+    this->holdPositionTill = simTime() + this->command->getHoldSeconds();
+}
+
+bool HoldPositionCEE::commandCompleted()
+{
+    return (simTime() >= this->holdPositionTill) ? true : false;
+}
+
+void HoldPositionCEE::initializeState()
+{
+    //node->yaw = node->yaw;
+    node->pitch = 0;
+}
+
+void HoldPositionCEE::updateState(double stepSize)
+{
+}
+
+double HoldPositionCEE::getRemainingTime()
+{
+    return (this->holdPositionTill - simTime()).dbl();
 }

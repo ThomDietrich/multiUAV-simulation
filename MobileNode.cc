@@ -51,7 +51,8 @@ void MobileNode::initialize(int stage)
         case 1:
             ChannelController::getInstance()->addMobileNode(this);
 
-            auto scene = OsgEarthScene::getInstance()->getScene(); // scene is initialized in stage 0 so we have to do our init in stage 1
+            // scene is initialized in stage 0 so we have to do our init in stage 1
+            auto scene = OsgEarthScene::getInstance()->getScene();
             mapNode = osgEarth::MapNode::findMapNode(scene);
 
             // build up the node representing this module
@@ -158,17 +159,18 @@ void MobileNode::handleMessage(cMessage *msg)
         lastUpdate = simTime();
         initializeState();
         msg->setName("update");
+        EV_INFO << "UAV #" << this->getIndex() << " initialized and on its way." << endl;
     }
     else if (msg->isName("update")) {
         // update current position to represent position at simTime()
-        move();
+        updateState();
     }
     else {
         throw cRuntimeError("Unknown message name encountered");
     }
 
     if (commandCompleted()) {
-        EV_INFO << "UAV #" << this->getIndex() << " completed its current command! Selecting next command." << endl;
+        EV_INFO << "UAV #" << this->getIndex() << " completed its current command. Selecting next command." << endl;
         loadNextCommand();
         initializeState();
     }
@@ -184,7 +186,8 @@ void MobileNode::handleMessage(cMessage *msg)
     }
 
     // let the node decide when the next simulation step should happen
-    double stepSize = getNextStepSize();
+    double stepSize = nextNeededUpdate();
+    stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
 
     // schedule next update
     lastUpdate = simTime();

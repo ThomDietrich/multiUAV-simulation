@@ -25,8 +25,6 @@ class UAVNode: public MobileNode {
     friend class WaypointCEE;
     friend class HoldPositionCEE;
     friend class TakeoffCEE;
-protected:
-    int targetPointIndex;
 
 private:
     static int normalizeAngle(int angle);
@@ -41,12 +39,12 @@ protected:
         return 2;
     }
     void readWaypointsFromFile(const char *fileName);
-    virtual void move() override;
+    virtual void updateState() override;
+    virtual void updateState(double stepSize) override;
     virtual bool commandCompleted() override;
     virtual void loadNextCommand() override;
     virtual void initializeState() override;
-    virtual void updateState(double stepSize) override;
-    virtual double getNextStepSize() override;
+    virtual double nextNeededUpdate() override;
 };
 
 #endif

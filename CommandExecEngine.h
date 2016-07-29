@@ -28,18 +28,18 @@ class MobileNode;
  * Abstract Command Execution Engine
  * To be derived for specific Commands -> CEEs
  */
-class CommandExecEngine {
+class CommandExecEngine
+{
 protected:
     //SubclassNode *node;
     //SpecializedCommand *command;
 public:
     //CommandExecEngine(SubclassNode &node, SpecializedCommand &command) { };
-    virtual ~CommandExecEngine() {
-    }
-    ;
+    virtual ~CommandExecEngine() {};
     virtual bool commandCompleted() = 0;
     virtual void initializeState() = 0;
     virtual void updateState(double stepSize) = 0;
+    virtual double getRemainingTime() = 0;
 };
 
 //make UAVNode known to be reverse reference type
@@ -48,7 +48,8 @@ class UAVNode;
 /**
  * Waypoint Command Execution Engine
  */
-class WaypointCEE: public CommandExecEngine {
+class WaypointCEE : public CommandExecEngine
+{
 protected:
     UAVNode *node;
     WaypointCommand *command;
@@ -57,26 +58,14 @@ public:
     bool commandCompleted() override;
     void initializeState() override;
     void updateState(double stepSize) override;
-};
-
-/**
- * HoldPosition Command Execution Engine
- */
-class HoldPositionCEE: public CommandExecEngine {
-protected:
-    UAVNode *node;
-    HoldPositionCommand *command;
-public:
-    HoldPositionCEE(UAVNode &node, HoldPositionCommand &command);
-    bool commandCompleted() override;
-    void initializeState() override;
-    void updateState(double stepSize) override;
+    double getRemainingTime() override;
 };
 
 /**
  * Takeoff Command Execution Engine
  */
-class TakeoffCEE: public CommandExecEngine {
+class TakeoffCEE : public CommandExecEngine
+{
 protected:
     UAVNode *node;
     TakeoffCommand *command;
@@ -85,6 +74,24 @@ public:
     bool commandCompleted() override;
     void initializeState() override;
     void updateState(double stepSize) override;
+    double getRemainingTime() override;
+};
+
+/**
+ * HoldPosition Command Execution Engine
+ */
+class HoldPositionCEE : public CommandExecEngine
+{
+protected:
+    UAVNode *node;
+    HoldPositionCommand *command;
+    simtime_t holdPositionTill;
+public:
+    HoldPositionCEE(UAVNode &node, HoldPositionCommand &command);
+    bool commandCompleted() override;
+    void initializeState() override;
+    void updateState(double stepSize) override;
+    double getRemainingTime() override;
 };
 
 #endif /* COMMANDEXECENGINE_H_ */

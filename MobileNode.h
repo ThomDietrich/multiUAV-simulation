@@ -128,12 +128,12 @@ protected:
     }
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
-    virtual void move() = 0;
+    virtual void updateState() = 0;
+    virtual void updateState(double stepSize) = 0;
     virtual bool commandCompleted() = 0;
     virtual void loadNextCommand() = 0;
     virtual void initializeState() = 0;
-    virtual void updateState(double stepSize) = 0;
-    virtual double getNextStepSize() = 0;
+    virtual double nextNeededUpdate() = 0;
 };
 
 #endif
