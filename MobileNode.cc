@@ -88,6 +88,7 @@ void MobileNode::initialize(int stage)
                 labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 50);
                 labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
                 labelNode = new LabelNode(getFullName(), labelStyle);
+                labelNode->setDynamic(true);
                 locatorNode->addChild(labelNode);
             }
 

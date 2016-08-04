@@ -18,6 +18,11 @@
 
 using namespace omnetpp;
 
+void CommandExecEngine::setType(ceeType type)
+{
+    this->type = type;
+}
+
 /**
  * Waypoint Command Execution Engine
  */
@@ -25,12 +30,12 @@ WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command)
 {
     this->node = &node;
     this->command = &command;
+    this->setType(WAYPOINT);
 }
 
 bool WaypointCEE::commandCompleted()
 {
     double distanceSum = fabs(command->getX() - node->getX()) + fabs(command->getY() - node->getY()) + fabs(command->getZ() - node->getZ());
-    EV_INFO << "UAV #" << this->node->getIndex() << " distance: " << distanceSum << endl;
     return (distanceSum < 1.e-10);
 }
 
@@ -79,6 +84,7 @@ TakeoffCEE::TakeoffCEE(UAVNode& node, TakeoffCommand& command)
 {
     this->node = &node;
     this->command = &command;
+    this->setType(TAKEOFF);
 }
 
 bool TakeoffCEE::commandCompleted()
@@ -117,6 +123,7 @@ HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command)
 {
     this->node = &node;
     this->command = &command;
+    this->setType(HOLDPOSITION);
     this->holdPositionTill = simTime() + this->command->getHoldSeconds();
 }
 

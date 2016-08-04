@@ -24,6 +24,8 @@ using namespace omnetpp;
 //make MobileNode known to be reverse reference type
 class MobileNode;
 
+enum ceeType {WAYPOINT, TAKEOFF, HOLDPOSITION};
+
 /**
  * Abstract Command Execution Engine
  * To be derived for specific Commands -> CEEs
@@ -33,6 +35,8 @@ class CommandExecEngine
 protected:
     //SubclassNode *node;
     //SpecializedCommand *command;
+    ceeType type;
+    void setType(ceeType type);
 public:
     //CommandExecEngine(SubclassNode &node, SpecializedCommand &command) { };
     virtual ~CommandExecEngine() {};
@@ -40,6 +44,7 @@ public:
     virtual void initializeState() = 0;
     virtual void updateState(double stepSize) = 0;
     virtual double getRemainingTime() = 0;
+    ceeType getCeeType() { return type; };
 };
 
 //make UAVNode known to be reverse reference type

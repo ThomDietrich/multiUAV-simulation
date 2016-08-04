@@ -98,6 +98,14 @@ void UAVNode::initializeState()
         throw cRuntimeError("initializeState(): Command Engine missing.");
     }
     commandExecEngine->initializeState();
+
+    std::string text(getFullName());
+    switch (commandExecEngine->getCeeType()) {
+        case WAYPOINT: text += " WP"; break;
+        case TAKEOFF: text += " TO"; break;
+        case HOLDPOSITION: text += " HP"; break;
+    }
+    labelNode->setText(text);
 }
 
 void UAVNode::updateState()
