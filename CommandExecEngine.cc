@@ -25,6 +25,8 @@ void CommandExecEngine::setType(ceeType type)
 
 /**
  * Waypoint Command Execution Engine
+ *
+ * TODO: Take speed variable from command into account
  */
 WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command)
 {
@@ -67,6 +69,9 @@ void WaypointCEE::updateState(double stepSize)
     node->x += stepX;
     node->y += stepY;
     node->z += stepZ;
+
+    // TODO: testing energy consumption
+    node->battery.discharge(stepDistance);
 }
 double WaypointCEE::getRemainingTime()
 {
@@ -109,6 +114,9 @@ void TakeoffCEE::updateState(double stepSize)
 
     //some animation, remove if irritating
     node->yaw = node->yaw + 5;
+
+    // TODO: testing energy consumption
+    node->battery.discharge(2*stepDistance);
 }
 
 double TakeoffCEE::getRemainingTime()
@@ -142,6 +150,10 @@ void HoldPositionCEE::updateState(double stepSize)
 {
     //some animation, remove if irritating
     node->yaw = node->yaw + 5;
+
+    // TODO: testing energy consumption
+    double stepDistance = node->speed * stepSize;
+    node->battery.discharge(stepDistance/2);
 }
 
 double HoldPositionCEE::getRemainingTime()

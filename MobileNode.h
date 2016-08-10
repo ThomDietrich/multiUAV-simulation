@@ -20,6 +20,7 @@
 #include "OsgEarthScene.h"
 #include "Command.h"
 #include "CommandExecEngine.h"
+#include "Battery.h"
 
 using namespace omnetpp;
 
@@ -69,6 +70,9 @@ protected:
     CommandQueue commands;
     //instance of CEE childclass, contains current command
     CommandExecEngine *commandExecEngine = nullptr;
+
+    //Energy storage
+    Battery battery;
 
     // state
     double x, y, z;  // in meters, relative to playground origin

@@ -42,6 +42,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
 OBJS = \
+    $O/Battery.o \
     $O/ChannelController.o \
     $O/Command.o \
     $O/CommandExecEngine.o \
@@ -164,7 +165,10 @@ depend:
 	$(Q)$(MAKEDEPEND) $(INCLUDE_PATH) -f Makefile -P\$$O/ -- $(MSG_CC_FILES) $(SM_CC_FILES)  ./*.cc data/*.cc data/resources/*.cc data/resources/textures_us/*.cc data/resources/textures_us/barriers/*.cc data/resources/textures_us/commercial/*.cc data/resources/textures_us/commercial/Tiles/*.cc data/resources/textures_us/misc/*.cc data/resources/textures_us/residential/*.cc data/resources/textures_us/residential/tiles/*.cc data/resources/textures_us/rooftop/*.cc data/resources/textures_us/rooftop/tiled/*.cc
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
+$O/Battery.o: Battery.cc \
+	Battery.h
 $O/ChannelController.o: ChannelController.cc \
+	Battery.h \
 	ChannelController.h \
 	Command.h \
 	CommandExecEngine.h \
@@ -173,12 +177,14 @@ $O/ChannelController.o: ChannelController.cc \
 $O/Command.o: Command.cc \
 	Command.h
 $O/CommandExecEngine.o: CommandExecEngine.cc \
+	Battery.h \
 	Command.h \
 	CommandExecEngine.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h
 $O/MobileNode.o: MobileNode.cc \
+	Battery.h \
 	ChannelController.h \
 	Command.h \
 	CommandExecEngine.h \
@@ -187,6 +193,7 @@ $O/MobileNode.o: MobileNode.cc \
 $O/OsgEarthScene.o: OsgEarthScene.cc \
 	OsgEarthScene.h
 $O/UAVNode.o: UAVNode.cc \
+	Battery.h \
 	ChannelController.h \
 	Command.h \
 	CommandExecEngine.h \

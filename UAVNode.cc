@@ -13,6 +13,7 @@
 #include "ChannelController.h"
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 using namespace omnetpp;
 
@@ -113,8 +114,12 @@ void UAVNode::updateState()
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     updateState(stepSize);
-    //Testing sublabel
-    sublabelNode->setText(simTime().str());
+
+    //update sublabel with battery info
+    std::ostringstream strs;
+    strs << battery.getRemainingPercentage() << " %";
+    std::string str = strs.str();
+    sublabelNode->setText(str);
 }
 
 void UAVNode::updateState(double stepSize)

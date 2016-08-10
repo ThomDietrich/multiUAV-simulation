@@ -124,6 +124,9 @@ void MobileNode::initialize(int stage)
             // add the locator node to the scene
             mapNode->getModelLayerGroup()->addChild(locatorNode);
 
+            //Initialize Energy storage
+            battery = Battery(par("batteryCapacity"));
+
             // schedule start of the mission for each uav (may be delayed by ned parameter)
             cMessage *timer = new cMessage("startMission");
             scheduleAt(par("startTime"), timer);
