@@ -20,10 +20,11 @@ simple MobileNode
         string modelColor = default("");             // colorizes the 3D model used for the node
         // decorations and annotations
         string labelColor = default("#ffff00ff");    // the color of the model label in hex RRGGBBAA format or "" to turn off labels
+        string label2Color = default("#cccc00ff");   // the color of the second model label in hex RRGGBBAA format or "" to turn off labels
         string trailColor = default("#000000ff");    // the color of the trail indicator in hex RRGGBBAA format
         string rangeColor = default("#ff000040");    // the color of the range indicator in hex RRGGBBAA format
         int trailLength = default(0);	             // the length of the trail in time steps showing the past movement of the node. 0 disables the trail
-        bool showTxRange = default(false);            // whether to show the transmission range around the nodes
+        bool showTxRange = default(false);           // whether to show the transmission range around the nodes
         double txRange @unit("m") = default(200m);   // the transmission range of the mobile node's radio
         double timeStep @unit("s") = default(33ms);  // the time granularity of movement calculation (for 30fps)
         double startTime @unit("s") = default(0s);   // time when the movement starts

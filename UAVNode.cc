@@ -113,6 +113,8 @@ void UAVNode::updateState()
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     updateState(stepSize);
+    //Testing sublabel
+    sublabelNode->setText(simTime().str());
 }
 
 void UAVNode::updateState(double stepSize)

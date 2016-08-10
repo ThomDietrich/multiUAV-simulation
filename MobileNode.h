@@ -58,6 +58,7 @@ protected:
     simtime_t lastUpdate;
     unsigned int trailLength;
     std::string labelColor;
+    std::string label2Color;
     std::string rangeColor;
     std::string trailColor;
     std::string modelURL;
@@ -84,6 +85,8 @@ protected:
     osg::ref_ptr<osgEarth::Annotation::CircleNode> rangeNode = nullptr;
     // label visible next to node
     osg::ref_ptr<osgEarth::Annotation::LabelNode> labelNode = nullptr;
+    // second label beneath labelNode
+    osg::ref_ptr<osgEarth::Annotation::LabelNode> sublabelNode = nullptr;
     // trail annotation
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> trailNode = nullptr;
     osgEarth::Style trailStyle;

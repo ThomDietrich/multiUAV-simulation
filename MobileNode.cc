@@ -43,6 +43,7 @@ void MobileNode::initialize(int stage)
             showTxRange = par("showTxRange");
             txRange = par("txRange");
             labelColor = par("labelColor").stringValue();
+            label2Color = par("label2Color").stringValue();
             rangeColor = par("rangeColor").stringValue();
             trailColor = par("trailColor").stringValue();
             speed = par("speed");
@@ -85,11 +86,18 @@ void MobileNode::initialize(int stage)
                 Style labelStyle;
                 labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_TOP;
                 labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
-                labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 50);
+                labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 40);
                 labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
                 labelNode = new LabelNode(getFullName(), labelStyle);
                 labelNode->setDynamic(true);
                 locatorNode->addChild(labelNode);
+
+                labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 20);
+                labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(label2Color);
+                labelStyle.getOrCreate<TextSymbol>()->size() = 12;
+                sublabelNode = new LabelNode("---", labelStyle);
+                sublabelNode->setDynamic(true);
+                locatorNode->addChild(sublabelNode);
             }
 
             // create a node showing the transmission range
