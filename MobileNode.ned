@@ -29,5 +29,5 @@ simple MobileNode
         double timeStep @unit("s") = default(33ms);  // the time granularity of movement calculation (for 30fps)
         double startTime @unit("s") = default(0s);   // time when the movement starts
         
-        double batteryCapacity @unit("mAh") = default(2200mAh); // the battery capacity in mAh
+        double batteryCapacity @unit("mAh") = default(2200mAh); // the battery capacity in mAh, "0" for infinite energy storage
 }
