@@ -19,7 +19,7 @@
 
 #include <omnetpp.h>
 #include "OsgEarthScene.h"
-#include "MobileNode.h"
+#include "GenericNode.h"
 
 using namespace omnetpp;
 
@@ -31,7 +31,7 @@ class ChannelController : public cSimpleModule
 {
   protected:
     static ChannelController *instance;
-    std::vector<IMobileNode *> nodeList;
+    std::vector<IGenericNode *> nodeList;
     double playgroundLat;
     double playgroundLon;
     bool showConnections;
@@ -45,14 +45,14 @@ class ChannelController : public cSimpleModule
     virtual void initialize(int stage) override;
     virtual int numInitStages() const override { return 2; }
     virtual void handleMessage(cMessage *msg) override;
-    int findMobileNode(IMobileNode *p);
+    int findGenericNode(IGenericNode *p);
 
   public:
     ChannelController();
     virtual ~ChannelController();
     static ChannelController *getInstance();
-    virtual void addMobileNode(IMobileNode *p);
-    virtual void removeMobileNode(IMobileNode *p);
+    virtual void addGenericNode(IGenericNode *p);
+    virtual void removeGenericNode(IGenericNode *p);
     virtual void refreshDisplay() const override;
 };
 

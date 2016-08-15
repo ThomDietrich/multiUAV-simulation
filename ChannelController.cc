@@ -40,7 +40,7 @@ ChannelController *ChannelController::getInstance()
     return instance;
 }
 
-int ChannelController::findMobileNode(IMobileNode *p)
+int ChannelController::findGenericNode(IGenericNode *p)
 {
     for (int i = 0; i < (int)nodeList.size(); i++)
         if (nodeList[i] == p)
@@ -49,15 +49,15 @@ int ChannelController::findMobileNode(IMobileNode *p)
     return -1;
 }
 
-void ChannelController::addMobileNode(IMobileNode *p)
+void ChannelController::addGenericNode(IGenericNode *p)
 {
-    if (findMobileNode(p) == -1)
+    if (findGenericNode(p) == -1)
         nodeList.push_back(p);
 }
 
-void ChannelController::removeMobileNode(IMobileNode *p)
+void ChannelController::removeGenericNode(IGenericNode *p)
 {
-    int k = findMobileNode(p);
+    int k = findGenericNode(p);
     if (k != -1)
         nodeList.erase(nodeList.begin()+k);
 }
@@ -99,8 +99,8 @@ void ChannelController::refreshDisplay() const
 
     for (int i = 0; i < (int)nodeList.size(); ++i) {
         for (int j = i+1; j < (int)nodeList.size(); ++j) {
-            IMobileNode *pi = nodeList[i];
-            IMobileNode *pj = nodeList[j];
+            IGenericNode *pi = nodeList[i];
+            IGenericNode *pj = nodeList[j];
             double ix = pi->getX(), iy = pi->getY(), iz = pi->getZ();
             double jx = pj->getX(), jy = pj->getY(), jz = pj->getZ();
             if (pi->getTxRange()*pi->getTxRange() > (ix-jx)*(ix-jx)+(iy-jy)*(iy-jy)+(iz-jz)*(iz-jz)) {

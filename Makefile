@@ -44,9 +44,11 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 OBJS = \
     $O/Battery.o \
     $O/ChannelController.o \
+    $O/ChargingNode.o \
     $O/Command.o \
     $O/CommandExecEngine.o \
     $O/fallback.o \
+    $O/GenericNode.o \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
     $O/UAVNode.o
@@ -168,26 +170,33 @@ depend:
 $O/Battery.o: Battery.cc \
 	Battery.h
 $O/ChannelController.o: ChannelController.cc \
-	Battery.h \
 	ChannelController.h \
 	Command.h \
 	CommandExecEngine.h \
-	MobileNode.h \
+	GenericNode.h \
 	OsgEarthScene.h
+$O/ChargingNode.o: ChargingNode.cc
 $O/Command.o: Command.cc \
 	Command.h
 $O/CommandExecEngine.o: CommandExecEngine.cc \
 	Battery.h \
 	Command.h \
 	CommandExecEngine.h \
+	GenericNode.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h
-$O/MobileNode.o: MobileNode.cc \
-	Battery.h \
+$O/GenericNode.o: GenericNode.cc \
 	ChannelController.h \
 	Command.h \
 	CommandExecEngine.h \
+	GenericNode.h \
+	OsgEarthScene.h
+$O/MobileNode.o: MobileNode.cc \
+	Battery.h \
+	Command.h \
+	CommandExecEngine.h \
+	GenericNode.h \
 	MobileNode.h \
 	OsgEarthScene.h
 $O/OsgEarthScene.o: OsgEarthScene.cc \
@@ -197,6 +206,7 @@ $O/UAVNode.o: UAVNode.cc \
 	ChannelController.h \
 	Command.h \
 	CommandExecEngine.h \
+	GenericNode.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h

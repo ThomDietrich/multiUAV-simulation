@@ -14,6 +14,7 @@
 simple MobileNode
 {
     parameters:
+        @class(MobileNode);
         @display("i=block/broadcast");
         string modelURL;                             // the URL/filename of the 3D model to be used for the node
                                                      // (you can use osg pseudo filters like: modelname.osgb.3.scale.0,0,45.rot scaleX3, rotate 45 deg around Z)
