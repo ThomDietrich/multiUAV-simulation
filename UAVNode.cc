@@ -19,16 +19,13 @@ using namespace omnetpp;
 
 Define_Module(UAVNode);
 
-UAVNode::UAVNode()
-{
+UAVNode::UAVNode() {
 }
 
-UAVNode::~UAVNode()
-{
+UAVNode::~UAVNode() {
 }
 
-void UAVNode::initialize(int stage)
-{
+void UAVNode::initialize(int stage) {
     MobileNode::initialize(stage);
     switch (stage) {
         case 0:
@@ -46,8 +43,7 @@ void UAVNode::initialize(int stage)
     }
 }
 
-void UAVNode::readWaypointsFromFile(const char *fileName)
-{
+void UAVNode::readWaypointsFromFile(const char *fileName) {
     std::ifstream inputFile(fileName);
     while (true) {
         std::string commandName;
@@ -71,8 +67,7 @@ void UAVNode::readWaypointsFromFile(const char *fileName)
     }
 }
 
-void UAVNode::loadNextCommand()
-{
+void UAVNode::loadNextCommand() {
     delete commandExecEngine;
 
     if (commands.size() == 0) {
@@ -93,8 +88,7 @@ void UAVNode::loadNextCommand()
     commands.pop_front();
 }
 
-void UAVNode::initializeState()
-{
+void UAVNode::initializeState() {
     if (commandExecEngine == nullptr) {
         throw cRuntimeError("initializeState(): Command Engine missing.");
     }
@@ -102,15 +96,20 @@ void UAVNode::initializeState()
 
     std::string text(getFullName());
     switch (commandExecEngine->getCeeType()) {
-        case WAYPOINT: text += " WP"; break;
-        case TAKEOFF: text += " TO"; break;
-        case HOLDPOSITION: text += " HP"; break;
+        case WAYPOINT:
+            text += " WP";
+            break;
+        case TAKEOFF:
+            text += " TO";
+            break;
+        case HOLDPOSITION:
+            text += " HP";
+            break;
     }
     labelNode->setText(text);
 }
 
-void UAVNode::updateState()
-{
+void UAVNode::updateState() {
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     updateState(stepSize);
@@ -122,27 +121,23 @@ void UAVNode::updateState()
     sublabelNode->setText(str);
 }
 
-void UAVNode::updateState(double stepSize)
-{
+void UAVNode::updateState(double stepSize) {
     commandExecEngine->updateState(stepSize);
 }
 
-bool UAVNode::commandCompleted()
-{
+bool UAVNode::commandCompleted() {
     return commandExecEngine->commandCompleted();
 }
 
 /**
  * Get the time in seconds till the end of current command
  */
-double UAVNode::nextNeededUpdate()
-{
+double UAVNode::nextNeededUpdate() {
     return commandExecEngine->getRemainingTime();
 }
 
 //obsolete
-int UAVNode::normalizeAngle(int angle)
-{
+int UAVNode::normalizeAngle(int angle) {
     int newAngle = angle;
     while (newAngle <= -180)
         newAngle += 360;

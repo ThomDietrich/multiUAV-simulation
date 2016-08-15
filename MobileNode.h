@@ -48,7 +48,7 @@ typedef std::deque<Command*> CommandQueue;
  * A mobile node (with a 3D model) moving around. A range indicator, and the
  * model's track can be shown along with its label.
  */
-class MobileNode: public cSimpleModule, public IMobileNode {
+class MobileNode : public cSimpleModule, public IMobileNode {
     friend class CommandExecEngine;
     friend class WaypointCEE;
     friend class HoldPositionCEE;

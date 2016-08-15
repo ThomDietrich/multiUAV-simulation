@@ -24,14 +24,15 @@ using namespace omnetpp;
 //make MobileNode known to be reverse reference type
 class MobileNode;
 
-enum ceeType {WAYPOINT, TAKEOFF, HOLDPOSITION};
+enum ceeType {
+    WAYPOINT, TAKEOFF, HOLDPOSITION
+};
 
 /**
  * Abstract Command Execution Engine
  * To be derived for specific Commands -> CEEs
  */
-class CommandExecEngine
-{
+class CommandExecEngine {
 protected:
     //SubclassNode *node;
     //SpecializedCommand *command;
@@ -39,12 +40,17 @@ protected:
     void setType(ceeType type);
 public:
     //CommandExecEngine(SubclassNode &node, SpecializedCommand &command) { };
-    virtual ~CommandExecEngine() {};
+    virtual ~CommandExecEngine() {
+    }
+    ;
     virtual bool commandCompleted() = 0;
     virtual void initializeState() = 0;
     virtual void updateState(double stepSize) = 0;
     virtual double getRemainingTime() = 0;
-    ceeType getCeeType() { return type; };
+    ceeType getCeeType() {
+        return type;
+    }
+    ;
 };
 
 //make UAVNode known to be reverse reference type
@@ -53,8 +59,7 @@ class UAVNode;
 /**
  * Waypoint Command Execution Engine
  */
-class WaypointCEE : public CommandExecEngine
-{
+class WaypointCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     WaypointCommand *command;
@@ -69,8 +74,7 @@ public:
 /**
  * Takeoff Command Execution Engine
  */
-class TakeoffCEE : public CommandExecEngine
-{
+class TakeoffCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     TakeoffCommand *command;
@@ -85,8 +89,7 @@ public:
 /**
  * HoldPosition Command Execution Engine
  */
-class HoldPositionCEE : public CommandExecEngine
-{
+class HoldPositionCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     HoldPositionCommand *command;

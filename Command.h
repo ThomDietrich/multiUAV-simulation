@@ -47,7 +47,7 @@ public:
  * The vehicle will fly a straight line to the location specified as a lat, lon and altitude (in meters).
  * http://ardupilot.org/copter/docs/mission-command-list.html#waypoint
  */
-class WaypointCommand: public Command {
+class WaypointCommand : public Command {
 protected:
     double speed; // in meters per second
 public:
@@ -62,7 +62,7 @@ public:
  * The vehicle will climb straight up from it’s current location to the altitude specified (in meters).
  * http://ardupilot.org/copter/docs/mission-command-list.html#takeoff
  */
-class TakeoffCommand: public Command {
+class TakeoffCommand : public Command {
 public:
     TakeoffCommand(double altitude);
     void setAltitude(double);
@@ -72,7 +72,7 @@ public:
  * Part of Loiter_Time command http://ardupilot.org/copter/docs/mission-command-list.html#loiter-time
  * The vehicle will wait at the current location for the specified number of seconds.
  */
-class HoldPositionCommand: public Command {
+class HoldPositionCommand : public Command {
 protected:
     int holdSeconds;
 public:

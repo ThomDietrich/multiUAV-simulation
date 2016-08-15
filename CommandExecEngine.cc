@@ -18,8 +18,7 @@
 
 using namespace omnetpp;
 
-void CommandExecEngine::setType(ceeType type)
-{
+void CommandExecEngine::setType(ceeType type) {
     this->type = type;
 }
 
@@ -28,21 +27,18 @@ void CommandExecEngine::setType(ceeType type)
  *
  * TODO: Take speed variable from command into account
  */
-WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command)
-{
+WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command) {
     this->node = &node;
     this->command = &command;
     this->setType(WAYPOINT);
 }
 
-bool WaypointCEE::commandCompleted()
-{
+bool WaypointCEE::commandCompleted() {
     double distanceSum = fabs(command->getX() - node->getX()) + fabs(command->getY() - node->getY()) + fabs(command->getZ() - node->getZ());
     return (distanceSum < 1.e-10);
 }
 
-void WaypointCEE::initializeState()
-{
+void WaypointCEE::initializeState() {
     //absolute distance to next waypoint, in meters
     if (this->command == nullptr) {
         throw cRuntimeError("initializeState(): Command missing.");
@@ -56,8 +52,7 @@ void WaypointCEE::initializeState()
     node->pitch = atan2(dz, sqrt(dx * dx + dy * dy)) / M_PI * 180;
 }
 
-void WaypointCEE::updateState(double stepSize)
-{
+void WaypointCEE::updateState(double stepSize) {
     //distance to move, based on simulation time passed since last update
     double stepDistance = node->speed * stepSize;
 
@@ -73,8 +68,7 @@ void WaypointCEE::updateState(double stepSize)
     // TODO: testing energy consumption
     node->battery.discharge(stepDistance);
 }
-double WaypointCEE::getRemainingTime()
-{
+double WaypointCEE::getRemainingTime() {
     double dx = command->getX() - node->x;
     double dy = command->getY() - node->y;
     double dz = command->getZ() - node->z;
@@ -85,27 +79,23 @@ double WaypointCEE::getRemainingTime()
 /**
  * Takeoff Command Execution Engine
  */
-TakeoffCEE::TakeoffCEE(UAVNode& node, TakeoffCommand& command)
-{
+TakeoffCEE::TakeoffCEE(UAVNode& node, TakeoffCommand& command) {
     this->node = &node;
     this->command = &command;
     this->setType(TAKEOFF);
 }
 
-bool TakeoffCEE::commandCompleted()
-{
+bool TakeoffCEE::commandCompleted() {
     double distanceSum = fabs(command->getZ() - node->z);
     return (distanceSum < 1.e-10);
 }
 
-void TakeoffCEE::initializeState()
-{
+void TakeoffCEE::initializeState() {
     //node->yaw = node->yaw;
     node->pitch = 0;
 }
 
-void TakeoffCEE::updateState(double stepSize)
-{
+void TakeoffCEE::updateState(double stepSize) {
     double stepDistance = node->speed * stepSize;
     if (command->getZ() > node->z)
         node->z += stepDistance;
@@ -116,47 +106,41 @@ void TakeoffCEE::updateState(double stepSize)
     node->yaw = node->yaw + 5;
 
     // TODO: testing energy consumption
-    node->battery.discharge(2*stepDistance);
+    node->battery.discharge(2 * stepDistance);
 }
 
-double TakeoffCEE::getRemainingTime()
-{
+double TakeoffCEE::getRemainingTime() {
     return fabs(command->getZ() - node->z) / this->node->speed;
 }
 
 /**
  * HoldPosition Command Execution Engine
  */
-HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command)
-{
+HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command) {
     this->node = &node;
     this->command = &command;
     this->setType(HOLDPOSITION);
     this->holdPositionTill = simTime() + this->command->getHoldSeconds();
 }
 
-bool HoldPositionCEE::commandCompleted()
-{
+bool HoldPositionCEE::commandCompleted() {
     return (simTime() == this->holdPositionTill) ? true : false;
 }
 
-void HoldPositionCEE::initializeState()
-{
+void HoldPositionCEE::initializeState() {
     //node->yaw = node->yaw;
     node->pitch = 0;
 }
 
-void HoldPositionCEE::updateState(double stepSize)
-{
+void HoldPositionCEE::updateState(double stepSize) {
     //some animation, remove if irritating
     node->yaw = node->yaw + 5;
 
     // TODO: testing energy consumption
     double stepDistance = node->speed * stepSize;
-    node->battery.discharge(stepDistance/2);
+    node->battery.discharge(stepDistance / 2);
 }
 
-double HoldPositionCEE::getRemainingTime()
-{
+double HoldPositionCEE::getRemainingTime() {
     return (this->holdPositionTill - simTime()).dbl();
 }

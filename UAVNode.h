@@ -20,7 +20,7 @@ using namespace omnetpp;
 /**
  * A mobile node that follows a predefined track.
  */
-class UAVNode: public MobileNode {
+class UAVNode : public MobileNode {
     friend class CommandExecEngine;
     friend class WaypointCEE;
     friend class HoldPositionCEE;

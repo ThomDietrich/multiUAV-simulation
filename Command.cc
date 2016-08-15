@@ -25,56 +25,61 @@ Command::~Command() {
     // TODO Auto-generated destructor stub
 }
 
-void Command::setX(double value) {
-    this->x = value;
+void Command::setX(double value) :
+        x(value)
+{
 }
-void Command::setY(double value) {
-    this->y = value;
+void Command::setY(double value) :
+        y(value)
+{
 }
-void Command::setZ(double value) {
-    this->z = value;
+void Command::setZ(double value) :
+        z(value)
+{
 }
-void Command::setMessageName(std::string name) {
-    this->messageName = name;
+void Command::setMessageName(std::string name) :
+        messageName(name)
+{
 }
 
 /**
  *
  */
-WaypointCommand::WaypointCommand(double x, double y, double z) {
-    this->setX(x);
-    this->setY(y);
-    this->setZ(z);
-    this->setMessageName("waypoint");
+WaypointCommand::WaypointCommand(double x, double y, double z) :
+        x(x), y(y), z(z)
+{
+    setMessageName("waypoint");
 }
 
-void WaypointCommand::setSpeed(double value) {
-    this->speed = value;
+void WaypointCommand::setSpeed(double value) :
+        speed(value)
+{
 }
 
 /**
  *
  */
 TakeoffCommand::TakeoffCommand(double altitude) {
-    this->setX(0);
-    this->setY(0);
-    this->setZ(0);
-    this->setAltitude(altitude);
-    this->setMessageName("takeoff");
+    setX(0);
+    setY(0);
+    setZ(0);
+    setAltitude(altitude);
+    setMessageName("takeoff");
 }
 
 void TakeoffCommand::setAltitude(double value) {
-    this->setZ(value);
+    setZ(value);
 }
 
 /**
  *
  */
 HoldPositionCommand::HoldPositionCommand(int seconds) {
-    this->setHoldSeconds(seconds);
-    this->setMessageName("holdPosition");
+    setHoldSeconds(seconds);
+    setMessageName("holdPosition");
 }
 
-void HoldPositionCommand::setHoldSeconds(int value) {
-    this->holdSeconds = value;
+void HoldPositionCommand::setHoldSeconds(int value) :
+        holdSeconds(value)
+{
 }
