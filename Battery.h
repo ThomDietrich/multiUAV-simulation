@@ -16,12 +16,15 @@
 #ifndef BATTERY_H_
 #define BATTERY_H_
 
-class Battery
-{
+#include <omnetpp.h>
+
+using namespace omnetpp;
+
+class Battery {
 protected:
     double capacity;
     double remaining;
-    bool infinit;
+    bool infinite;
 public:
     Battery();
     Battery(double capacity);
@@ -29,6 +32,7 @@ public:
     virtual ~Battery();
     bool charge(double amount);
     bool discharge(double amount);
+    double getMissing();
     double getRemaining();
     int getRemainingPercentage();
     bool isEmpty();
