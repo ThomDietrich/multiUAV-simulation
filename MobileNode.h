@@ -1,10 +1,16 @@
 //
-// This file is part of an OMNeT++/OMNEST simulation example.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Copyright (C) 2015 OpenSim Ltd.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// This file is distributed WITHOUT ANY WARRANTY. See the file
-// `license' for details on this and other legal matters.
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
 #ifndef __MOBILENODE_H__
@@ -27,22 +33,23 @@ using namespace omnetpp;
  * model's track can be shown along with its label.
  */
 class MobileNode : public GenericNode {
+
+    //TODO delete here?
+    friend class CommandExecEngine;
+    friend class WaypointCEE;
+    friend class HoldPositionCEE;
+    friend class TakeoffCEE;
+
 protected:
-    unsigned int trailLength;
-    std::string trailColor;
-    bool showTxRange;
-    double txRange;
-
-    //Energy storage
-    Battery battery;
-
-    //state
-    double speed; // in meters per second
-
-    // trail annotation
+    //trail (recently visited points)
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> trailNode = nullptr;
+    osgEarth::Vec3dVector trail;
+    unsigned int trailLength;
     osgEarth::Style trailStyle;
-    osgEarth::Vec3dVector trail;  // recently visited points
+    std::string trailColor;
+
+    double speed; // speed in meters per second
+    Battery battery; //energy storage
 
 public:
     MobileNode();
@@ -54,9 +61,6 @@ public:
 
 protected:
     virtual void initialize(int stage) override;
-    virtual int numInitStages() const override {
-        return 2;
-    }
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
 };

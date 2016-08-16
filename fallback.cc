@@ -1,49 +1,46 @@
 //
-// This file is part of an OMNeT++/OMNEST simulation example.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Copyright (C) 2015 OpenSim Ltd.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// This file is distributed WITHOUT ANY WARRANTY. See the file
-// `license' for details on this and other legal matters.
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
 #ifndef WITH_OSG
 #include <omnetpp.h>
 
-// fallbac code used in case OpenSceneGraph and osgEarth is not present on the system
+// fallback code used in case OpenSceneGraph and osgEarth is not present on the system
 using namespace omnetpp;
-
-class UAVNode : public cSimpleModule
-{
-  protected:
-    virtual void initialize() { throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed"); }
-    virtual void handleMessage(cMessage *msg) {};
-};
-
-Define_Module(UAVNode);
 
 class OsgEarthScene : public cSimpleModule
 {
-  protected:
-    virtual void initialize() { throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed"); }
+protected:
+    virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
 };
 
 Define_Module(OsgEarthScene);
 
-class MobileNode : public cSimpleModule
+class GenericNode : public cSimpleModule
 {
-  protected:
-    virtual void initialize() { throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed"); }
+protected:
+    virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
 };
 
-Define_Module(MobileNode);
+Define_Module(GenericNode);
 
 class ChannelController : public cSimpleModule
 {
-  protected:
-    virtual void initialize() { throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed"); }
+protected:
+    virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
 };
 

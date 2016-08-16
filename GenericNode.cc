@@ -1,10 +1,16 @@
 //
-// This file is part of an OMNeT++/OMNEST simulation example.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Copyright (C) 2015 OpenSim Ltd.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// This file is distributed WITHOUT ANY WARRANTY. See the file
-// `license' for details on this and other legal matters.
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
 #ifdef WITH_OSG
@@ -25,16 +31,14 @@ using namespace osgEarth;
 using namespace osgEarth::Annotation;
 using namespace osgEarth::Features;
 
-GenericNode::GenericNode()
-{
+GenericNode::GenericNode() {
+    // Ignore Warning: members are initialized in "initialize(int stage)"
 }
 
-GenericNode::~GenericNode()
-{
+GenericNode::~GenericNode() {
 }
 
-void GenericNode::initialize(int stage)
-{
+void GenericNode::initialize(int stage) {
     switch (stage) {
         case 0:
             timeStep = par("timeStep");
@@ -57,8 +61,7 @@ void GenericNode::initialize(int stage)
             // an ObjectLocatorNode allows positioning a model using world coordinates
             locatorNode = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
             auto modelNode = osgDB::readNodeFile(modelURL);
-            if (!modelNode)
-                throw cRuntimeError("Model file \"%s\" not found", modelURL.c_str());
+            if (!modelNode) throw cRuntimeError("Model file \"%s\" not found", modelURL.c_str());
 
             // disable shader and lighting on the model so textures are correctly shown
             modelNode->getOrCreateStateSet()->setAttributeAndModes(new osg::Program(), osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
@@ -117,8 +120,7 @@ void GenericNode::initialize(int stage)
     }
 }
 
-void GenericNode::refreshDisplay() const
-{
+void GenericNode::refreshDisplay() const {
     auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
     double modelheading = fmod((360 + 90 + yaw), 360) - 180;
     double longitude = getLongitude();
@@ -130,16 +132,14 @@ void GenericNode::refreshDisplay() const
     locatorNode->getLocator()->setOrientation(osg::Vec3d(modelheading, 0, pitch));
 
     // re-position the range indicator node
-    if (showTxRange)
-        rangeNode->setPosition(GeoPoint(geoSRS, longitude, latitude));
+    if (showTxRange) rangeNode->setPosition(GeoPoint(geoSRS, longitude, latitude));
 
     // update the position on the 2D canvas, too
     getDisplayString().setTagArg("p", 0, x);
     getDisplayString().setTagArg("p", 1, y);
 }
 
-void GenericNode::handleMessage(cMessage *msg)
-{
+void GenericNode::handleMessage(cMessage *msg) {
     if (msg->isName("startMission")) {
         //only at the beginning in the simulation, after a delayed 'startTime' in ned file
         loadNextCommand();

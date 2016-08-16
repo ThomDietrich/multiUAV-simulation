@@ -1,10 +1,16 @@
 //
-// This file is part of an OMNeT++/OMNEST simulation example.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Copyright (C) 2015 OpenSim Ltd.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// This file is distributed WITHOUT ANY WARRANTY. See the file
-// `license' for details on this and other legal matters.
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
 #ifndef __GENERICNODE_H__
@@ -42,10 +48,7 @@ public:
 typedef std::deque<Command*> CommandQueue;
 
 class GenericNode : public cSimpleModule, public IGenericNode {
-    friend class CommandExecEngine;
-    friend class WaypointCEE;
-    friend class HoldPositionCEE;
-    friend class TakeoffCEE;
+
 protected:
     // configuration
     double timeStep;
@@ -59,13 +62,13 @@ protected:
 
     //queue, contains future commands
     CommandQueue commands;
-    //instance of CEE childclass, contains current command
+    //instance of CEE subclass, contains current command
     CommandExecEngine *commandExecEngine = nullptr;
 
     // state
-    double x, y, z;  // in meters, relative to playground origin
-    double yaw;  // in degrees
-    double pitch;  // in degrees
+    double x, y, z; // relative to playground origin in meters
+    double yaw; // horizontal orientation in degrees
+    double pitch; // vertical orientation in degrees. be aware, that yaw and pitch do not directly result in heading
 
     // the node containing the osgEarth data
     osg::observer_ptr<osgEarth::MapNode> mapNode = nullptr;

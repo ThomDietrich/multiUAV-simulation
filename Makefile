@@ -175,7 +175,14 @@ $O/ChannelController.o: ChannelController.cc \
 	CommandExecEngine.h \
 	GenericNode.h \
 	OsgEarthScene.h
-$O/ChargingNode.o: ChargingNode.cc
+$O/ChargingNode.o: ChargingNode.cc \
+	Battery.h \
+	ChargingNode.h \
+	Command.h \
+	CommandExecEngine.h \
+	GenericNode.h \
+	MobileNode.h \
+	OsgEarthScene.h
 $O/Command.o: Command.cc \
 	Command.h
 $O/CommandExecEngine.o: CommandExecEngine.cc \

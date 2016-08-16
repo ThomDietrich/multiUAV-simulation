@@ -13,11 +13,17 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-//
-// Creates OSG Nodes from the model
-//
-simple OsgEarthScene
-{
-    @display("i=misc/globe");
-    string scene;
+#ifdef WITH_OSG
+#include <ChargingNode.h>
+
+Define_Module(ChargingNode);
+
+ChargingNode::ChargingNode() {
+    // TODO Auto-generated constructor stub
 }
+
+ChargingNode::~ChargingNode() {
+    // TODO Auto-generated destructor stub
+}
+
+#endif // WITH_OSG

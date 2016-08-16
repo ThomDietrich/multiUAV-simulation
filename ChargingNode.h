@@ -3,55 +3,35 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-//
+// 
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-//
+// 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-//
+// 
 
-#ifndef __UAVNODE_H__
-#define __UAVNODE_H__
+#ifndef CHARGINGNODE_H_
+#define CHARGINGNODE_H_
 
-#include <vector>
-#include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
 
 using namespace omnetpp;
 
-/**
- * A mobile node that follows a predefined track.
- */
-class UAVNode : public MobileNode {
-
-    friend class CommandExecEngine;
-    friend class WaypointCEE;
-    friend class HoldPositionCEE;
-    friend class TakeoffCEE;
-
+class ChargingNode : public GenericNode {
 public:
-    UAVNode();
-    virtual ~UAVNode();
-
-protected:
-    virtual void initialize(int stage) override;
-    virtual int numInitStages() const override {
-        return 2;
-    }
-    void readWaypointsFromFile(const char *fileName);
+    ChargingNode();
+    virtual ~ChargingNode();
     virtual void updateState() override;
     virtual void updateState(double stepSize) override;
     virtual bool commandCompleted() override;
     virtual void loadNextCommand() override;
     virtual void initializeState() override;
     virtual double nextNeededUpdate() override;
-
-private:
-    static int normalizeAngle(int angle);
 };
 
-#endif
+#endif /* CHARGINGNODE_H_ */
+

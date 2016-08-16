@@ -1,10 +1,16 @@
 //
-// This file is part of an OMNeT++/OMNEST simulation example.
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
-// Copyright (C) 2015 OpenSim Ltd.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
 //
-// This file is distributed WITHOUT ANY WARRANTY. See the file
-// `license' for details on this and other legal matters.
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
 #ifdef WITH_OSG
@@ -24,16 +30,14 @@ using namespace osgEarth;
 using namespace osgEarth::Annotation;
 using namespace osgEarth::Features;
 
-MobileNode::MobileNode()
-{
+MobileNode::MobileNode() {
+    // Ignore Warning: members are initialized in "initialize(int stage)"
 }
 
-MobileNode::~MobileNode()
-{
+MobileNode::~MobileNode() {
 }
 
-void MobileNode::initialize(int stage)
-{
+void MobileNode::initialize(int stage) {
     GenericNode::initialize(stage);
     switch (stage) {
         case 0:
@@ -59,8 +63,7 @@ void MobileNode::initialize(int stage)
     }
 }
 
-void MobileNode::refreshDisplay() const
-{
+void MobileNode::refreshDisplay() const {
     GenericNode::refreshDisplay();
     auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
     // if we are showing the model's track, update geometry in the trackNode
@@ -73,8 +76,7 @@ void MobileNode::refreshDisplay() const
     }
 }
 
-void MobileNode::handleMessage(cMessage *msg)
-{
+void MobileNode::handleMessage(cMessage *msg) {
     GenericNode::handleMessage(msg);
     // update the trail data based on the new position
     if (trailNode) {
@@ -83,8 +85,7 @@ void MobileNode::handleMessage(cMessage *msg)
         //trail.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
 
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
-        if (trail.size() > trailLength)
-            trail.erase(trail.begin());
+        if (trail.size() > trailLength) trail.erase(trail.begin());
     }
 }
 
