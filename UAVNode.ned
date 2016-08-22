@@ -20,3 +20,10 @@ simple UAVNode extends MobileNode
         double startY @unit("m") = default(0m);      // the starting coordinates in meter
         string trackFile;                            // a file with longitude latitude pairs
 }
+
+//
+// mod->getName()       - uav
+// mod->getClassName()  - UAVNode
+// mod->getFullName()   - uav[0]
+// mod->getFullPath()   - OSgEarthNet.uav[0]
+//

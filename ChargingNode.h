@@ -22,16 +22,22 @@
 using namespace omnetpp;
 
 class ChargingNode : public GenericNode {
+protected:
+    int spotsLanding;
+    int spotsCharging;
+    double chargingCurrent;
 public:
     ChargingNode();
     virtual ~ChargingNode();
-    virtual void updateState() override;
-    virtual void updateState(double stepSize) override;
-    virtual bool commandCompleted() override;
     virtual void loadNextCommand() override;
     virtual void initializeState() override;
+    virtual void updateState() override;
+    virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
+protected:
+    virtual void initialize(int stage) override;
+    virtual void handleMessage(cMessage *msg) override;
+    virtual void refreshDisplay() const override;
 };
 
 #endif /* CHARGINGNODE_H_ */
-

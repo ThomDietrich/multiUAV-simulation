@@ -19,11 +19,53 @@
 Define_Module(ChargingNode);
 
 ChargingNode::ChargingNode() {
-    // TODO Auto-generated constructor stub
 }
 
 ChargingNode::~ChargingNode() {
-    // TODO Auto-generated destructor stub
+}
+
+void ChargingNode::initialize(int stage) {
+    GenericNode::initialize(stage);
+    switch (stage) {
+        case 0:
+        this->spotsLanding = 5;
+        this->spotsCharging = 1;
+        this->chargingCurrent = 2000;
+        this->x = par("posX");
+        this->y = par("posY");
+        this->z = 2;
+        this->pitch = 0;
+        this->yaw = 0;
+        break;
+
+        case 1:
+        break;
+    }
+}
+
+void ChargingNode::refreshDisplay() const {
+    GenericNode::refreshDisplay();
+}
+
+void ChargingNode::handleMessage(cMessage* msg) {
+    GenericNode::handleMessage(msg);
+}
+
+void ChargingNode::loadNextCommand() {
+}
+
+void ChargingNode::initializeState() {
+}
+
+void ChargingNode::updateState() {
+}
+
+bool ChargingNode::commandCompleted() {
+    return false;
+}
+
+double ChargingNode::nextNeededUpdate() {
+    return 1.0;
 }
 
 #endif // WITH_OSG

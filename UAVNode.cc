@@ -31,24 +31,37 @@ UAVNode::UAVNode() {
 UAVNode::~UAVNode() {
 }
 
+/**
+ * Simulation initialization with two stages, i.e. setup cycles
+ * @param stage
+ */
 void UAVNode::initialize(int stage) {
     MobileNode::initialize(stage);
     switch (stage) {
         case 0:
-            // fill the track
-            for (int _ = 0; _ < 100; ++_) {
-                //Dirty little hack for enough waypoints
-                readWaypointsFromFile(par("trackFile"));
-            }
-            // initial position
-            x = par("startX");
-            y = par("startY");
-            z = 2;
-            speed = par("speed");
-            break;
+        // fill the track
+        for (int _ = 0; _ < 100; ++_) {
+            //Dirty little hack for enough waypoints
+            readWaypointsFromFile(par("trackFile"));
+        }
+        // initial position
+        x = par("startX");
+        y = par("startY");
+        z = 2;
+        speed = par("speed");
+        break;
+
+        case 1:
+        break;
     }
 }
 
+/**
+ * Load commands from a textfile.
+ * This methode is temporary and will be replaced by a Mission Control
+ *
+ * @param fileName
+ */
 void UAVNode::readWaypointsFromFile(const char *fileName) {
     std::ifstream inputFile(fileName);
     while (true) {
@@ -73,6 +86,11 @@ void UAVNode::readWaypointsFromFile(const char *fileName) {
     }
 }
 
+/**
+ * Fetches the next command from the commands queue and creates a corresponding CEE.
+ *
+ * @throws cRuntimeError if no commands left in queue
+ */
 void UAVNode::loadNextCommand() {
     delete commandExecEngine;
 
@@ -90,7 +108,7 @@ void UAVNode::loadNextCommand() {
         commandExecEngine = new HoldPositionCEE(*this, *command);
     }
     else
-        throw cRuntimeError("loadNextCommand(): invalid cast.");
+    throw cRuntimeError("loadNextCommand(): invalid cast.");
     commands.pop_front();
 }
 
@@ -103,14 +121,14 @@ void UAVNode::initializeState() {
     std::string text(getFullName());
     switch (commandExecEngine->getCeeType()) {
         case WAYPOINT:
-            text += " WP";
-            break;
+        text += " WP";
+        break;
         case TAKEOFF:
-            text += " TO";
-            break;
+        text += " TO";
+        break;
         case HOLDPOSITION:
-            text += " HP";
-            break;
+        text += " HP";
+        break;
     }
     labelNode->setText(text);
 }
@@ -118,17 +136,13 @@ void UAVNode::initializeState() {
 void UAVNode::updateState() {
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
-    updateState(stepSize);
+    commandExecEngine->updateState(stepSize);
 
     //update sublabel with battery info
     std::ostringstream strs;
     strs << battery.getRemainingPercentage() << " %";
     std::string str = strs.str();
     sublabelNode->setText(str);
-}
-
-void UAVNode::updateState(double stepSize) {
-    commandExecEngine->updateState(stepSize);
 }
 
 bool UAVNode::commandCompleted() {
@@ -146,9 +160,9 @@ double UAVNode::nextNeededUpdate() {
 int UAVNode::normalizeAngle(int angle) {
     int newAngle = angle;
     while (newAngle <= -180)
-        newAngle += 360;
+    newAngle += 360;
     while (newAngle > 180)
-        newAngle -= 360;
+    newAngle -= 360;
     return newAngle;
 }
 

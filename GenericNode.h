@@ -48,7 +48,7 @@ public:
 typedef std::deque<Command*> CommandQueue;
 
 class GenericNode : public cSimpleModule, public IGenericNode {
-
+    
 protected:
     // configuration
     double timeStep;
@@ -69,7 +69,7 @@ protected:
     double x, y, z; // relative to playground origin in meters
     double yaw; // horizontal orientation in degrees
     double pitch; // vertical orientation in degrees. be aware, that yaw and pitch do not directly result in heading
-
+    
     // the node containing the osgEarth data
     osg::observer_ptr<osgEarth::MapNode> mapNode = nullptr;
     // osgEarth node for 3D visualization
@@ -81,7 +81,7 @@ protected:
     // second label beneath labelNode
     osg::ref_ptr<osgEarth::Annotation::LabelNode> sublabelNode = nullptr;
     // trail annotation
-
+    
 public:
     GenericNode();
     virtual ~GenericNode();
@@ -113,7 +113,7 @@ public:
     double getPitch() const override {
         return pitch;
     }
-
+    
 protected:
     virtual void initialize(int stage) override;
     virtual int numInitStages() const override {
@@ -122,9 +122,13 @@ protected:
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
     virtual void updateState() = 0;
-    virtual void updateState(double stepSize) = 0;
     virtual bool commandCompleted() = 0;
     virtual void loadNextCommand() = 0;
+
+    /**
+     * Execute once after new command was selected.
+     * Initializes state of the Node based on the new command.
+     */
     virtual void initializeState() = 0;
     virtual double nextNeededUpdate() = 0;
 };

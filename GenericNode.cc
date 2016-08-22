@@ -41,82 +41,82 @@ GenericNode::~GenericNode() {
 void GenericNode::initialize(int stage) {
     switch (stage) {
         case 0:
-            timeStep = par("timeStep");
-            modelURL = par("modelURL").stringValue();
-            showTxRange = par("showTxRange");
-            txRange = par("txRange");
-            labelColor = par("labelColor").stringValue();
-            label2Color = par("label2Color").stringValue();
-            rangeColor = par("rangeColor").stringValue();
-            break;
+        timeStep = par("timeStep");
+        modelURL = par("modelURL").stringValue();
+        showTxRange = par("showTxRange");
+        txRange = par("txRange");
+        labelColor = par("labelColor").stringValue();
+        label2Color = par("label2Color").stringValue();
+        rangeColor = par("rangeColor").stringValue();
+        break;
 
         case 1:
-            ChannelController::getInstance()->addGenericNode(this);
+        ChannelController::getInstance()->addGenericNode(this);
 
-            // scene is initialized in stage 0 so we have to do our init in stage 1
-            auto scene = OsgEarthScene::getInstance()->getScene();
-            mapNode = osgEarth::MapNode::findMapNode(scene);
+        // scene is initialized in stage 0 so we have to do our init in stage 1
+        auto scene = OsgEarthScene::getInstance()->getScene();
+        mapNode = osgEarth::MapNode::findMapNode(scene);
 
-            // build up the node representing this module
-            // an ObjectLocatorNode allows positioning a model using world coordinates
-            locatorNode = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
-            auto modelNode = osgDB::readNodeFile(modelURL);
-            if (!modelNode) throw cRuntimeError("Model file \"%s\" not found", modelURL.c_str());
+        // build up the node representing this module
+        // an ObjectLocatorNode allows positioning a model using world coordinates
+        locatorNode = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
+        auto modelNode = osgDB::readNodeFile(modelURL);
+        if (!modelNode) throw cRuntimeError("Model file \"%s\" not found", modelURL.c_str());
 
-            // disable shader and lighting on the model so textures are correctly shown
-            modelNode->getOrCreateStateSet()->setAttributeAndModes(new osg::Program(), osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-            modelNode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
+        // disable shader and lighting on the model so textures are correctly shown
+        modelNode->getOrCreateStateSet()->setAttributeAndModes(new osg::Program(), osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+        modelNode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
 
-            const char *modelColor = par("modelColor");
-            if (*modelColor != '\0') {
-                auto color = osgEarth::Color(modelColor);
-                auto material = new osg::Material();
-                material->setAmbient(osg::Material::FRONT_AND_BACK, color);
-                material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
-                material->setAlpha(osg::Material::FRONT_AND_BACK, 1.0);
-                modelNode->getOrCreateStateSet()->setAttribute(material, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
-            }
+        const char *modelColor = par("modelColor");
+        if (*modelColor != '\0') {
+            auto color = osgEarth::Color(modelColor);
+            auto material = new osg::Material();
+            material->setAmbient(osg::Material::FRONT_AND_BACK, color);
+            material->setDiffuse(osg::Material::FRONT_AND_BACK, color);
+            material->setAlpha(osg::Material::FRONT_AND_BACK, 1.0);
+            modelNode->getOrCreateStateSet()->setAttribute(material, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+        }
 
-            auto objectNode = new cObjectOsgNode(this); // make the node selectable in Qtenv
-            objectNode->addChild(modelNode);
-            locatorNode->addChild(objectNode);
+        auto objectNode = new cObjectOsgNode(this); // make the node selectable in Qtenv
+        objectNode->addChild(modelNode);
+        locatorNode->addChild(objectNode);
 
-            // set the name label if the color is specified
-            if (!labelColor.empty()) {
-                Style labelStyle;
-                labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_TOP;
-                labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
-                labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 40);
-                labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
-                labelNode = new LabelNode(getFullName(), labelStyle);
-                labelNode->setDynamic(true);
-                locatorNode->addChild(labelNode);
+        // set the name label if the color is specified
+        if (!labelColor.empty()) {
+            Style labelStyle;
+            labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_TOP;
+            labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
+            labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 40);
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
+            labelNode = new LabelNode(getFullName(), labelStyle);
+            labelNode->setDynamic(true);
+            locatorNode->addChild(labelNode);
 
-                labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 20);
-                labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(label2Color);
-                labelStyle.getOrCreate<TextSymbol>()->size() = 12;
-                sublabelNode = new LabelNode("---", labelStyle);
-                sublabelNode->setDynamic(true);
-                locatorNode->addChild(sublabelNode);
-            }
+            labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 20);
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(label2Color);
+            labelStyle.getOrCreate<TextSymbol>()->size() = 12;
+            sublabelNode = new LabelNode("---", labelStyle);
+            sublabelNode->setDynamic(true);
+            locatorNode->addChild(sublabelNode);
+        }
 
-            // create a node showing the transmission range
-            if (showTxRange) {
-                Style rangeStyle;
-                rangeStyle.getOrCreate<PolygonSymbol>()->fill()->color() = osgEarth::Color(rangeColor);
-                rangeStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;
-                rangeStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
-                rangeNode = new CircleNode(mapNode.get(), GeoPoint::INVALID, Linear(txRange, Units::METERS), rangeStyle);
-                locatorNode->addChild(rangeNode);
-            }
+        // create a node showing the transmission range
+        if (showTxRange) {
+            Style rangeStyle;
+            rangeStyle.getOrCreate<PolygonSymbol>()->fill()->color() = osgEarth::Color(rangeColor);
+            rangeStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_TO_TERRAIN;
+            rangeStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
+            rangeNode = new CircleNode(mapNode.get(), GeoPoint::INVALID, Linear(txRange, Units::METERS), rangeStyle);
+            locatorNode->addChild(rangeNode);
+        }
 
-            // add the locator node to the scene
-            mapNode->getModelLayerGroup()->addChild(locatorNode);
+        // add the locator node to the scene
+        mapNode->getModelLayerGroup()->addChild(locatorNode);
 
-            // schedule start of the mission for each uav (may be delayed by ned parameter)
-            cMessage *timer = new cMessage("startMission");
-            scheduleAt(par("startTime"), timer);
-            break;
+        // schedule start of the mission for each node (may be delayed by ned parameter)
+        cMessage *timer = new cMessage("startMission");
+        scheduleAt(par("startTime"), timer);
+        break;
     }
 }
 
@@ -169,6 +169,7 @@ void GenericNode::handleMessage(cMessage *msg) {
     // schedule next update
     lastUpdate = simTime();
     scheduleAt(lastUpdate + stepSize, msg);
+
 }
 
 #endif // WITH_OSG

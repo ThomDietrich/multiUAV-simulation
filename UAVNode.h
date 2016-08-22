@@ -27,7 +27,7 @@ using namespace omnetpp;
  * A mobile node that follows a predefined track.
  */
 class UAVNode : public MobileNode {
-
+    
     friend class CommandExecEngine;
     friend class WaypointCEE;
     friend class HoldPositionCEE;
@@ -43,11 +43,10 @@ protected:
         return 2;
     }
     void readWaypointsFromFile(const char *fileName);
-    virtual void updateState() override;
-    virtual void updateState(double stepSize) override;
-    virtual bool commandCompleted() override;
     virtual void loadNextCommand() override;
     virtual void initializeState() override;
+    virtual void updateState() override;
+    virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
 
 private:

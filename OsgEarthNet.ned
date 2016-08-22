@@ -37,7 +37,7 @@ network OsgEarthNet
         uav[numUAVs]: UAVNode {
             @display("p=243,150");
         }
-        chargingStation[numCSs]: ChargingNode {
+        cs[numCSs]: ChargingNode {
             @display("p=150,100");
         }
 }

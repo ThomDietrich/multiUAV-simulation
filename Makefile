@@ -187,6 +187,7 @@ $O/Command.o: Command.cc \
 	Command.h
 $O/CommandExecEngine.o: CommandExecEngine.cc \
 	Battery.h \
+	ChargingNode.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -201,6 +202,7 @@ $O/GenericNode.o: GenericNode.cc \
 	OsgEarthScene.h
 $O/MobileNode.o: MobileNode.cc \
 	Battery.h \
+	ChargingNode.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -211,6 +213,7 @@ $O/OsgEarthScene.o: OsgEarthScene.cc \
 $O/UAVNode.o: UAVNode.cc \
 	Battery.h \
 	ChannelController.h \
+	ChargingNode.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \

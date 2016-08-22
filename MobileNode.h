@@ -24,6 +24,7 @@
 
 #include <omnetpp.h>
 #include "GenericNode.h"
+#include "ChargingNode.h"
 #include "Battery.h"
 
 using namespace omnetpp;
@@ -33,13 +34,7 @@ using namespace omnetpp;
  * model's track can be shown along with its label.
  */
 class MobileNode : public GenericNode {
-
-    //TODO delete here?
-    friend class CommandExecEngine;
-    friend class WaypointCEE;
-    friend class HoldPositionCEE;
-    friend class TakeoffCEE;
-
+    
 protected:
     //trail (recently visited points)
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> trailNode = nullptr;
@@ -50,7 +45,7 @@ protected:
 
     double speed; // speed in meters per second
     Battery battery; //energy storage
-
+    
 public:
     MobileNode();
     virtual ~MobileNode();
@@ -58,11 +53,13 @@ public:
     double getSpeed() const {
         return speed;
     }
+    
+    void findNearestCS();
 
 protected:
     virtual void initialize(int stage) override;
-    virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
+    virtual void handleMessage(cMessage *msg) override;
 };
 
 #endif

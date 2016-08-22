@@ -41,25 +41,25 @@ void MobileNode::initialize(int stage) {
     GenericNode::initialize(stage);
     switch (stage) {
         case 0:
-            trailLength = par("trailLength");
-            trailColor = par("trailColor").stringValue();
-            speed = par("speed");
-            break;
+        trailLength = par("trailLength");
+        trailColor = par("trailColor").stringValue();
+        speed = par("speed");
+        break;
 
         case 1:
-            // create a node containing a track showing the past trail of the model
-            if (trailLength > 0) {
-                trailStyle.getOrCreate<LineSymbol>()->stroke()->color() = osgEarth::Color(trailColor);
-                trailStyle.getOrCreate<LineSymbol>()->stroke()->width() = 50.0f;
-                trailStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_RELATIVE_TO_TERRAIN;
-                trailStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
-                auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
-                trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
-                locatorNode->addChild(trailNode);
-            }
-
-            //Initialize Energy storage
-            battery = Battery(par("batteryCapacity"));
+        // create a node containing a track showing the past trail of the model
+        if (trailLength > 0) {
+            trailStyle.getOrCreate<LineSymbol>()->stroke()->color() = osgEarth::Color(trailColor);
+            trailStyle.getOrCreate<LineSymbol>()->stroke()->width() = 50.0f;
+            trailStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_RELATIVE_TO_TERRAIN;
+            trailStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
+            auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
+            trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
+            locatorNode->addChild(trailNode);
+        }
+        //Initialize Energy storage
+        battery = Battery(par("batteryCapacity"));
+        break;
     }
 }
 
@@ -83,10 +83,34 @@ void MobileNode::handleMessage(cMessage *msg) {
         // store the new position to be able to create a track later
         //TODO fix
         //trail.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
-
+        
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
         if (trail.size() > trailLength) trail.erase(trail.begin());
     }
+    findNearestCS();
+}
+
+void MobileNode::findNearestCS() {
+    //cModule* osgEarthNet = getModuleByPath("OsgEarthNet");
+    //cModule* osgEarthNet = getModuleByPath("OsgEarthNet.cs");
+    //EV_INFO << "MobileNode #" << this->getIndex() << " name: " << this->getFullName() << " parent name: " << osgEarthNet->getFullName() << endl;
+    double minDistance = -1;
+    ChargingNode *nearest;
+    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+    for (SubmoduleIterator it(network); !it.end(); ++it) {
+        cModule *mod = *it;
+        if (mod->isName("cs")) {
+            EV << "Module " << mod->getName() << mod->getFullName() << mod->getFullPath() << endl;
+            ChargingNode *cs = dynamic_cast<ChargingNode *>(mod);
+            double distanceSum = fabs(cs->getX() - this->x) + fabs(cs->getY() - this->y) + fabs(cs->getZ() - this->z);
+            EV << "ChargingNode " << cs->getFullName() << " distanceSum=" << distanceSum << endl;
+            if ((minDistance == -1) || (distanceSum < minDistance)) {
+                minDistance = distanceSum;
+                nearest = cs;
+            }
+        }
+    }
+    EV << "ChargingNode selected: " << nearest->getFullName() << endl;
 }
 
 #endif // WITH_OSG
