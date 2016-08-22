@@ -43,7 +43,7 @@ protected:
         return 2;
     }
     void readWaypointsFromFile(const char *fileName);
-    virtual void loadNextCommand() override;
+    virtual void selectNextCommand() override;
     virtual void initializeState() override;
     virtual void updateState() override;
     virtual bool commandCompleted() override;

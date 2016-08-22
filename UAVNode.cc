@@ -91,7 +91,7 @@ void UAVNode::readWaypointsFromFile(const char *fileName) {
  *
  * @throws cRuntimeError if no commands left in queue
  */
-void UAVNode::loadNextCommand() {
+void UAVNode::selectNextCommand() {
     delete commandExecEngine;
 
     if (commands.size() == 0) {

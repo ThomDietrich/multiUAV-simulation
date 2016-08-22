@@ -51,7 +51,7 @@ void ChargingNode::handleMessage(cMessage* msg) {
     GenericNode::handleMessage(msg);
 }
 
-void ChargingNode::loadNextCommand() {
+void ChargingNode::selectNextCommand() {
 }
 
 void ChargingNode::initializeState() {

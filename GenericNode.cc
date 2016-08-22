@@ -142,7 +142,7 @@ void GenericNode::refreshDisplay() const {
 void GenericNode::handleMessage(cMessage *msg) {
     if (msg->isName("startMission")) {
         //only at the beginning in the simulation, after a delayed 'startTime' in ned file
-        loadNextCommand();
+        selectNextCommand();
         lastUpdate = simTime();
         initializeState();
         msg->setName("update");
@@ -158,7 +158,7 @@ void GenericNode::handleMessage(cMessage *msg) {
 
     if (commandCompleted()) {
         EV_INFO << "UAV #" << this->getIndex() << " completed its current command. Selecting next command." << endl;
-        loadNextCommand();
+        selectNextCommand();
         initializeState();
     }
 

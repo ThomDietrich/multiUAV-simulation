@@ -29,7 +29,7 @@ protected:
 public:
     ChargingNode();
     virtual ~ChargingNode();
-    virtual void loadNextCommand() override;
+    virtual void selectNextCommand() override;
     virtual void initializeState() override;
     virtual void updateState() override;
     virtual bool commandCompleted() override;
