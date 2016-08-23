@@ -43,10 +43,34 @@ public:
     virtual ~CommandExecEngine() {
     }
     ;
+
     virtual bool commandCompleted() = 0;
+
     virtual void initializeState() = 0;
+
+    /**
+     * Update physical and logical state of the node.
+     *
+     * @param stepSize simulation time step in seconds
+     */
     virtual void updateState(double stepSize) = 0;
+
     virtual double getRemainingTime() = 0;
+
+    /**
+     * For the energy consumption calculation and prediction
+     * The current is dependent on the specific command and command-related parameters (speed etc.)
+     *
+     * @return statistical mean current flow (mA)
+     */
+    virtual double getCurrent() = 0;
+
+    /**
+     * Predict the overall consumption for the full command execution procedure
+     * @return to be consumed energy in mAh
+     */
+    virtual double predictConsumption() = 0;
+
     ceeType getCeeType() {
         return type;
     }
@@ -69,6 +93,8 @@ public:
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
+    double getCurrent() override;
+    double predictConsumption() override;
 };
 
 /**
@@ -84,6 +110,8 @@ public:
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
+    double getCurrent() override;
+    double predictConsumption() override;
 };
 
 /**
@@ -100,6 +128,8 @@ public:
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
+    double getCurrent() override;
+    double predictConsumption() override;
 };
 
 #endif /* COMMANDEXECENGINE_H_ */

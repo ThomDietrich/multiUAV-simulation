@@ -87,10 +87,9 @@ void MobileNode::handleMessage(cMessage *msg) {
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
         if (trail.size() > trailLength) trail.erase(trail.begin());
     }
-    findNearestCS();
 }
 
-void MobileNode::findNearestCS() {
+ChargingNode* MobileNode::findNearestCS() {
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet");
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet.cs");
     //EV_INFO << "MobileNode #" << this->getIndex() << " name: " << this->getFullName() << " parent name: " << osgEarthNet->getFullName() << endl;
@@ -111,6 +110,7 @@ void MobileNode::findNearestCS() {
         }
     }
     EV << "ChargingNode selected: " << nearest->getFullName() << endl;
+    return nearest;
 }
 
 #endif // WITH_OSG

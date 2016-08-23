@@ -65,7 +65,7 @@ bool ChargingNode::commandCompleted() {
 }
 
 double ChargingNode::nextNeededUpdate() {
-    return 1.0;
+    return 100.0;
 }
 
 #endif // WITH_OSG

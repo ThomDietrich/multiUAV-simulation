@@ -46,7 +46,7 @@ void WaypointCEE::initializeState() {
     double dx = command->getX() - node->x;
     double dy = command->getY() - node->y;
     double dz = command->getZ() - node->z;
-
+    
     //update and store yaw and pitch angles
     node->yaw = atan2(dx, -dy) / M_PI * 180;
     node->pitch = atan2(dz, sqrt(dx * dx + dy * dy)) / M_PI * 180;
@@ -55,7 +55,7 @@ void WaypointCEE::initializeState() {
 void WaypointCEE::updateState(double stepSize) {
     //distance to move, based on simulation time passed since last update
     double stepDistance = node->speed * stepSize;
-
+    
     //resulting movement broken down to x,y,z
     double stepZ = stepDistance * sin(M_PI * node->pitch / 180);
     double stepXY = stepDistance * cos(M_PI * node->pitch / 180);
@@ -64,9 +64,9 @@ void WaypointCEE::updateState(double stepSize) {
     node->x += stepX;
     node->y += stepY;
     node->z += stepZ;
-
+    
     // TODO: testing energy consumption
-    node->battery.discharge(stepDistance);
+    node->battery.discharge(getCurrent() * stepSize / 3600);
 }
 double WaypointCEE::getRemainingTime() {
     double dx = command->getX() - node->x;
@@ -74,6 +74,16 @@ double WaypointCEE::getRemainingTime() {
     double dz = command->getZ() - node->z;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
     return distance / this->node->speed;
+}
+
+double WaypointCEE::getCurrent() {
+    //TODO depending on angle and speed
+    return 15000;
+}
+
+double WaypointCEE::predictConsumption() {
+    //TODO node Position may not be the starting point of this command!
+    return (getCurrent() * getRemainingTime() / 3600);
 }
 
 /**
@@ -101,16 +111,26 @@ void TakeoffCEE::updateState(double stepSize) {
         node->z += stepDistance;
     else
         node->z -= stepDistance;
-
+    
     //some animation, remove if irritating
     node->yaw = node->yaw + 5;
-
+    
     // TODO: testing energy consumption
-    node->battery.discharge(2 * stepDistance);
+    node->battery.discharge(getCurrent() * stepSize / 3600);
 }
 
 double TakeoffCEE::getRemainingTime() {
     return fabs(command->getZ() - node->z) / this->node->speed;
+}
+
+double TakeoffCEE::getCurrent() {
+    //TODO depending on angle and speed
+    return 20000;
+}
+
+double TakeoffCEE::predictConsumption() {
+    //TODO node->z may not be the starting point of this command!
+    return (getCurrent() * getRemainingTime() / 3600);
 }
 
 /**
@@ -135,12 +155,19 @@ void HoldPositionCEE::initializeState() {
 void HoldPositionCEE::updateState(double stepSize) {
     //some animation, remove if irritating
     node->yaw = node->yaw + 5;
-
-    // TODO: testing energy consumption
-    double stepDistance = node->speed * stepSize;
-    node->battery.discharge(stepDistance / 2);
+    
+    node->battery.discharge(getCurrent() * stepSize / 3600);
 }
 
 double HoldPositionCEE::getRemainingTime() {
     return (this->holdPositionTill - simTime()).dbl();
+}
+
+double HoldPositionCEE::getCurrent() {
+    //TODO just an example value
+    return 12000;
+}
+
+double HoldPositionCEE::predictConsumption() {
+    return (getCurrent() * this->command->getHoldSeconds() / 3600);
 }

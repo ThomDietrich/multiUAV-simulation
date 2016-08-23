@@ -29,6 +29,8 @@
 
 using namespace omnetpp;
 
+class ChargingNode;
+
 /**
  * A mobile node (with a 3D model) moving around. A range indicator, and the
  * model's track can be shown along with its label.
@@ -54,7 +56,7 @@ public:
         return speed;
     }
     
-    void findNearestCS();
+    ChargingNode* findNearestCS();
 
 protected:
     virtual void initialize(int stage) override;

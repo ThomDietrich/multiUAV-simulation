@@ -92,23 +92,38 @@ void UAVNode::readWaypointsFromFile(const char *fileName) {
  * @throws cRuntimeError if no commands left in queue
  */
 void UAVNode::selectNextCommand() {
-    delete commandExecEngine;
 
     if (commands.size() == 0) {
         throw cRuntimeError("loadNextCommand(): UAV has no commands left.");
     }
 
+    CommandExecEngine *scheduledCEE = nullptr;
+    CommandExecEngine *goToChargingNodeCEE = nullptr;
+
     if (WaypointCommand *command = dynamic_cast<WaypointCommand *>(commands.front())) {
-        commandExecEngine = new WaypointCEE(*this, *command);
+        scheduledCEE = new WaypointCEE(*this, *command);
     }
     else if (TakeoffCommand *command = dynamic_cast<TakeoffCommand *>(commands.front())) {
-        commandExecEngine = new TakeoffCEE(*this, *command);
+        scheduledCEE = new TakeoffCEE(*this, *command);
     }
     else if (HoldPositionCommand *command = dynamic_cast<HoldPositionCommand *>(commands.front())) {
-        commandExecEngine = new HoldPositionCEE(*this, *command);
+        scheduledCEE = new HoldPositionCEE(*this, *command);
     }
     else
     throw cRuntimeError("loadNextCommand(): invalid cast.");
+
+    double predScheduledCEE = scheduledCEE->predictConsumption();
+
+    ChargingNode *cs = findNearestCS();
+    WaypointCommand *goToChargingNode = new WaypointCommand(cs->getX(), cs->getY(), cs->getZ());
+    goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+
+    double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
+
+    EV_INFO << "Consumption Command=" << predScheduledCEE << "mAh ("<< scheduledCEE->getCeeType() << "), Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh ("<< goToChargingNodeCEE->getCeeType() << ")" << endl;
+    delete commandExecEngine;
+    commandExecEngine = scheduledCEE;
+
     commands.pop_front();
 }
 
