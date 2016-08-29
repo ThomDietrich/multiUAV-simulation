@@ -100,10 +100,10 @@ ChargingNode* MobileNode::findNearestCS(double nodeX, double nodeY, double nodeZ
     for (SubmoduleIterator it(network); !it.end(); ++it) {
         cModule *mod = *it;
         if (mod->isName("cs")) {
-            EV << "Module " << mod->getName() << mod->getFullName() << mod->getFullPath() << endl;
+            //EV << "Module " << mod->getName() << mod->getFullName() << mod->getFullPath() << endl;
             ChargingNode *cs = dynamic_cast<ChargingNode *>(mod);
             double distanceSum = fabs(cs->getX() - nodeX) + fabs(cs->getY() - nodeY) + fabs(cs->getZ() - nodeZ);
-            EV << "ChargingNode " << cs->getFullName() << " distanceSum=" << distanceSum << endl;
+            //EV << "ChargingNode " << cs->getFullName() << " distanceSum=" << distanceSum << endl;
             if ((minDistance == -1) || (distanceSum < minDistance)) {
                 minDistance = distanceSum;
                 nearest = cs;

@@ -39,8 +39,10 @@ protected:
     ceeType type;
     void setType(ceeType type);
 
-    /// coordinates the command is executed from
+    /// coordinates from where the command will be executed
     double x0, y0, z0;
+    /// coordinates to where the command is going to
+    double x1, y1, z1;
 
 public:
     //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
@@ -63,6 +65,11 @@ public:
         this->y0 = y;
         this->z0 = z;
     }
+    void setToCoordinates(double x, double y, double z) {
+        this->x1 = x;
+        this->y1 = y;
+        this->z1 = z;
+    }
     
     double getX0() {
         return x0;
@@ -74,13 +81,13 @@ public:
         return z0;
     }
     double getX1() {
-        return command->getX();
+        return x1;
     }
     double getY1() {
-        return command->getY();
+        return y1;
     }
     double getZ1() {
-        return command->getZ();
+        return z1;
     }
     
     virtual bool commandCompleted() = 0;

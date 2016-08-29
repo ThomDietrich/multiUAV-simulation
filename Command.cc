@@ -45,7 +45,6 @@ void Command::setMessageName(std::string name) {
  *
  */
 WaypointCommand::WaypointCommand(double x, double y, double z) {
-    Command::Command();
     setX(x);
     setY(y);
     setZ(z);
@@ -60,7 +59,9 @@ void WaypointCommand::setSpeed(double value) {
  *
  */
 TakeoffCommand::TakeoffCommand(double altitude) {
-    Command::Command();
+    setX(0);
+    setY(0);
+    setZ(0);
     setAltitude(altitude);
     setMessageName("takeoff");
 }
@@ -73,7 +74,6 @@ void TakeoffCommand::setAltitude(double value) {
  *
  */
 HoldPositionCommand::HoldPositionCommand(int seconds) {
-    Command::Command();
     setHoldSeconds(seconds);
     setMessageName("holdPosition");
 }

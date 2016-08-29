@@ -105,6 +105,7 @@ void UAVNode::selectNextCommand() {
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
 
     double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
+    EV_INFO << "Remaining Energy in Battery=" << this->battery.getRemaining() << "mAh " << endl;
     EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
 
     //
@@ -127,7 +128,7 @@ void UAVNode::selectNextCommand() {
     // Get consumption for next Command
     //
     double predScheduledCEE = scheduledCEE->predictConsumption();
-    EV_INFO << "Consumption Command=" << predScheduledCEE << "mAh ("<< scheduledCEE->getCeeTypeString() << "), " << endl;
+    EV_INFO << "Consumption "<< scheduledCEE->getCeeTypeString() <<" command=" << predScheduledCEE << "mAh, " << endl;
 
     //
     // Get consumption for going to charging node after next command
@@ -135,9 +136,11 @@ void UAVNode::selectNextCommand() {
     ChargingNode *cn2 = findNearestCS(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
     WaypointCommand *goToChargingNode2 = new WaypointCommand(cn2->getX(), cn2->getY(), cn2->getZ());
     CommandExecEngine *goToChargingNodeCEE2 = new WaypointCEE(*this, *goToChargingNode2);
+    goToChargingNodeCEE2->setFromCoordinates(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
 
     double predGoToChargingNodeCEE2 = goToChargingNodeCEE2->predictConsumption();
-    EV_INFO << "Consumption GoToChargingNode-after-Command=" << predGoToChargingNodeCEE2 << "mAh" << endl;
+    EV_INFO << "Consumption GoToChargingNode (after Command)=" << predGoToChargingNodeCEE2 << "mAh" << endl;
+    EV_INFO << "Consumption Command + GoToChargingNode=" << predScheduledCEE + predGoToChargingNodeCEE2 << "mAh" << endl;
 
     //
     // Elect and activate the next command/CEE

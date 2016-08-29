@@ -32,10 +32,11 @@ WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command) {
     this->command = &command;
     this->setType(WAYPOINT);
     setFromCoordinates(node->x, node->y, node->z);
+    setToCoordinates(command.getX(), command.getY(), command.getZ());
 }
 
 bool WaypointCEE::commandCompleted() {
-    double distanceSum = fabs(command->getX() - node->getX()) + fabs(command->getY() - node->getY()) + fabs(command->getZ() - node->getZ());
+    double distanceSum = fabs(x1 - node->x) + fabs(y1 - node->y) + fabs(z1 - node->z);
     return (distanceSum < 1.e-10);
 }
 
@@ -44,9 +45,9 @@ void WaypointCEE::initializeState() {
     if (this->command == nullptr) {
         throw cRuntimeError("initializeState(): Command missing.");
     }
-    double dx = command->getX() - node->x;
-    double dy = command->getY() - node->y;
-    double dz = command->getZ() - node->z;
+    double dx = x1 - node->x;
+    double dy = y1 - node->y;
+    double dz = z1 - node->z;
     
     //update and store yaw and pitch angles
     node->yaw = atan2(dx, -dy) / M_PI * 180;
@@ -70,11 +71,11 @@ void WaypointCEE::updateState(double stepSize) {
     node->battery.discharge(getCurrent() * stepSize / 3600);
 }
 double WaypointCEE::getRemainingTime() {
-    double dx = command->getX() - node->x;
-    double dy = command->getY() - node->y;
-    double dz = command->getZ() - node->z;
+    double dx = x1 - node->x;
+    double dy = y1 - node->y;
+    double dz = z1 - node->z;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
-    return distance / this->node->speed;
+    return distance / node->speed;
 }
 
 double WaypointCEE::getCurrent() {
@@ -84,15 +85,15 @@ double WaypointCEE::getCurrent() {
 
 double WaypointCEE::predictConsumption() {
     //TODO node Position may not be the starting point of this command!
-    double dx = command->getX() - this->x0;
-    double dy = command->getY() - this->y0;
-    double dz = command->getZ() - this->z0;
-    double remainingTime = sqrt(dx * dx + dy * dy + dz * dz) / this->node->speed;
+    double dx = x1 - x0;
+    double dy = y1 - y0;
+    double dz = z1 - z0;
+    double remainingTime = sqrt(dx * dx + dy * dy + dz * dz) / node->speed;
     return (getCurrent() * remainingTime / 3600);
 }
 
 char* WaypointCEE::getCeeTypeString() {
-    return "Waypoint";
+    return (char*) "Waypoint";
 }
 
 /**
@@ -103,10 +104,12 @@ TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command) {
     this->command = &command;
     this->setType(TAKEOFF);
     setFromCoordinates(node->x, node->y, node->z);
+    setToCoordinates(node->x, node->y, command.getZ());
+    
 }
 
 bool TakeoffCEE::commandCompleted() {
-    double distanceSum = fabs(command->getZ() - node->z);
+    double distanceSum = fabs(z1 - node->z);
     return (distanceSum < 1.e-10);
 }
 
@@ -117,7 +120,7 @@ void TakeoffCEE::initializeState() {
 
 void TakeoffCEE::updateState(double stepSize) {
     double stepDistance = node->speed * stepSize;
-    if (command->getZ() > node->z)
+    if (z1 > node->z)
         node->z += stepDistance;
     else
         node->z -= stepDistance;
@@ -130,7 +133,7 @@ void TakeoffCEE::updateState(double stepSize) {
 }
 
 double TakeoffCEE::getRemainingTime() {
-    return fabs(command->getZ() - node->z) / this->node->speed;
+    return fabs(z1 - node->z) / node->speed;
 }
 
 double TakeoffCEE::getCurrent() {
@@ -140,12 +143,12 @@ double TakeoffCEE::getCurrent() {
 
 double TakeoffCEE::predictConsumption() {
 //TODO node->z may not be the starting point of this command!
-    double remainingTime = fabs(command->getZ() - this->z0) / this->node->speed;
+    double remainingTime = fabs(z1 - z0) / node->speed;
     return (getCurrent() * remainingTime / 3600);
 }
 
 char* TakeoffCEE::getCeeTypeString() {
-    return "Take Off";
+    return (char*) "Take Off";
 }
 
 /**
@@ -156,6 +159,7 @@ HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& comman
     this->command = &command;
     this->setType(HOLDPOSITION);
     setFromCoordinates(node->x, node->y, node->z);
+    setToCoordinates(node->x, node->y, node->z);
     this->holdPositionTill = simTime() + this->command->getHoldSeconds();
 }
 
@@ -189,5 +193,5 @@ double HoldPositionCEE::predictConsumption() {
 }
 
 char* HoldPositionCEE::getCeeTypeString() {
-    return "Hold Position";
+    return (char*) "Hold Position";
 }
