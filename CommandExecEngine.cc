@@ -27,10 +27,11 @@ void CommandExecEngine::setType(ceeType type) {
  *
  * TODO: Take speed variable from command into account
  */
-WaypointCEE::WaypointCEE(UAVNode &node, WaypointCommand &command) {
-    this->node = &node;
+WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command) {
+    this->node = &boundNode;
     this->command = &command;
     this->setType(WAYPOINT);
+    setFromCoordinates(node->x, node->y, node->z);
 }
 
 bool WaypointCEE::commandCompleted() {
@@ -83,16 +84,25 @@ double WaypointCEE::getCurrent() {
 
 double WaypointCEE::predictConsumption() {
     //TODO node Position may not be the starting point of this command!
-    return (getCurrent() * getRemainingTime() / 3600);
+    double dx = command->getX() - this->x0;
+    double dy = command->getY() - this->y0;
+    double dz = command->getZ() - this->z0;
+    double remainingTime = sqrt(dx * dx + dy * dy + dz * dz) / this->node->speed;
+    return (getCurrent() * remainingTime / 3600);
+}
+
+char* WaypointCEE::getCeeTypeString() {
+    return "Waypoint";
 }
 
 /**
  * Takeoff Command Execution Engine
  */
-TakeoffCEE::TakeoffCEE(UAVNode& node, TakeoffCommand& command) {
-    this->node = &node;
+TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command) {
+    this->node = &boundNode;
     this->command = &command;
     this->setType(TAKEOFF);
+    setFromCoordinates(node->x, node->y, node->z);
 }
 
 bool TakeoffCEE::commandCompleted() {
@@ -101,7 +111,7 @@ bool TakeoffCEE::commandCompleted() {
 }
 
 void TakeoffCEE::initializeState() {
-    //node->yaw = node->yaw;
+//node->yaw = node->yaw;
     node->pitch = 0;
 }
 
@@ -112,10 +122,10 @@ void TakeoffCEE::updateState(double stepSize) {
     else
         node->z -= stepDistance;
     
-    //some animation, remove if irritating
+//some animation, remove if irritating
     node->yaw = node->yaw + 5;
     
-    // TODO: testing energy consumption
+// TODO: testing energy consumption
     node->battery.discharge(getCurrent() * stepSize / 3600);
 }
 
@@ -124,22 +134,28 @@ double TakeoffCEE::getRemainingTime() {
 }
 
 double TakeoffCEE::getCurrent() {
-    //TODO depending on angle and speed
+//TODO depending on angle and speed
     return 20000;
 }
 
 double TakeoffCEE::predictConsumption() {
-    //TODO node->z may not be the starting point of this command!
-    return (getCurrent() * getRemainingTime() / 3600);
+//TODO node->z may not be the starting point of this command!
+    double remainingTime = fabs(command->getZ() - this->z0) / this->node->speed;
+    return (getCurrent() * remainingTime / 3600);
+}
+
+char* TakeoffCEE::getCeeTypeString() {
+    return "Take Off";
 }
 
 /**
  * HoldPosition Command Execution Engine
  */
-HoldPositionCEE::HoldPositionCEE(UAVNode& node, HoldPositionCommand& command) {
-    this->node = &node;
+HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& command) {
+    this->node = &boundNode;
     this->command = &command;
     this->setType(HOLDPOSITION);
+    setFromCoordinates(node->x, node->y, node->z);
     this->holdPositionTill = simTime() + this->command->getHoldSeconds();
 }
 
@@ -148,12 +164,12 @@ bool HoldPositionCEE::commandCompleted() {
 }
 
 void HoldPositionCEE::initializeState() {
-    //node->yaw = node->yaw;
+//node->yaw = node->yaw;
     node->pitch = 0;
 }
 
 void HoldPositionCEE::updateState(double stepSize) {
-    //some animation, remove if irritating
+//some animation, remove if irritating
     node->yaw = node->yaw + 5;
     
     node->battery.discharge(getCurrent() * stepSize / 3600);
@@ -164,10 +180,14 @@ double HoldPositionCEE::getRemainingTime() {
 }
 
 double HoldPositionCEE::getCurrent() {
-    //TODO just an example value
+//TODO just an example value
     return 12000;
 }
 
 double HoldPositionCEE::predictConsumption() {
     return (getCurrent() * this->command->getHoldSeconds() / 3600);
+}
+
+char* HoldPositionCEE::getCeeTypeString() {
+    return "Hold Position";
 }

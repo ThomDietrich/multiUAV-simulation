@@ -97,9 +97,20 @@ void UAVNode::selectNextCommand() {
         throw cRuntimeError("loadNextCommand(): UAV has no commands left.");
     }
 
-    CommandExecEngine *scheduledCEE = nullptr;
-    CommandExecEngine *goToChargingNodeCEE = nullptr;
+    //
+    // Get consumption to go to CS now
+    //
+    ChargingNode *cn = findNearestCS(getX(), getY(), getZ());
+    WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
 
+    double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
+    EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
+
+    //
+    // Select next Command -> CEE
+    //
+    CommandExecEngine *scheduledCEE = nullptr;
     if (WaypointCommand *command = dynamic_cast<WaypointCommand *>(commands.front())) {
         scheduledCEE = new WaypointCEE(*this, *command);
     }
@@ -112,15 +123,25 @@ void UAVNode::selectNextCommand() {
     else
     throw cRuntimeError("loadNextCommand(): invalid cast.");
 
+    //
+    // Get consumption for next Command
+    //
     double predScheduledCEE = scheduledCEE->predictConsumption();
+    EV_INFO << "Consumption Command=" << predScheduledCEE << "mAh ("<< scheduledCEE->getCeeTypeString() << "), " << endl;
 
-    ChargingNode *cs = findNearestCS();
-    WaypointCommand *goToChargingNode = new WaypointCommand(cs->getX(), cs->getY(), cs->getZ());
-    goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+    //
+    // Get consumption for going to charging node after next command
+    //
+    ChargingNode *cn2 = findNearestCS(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
+    WaypointCommand *goToChargingNode2 = new WaypointCommand(cn2->getX(), cn2->getY(), cn2->getZ());
+    CommandExecEngine *goToChargingNodeCEE2 = new WaypointCEE(*this, *goToChargingNode2);
 
-    double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
+    double predGoToChargingNodeCEE2 = goToChargingNodeCEE2->predictConsumption();
+    EV_INFO << "Consumption GoToChargingNode-after-Command=" << predGoToChargingNodeCEE2 << "mAh" << endl;
 
-    EV_INFO << "Consumption Command=" << predScheduledCEE << "mAh ("<< scheduledCEE->getCeeType() << "), Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh ("<< goToChargingNodeCEE->getCeeType() << ")" << endl;
+    //
+    // Elect and activate the next command/CEE
+    //
     delete commandExecEngine;
     commandExecEngine = scheduledCEE;
 

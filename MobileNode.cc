@@ -89,7 +89,8 @@ void MobileNode::handleMessage(cMessage *msg) {
     }
 }
 
-ChargingNode* MobileNode::findNearestCS() {
+//TODO move to helpers
+ChargingNode* MobileNode::findNearestCS(double nodeX, double nodeY, double nodeZ) {
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet");
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet.cs");
     //EV_INFO << "MobileNode #" << this->getIndex() << " name: " << this->getFullName() << " parent name: " << osgEarthNet->getFullName() << endl;
@@ -101,7 +102,7 @@ ChargingNode* MobileNode::findNearestCS() {
         if (mod->isName("cs")) {
             EV << "Module " << mod->getName() << mod->getFullName() << mod->getFullPath() << endl;
             ChargingNode *cs = dynamic_cast<ChargingNode *>(mod);
-            double distanceSum = fabs(cs->getX() - this->x) + fabs(cs->getY() - this->y) + fabs(cs->getZ() - this->z);
+            double distanceSum = fabs(cs->getX() - nodeX) + fabs(cs->getY() - nodeY) + fabs(cs->getZ() - nodeZ);
             EV << "ChargingNode " << cs->getFullName() << " distanceSum=" << distanceSum << endl;
             if ((minDistance == -1) || (distanceSum < minDistance)) {
                 minDistance = distanceSum;

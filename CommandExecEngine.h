@@ -35,15 +35,54 @@ enum ceeType {
 class CommandExecEngine {
 protected:
     //SubclassNode *node;
-    //SpecializedCommand *command;
+    Command *command;
     ceeType type;
     void setType(ceeType type);
+
+    /// coordinates the command is executed from
+    double x0, y0, z0;
+
 public:
-    //CommandExecEngine(SubclassNode &node, SpecializedCommand &command) { };
+    //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
+    
     virtual ~CommandExecEngine() {
     }
     ;
 
+    /**
+     * Adopt the coordinates the command will be executed from, needed for consumption prediction.
+     * These will be the current position of the Node by default.
+     * TODO It's undecided what should be done if a Node should do if this is different to the current position.
+     *
+     * @param x
+     * @param y
+     * @param z
+     */
+    void setFromCoordinates(double x, double y, double z) {
+        this->x0 = x;
+        this->y0 = y;
+        this->z0 = z;
+    }
+    
+    double getX0() {
+        return x0;
+    }
+    double getY0() {
+        return y0;
+    }
+    double getZ0() {
+        return z0;
+    }
+    double getX1() {
+        return command->getX();
+    }
+    double getY1() {
+        return command->getY();
+    }
+    double getZ1() {
+        return command->getZ();
+    }
+    
     virtual bool commandCompleted() = 0;
 
     virtual void initializeState() = 0;
@@ -74,7 +113,7 @@ public:
     ceeType getCeeType() {
         return type;
     }
-    ;
+    virtual char* getCeeTypeString() = 0;
 };
 
 //make UAVNode known to be reverse reference type
@@ -88,13 +127,14 @@ protected:
     UAVNode *node;
     WaypointCommand *command;
 public:
-    WaypointCEE(UAVNode &node, WaypointCommand &command);
+    WaypointCEE(UAVNode &boundNode, WaypointCommand &command);
     bool commandCompleted() override;
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
+    char* getCeeTypeString() override;
 };
 
 /**
@@ -105,13 +145,14 @@ protected:
     UAVNode *node;
     TakeoffCommand *command;
 public:
-    TakeoffCEE(UAVNode &node, TakeoffCommand &command);
+    TakeoffCEE(UAVNode &boundNode, TakeoffCommand &command);
     bool commandCompleted() override;
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
+    char* getCeeTypeString() override;
 };
 
 /**
@@ -123,13 +164,14 @@ protected:
     HoldPositionCommand *command;
     simtime_t holdPositionTill;
 public:
-    HoldPositionCEE(UAVNode &node, HoldPositionCommand &command);
+    HoldPositionCEE(UAVNode &boundNode, HoldPositionCommand &command);
     bool commandCompleted() override;
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
+    char* getCeeTypeString() override;
 };
 
 #endif /* COMMANDEXECENGINE_H_ */
