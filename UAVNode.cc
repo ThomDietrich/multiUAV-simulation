@@ -57,8 +57,8 @@ void UAVNode::initialize(int stage) {
 }
 
 /**
- * Load commands from a textfile.
- * This methode is temporary and will be replaced by a Mission Control
+ * Load commands from a text file.
+ * This method is temporary and will be replaced by a Mission Control
  *
  * @param fileName
  */
@@ -97,15 +97,17 @@ void UAVNode::selectNextCommand() {
         throw cRuntimeError("loadNextCommand(): UAV has no commands left.");
     }
 
+    double remaining = this->battery.getRemaining();
+    EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
+
     //
     // Get consumption to go to CS now
     //
-    ChargingNode *cn = findNearestCS(getX(), getY(), getZ());
+    ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
 
     double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
-    EV_INFO << "Remaining Energy in Battery=" << this->battery.getRemaining() << "mAh " << endl;
     EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
 
     //
@@ -128,12 +130,12 @@ void UAVNode::selectNextCommand() {
     // Get consumption for next Command
     //
     double predScheduledCEE = scheduledCEE->predictConsumption();
-    EV_INFO << "Consumption "<< scheduledCEE->getCeeTypeString() <<" command=" << predScheduledCEE << "mAh, " << endl;
+    EV_INFO << "Consumption "<< scheduledCEE->getCeeTypeString() << " command=" << predScheduledCEE << "mAh, " << endl;
 
     //
     // Get consumption for going to charging node after next command
     //
-    ChargingNode *cn2 = findNearestCS(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
+    ChargingNode *cn2 = findNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
     WaypointCommand *goToChargingNode2 = new WaypointCommand(cn2->getX(), cn2->getY(), cn2->getZ());
     CommandExecEngine *goToChargingNodeCEE2 = new WaypointCEE(*this, *goToChargingNode2);
     goToChargingNodeCEE2->setFromCoordinates(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
@@ -146,9 +148,29 @@ void UAVNode::selectNextCommand() {
     // Elect and activate the next command/CEE
     //
     delete commandExecEngine;
-    commandExecEngine = scheduledCEE;
 
-    commands.pop_front();
+    if (remaining >= predScheduledCEE + predGoToChargingNodeCEE2) {
+        // remaining energy for next command + going to charging node + more
+        EV_INFO << "Energy Management: OK. UAV has enough energy to continue" << endl;
+        commandExecEngine = scheduledCEE;
+        commands.pop_front();
+    }
+    else if (remaining >= predGoToChargingNodeCEE) {
+        // remaining energy to at least go to the charging node
+        EV_WARN << "Energy Management: UAV has to go back now!" << endl;
+        commandExecEngine = goToChargingNodeCEE;
+        //commands.push_front(chargingCEE);
+    }
+    else if (remaining < predGoToChargingNodeCEE) {
+        // not enough remaining energy at all
+        EV_WARN << "Energy Management: Too late! The UAV is too far from the nearest ChargingNode." << endl;
+        commandExecEngine = scheduledCEE;
+        commands.pop_front();
+    }
+    else {
+        throw cRuntimeError("Electing next command based on energy consumption: invalid constellation.");
+    }
+
 }
 
 void UAVNode::initializeState() {

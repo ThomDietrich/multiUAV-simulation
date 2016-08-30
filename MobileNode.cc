@@ -90,7 +90,7 @@ void MobileNode::handleMessage(cMessage *msg) {
 }
 
 //TODO move to helpers
-ChargingNode* MobileNode::findNearestCS(double nodeX, double nodeY, double nodeZ) {
+ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ) {
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet");
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet.cs");
     //EV_INFO << "MobileNode #" << this->getIndex() << " name: " << this->getFullName() << " parent name: " << osgEarthNet->getFullName() << endl;

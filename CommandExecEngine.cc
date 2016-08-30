@@ -80,16 +80,16 @@ double WaypointCEE::getRemainingTime() {
 
 double WaypointCEE::getCurrent() {
     //TODO depending on angle and speed
-    return 15000;
+    return 20000;
 }
 
 double WaypointCEE::predictConsumption() {
-    //TODO node Position may not be the starting point of this command!
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
-    double remainingTime = sqrt(dx * dx + dy * dy + dz * dz) / node->speed;
-    return (getCurrent() * remainingTime / 3600);
+    double time = sqrt(dx * dx + dy * dy + dz * dz) / node->speed;
+    //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << time << "s" << endl;
+    return (getCurrent() * time / 3600);
 }
 
 char* WaypointCEE::getCeeTypeString() {
@@ -142,7 +142,6 @@ double TakeoffCEE::getCurrent() {
 }
 
 double TakeoffCEE::predictConsumption() {
-//TODO node->z may not be the starting point of this command!
     double remainingTime = fabs(z1 - z0) / node->speed;
     return (getCurrent() * remainingTime / 3600);
 }

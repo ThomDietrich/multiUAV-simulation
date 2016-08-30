@@ -56,7 +56,7 @@ public:
         return speed;
     }
     
-    ChargingNode* findNearestCS(double nodeX, double nodeY, double nodeZ);
+    ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
 
 protected:
     virtual void initialize(int stage) override;
