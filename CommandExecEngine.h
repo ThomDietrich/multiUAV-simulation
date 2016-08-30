@@ -25,7 +25,7 @@ using namespace omnetpp;
 class MobileNode;
 
 enum ceeType {
-    WAYPOINT, TAKEOFF, HOLDPOSITION
+    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE
 };
 
 /**
@@ -109,14 +109,18 @@ public:
      *
      * @return statistical mean current flow (mA)
      */
-    virtual double getCurrent() = 0;
-
+    virtual double getCurrent() {
+        return 0;
+    }
+    
     /**
      * Predict the overall consumption for the full command execution procedure
      * @return to be consumed energy in mAh
      */
-    virtual double predictConsumption() = 0;
-
+    virtual double predictConsumption() {
+        return 0;
+    }
+    
     ceeType getCeeType() {
         return type;
     }
@@ -178,6 +182,22 @@ public:
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
+    char* getCeeTypeString() override;
+};
+
+/**
+ * Charging Command Execution Engine
+ */
+class ChargeCEE : public CommandExecEngine {
+protected:
+    UAVNode *node;
+    ChargeCommand *command;
+public:
+    ChargeCEE(UAVNode &boundNode, ChargeCommand &command);
+    bool commandCompleted() override;
+    void initializeState() override;
+    void updateState(double stepSize) override;
+    double getRemainingTime() override;
     char* getCeeTypeString() override;
 };
 

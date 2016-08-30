@@ -84,4 +84,17 @@ public:
     }
 };
 
+class ChargingNode;
+
+/**
+ * The vehicle will connect to a ChargingNode and initiate a charging procedure.
+ * Charging ends when battery is fully charged.
+ */
+class ChargeCommand : public Command {
+protected:
+    ChargingNode *node;
+public:
+    ChargeCommand(ChargingNode *node);
+};
+
 #endif /* COMMAND_H_ */

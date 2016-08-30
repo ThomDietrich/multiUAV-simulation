@@ -43,6 +43,9 @@ void Command::setMessageName(std::string name) {
 
 /**
  *
+ * @param x
+ * @param y
+ * @param z
  */
 WaypointCommand::WaypointCommand(double x, double y, double z) {
     setX(x);
@@ -57,6 +60,7 @@ void WaypointCommand::setSpeed(double value) {
 
 /**
  *
+ * @param altitude
  */
 TakeoffCommand::TakeoffCommand(double altitude) {
     setX(0);
@@ -72,6 +76,7 @@ void TakeoffCommand::setAltitude(double value) {
 
 /**
  *
+ * @param seconds
  */
 HoldPositionCommand::HoldPositionCommand(int seconds) {
     setHoldSeconds(seconds);
@@ -80,4 +85,12 @@ HoldPositionCommand::HoldPositionCommand(int seconds) {
 
 void HoldPositionCommand::setHoldSeconds(int value) {
     this->holdSeconds = value;
+}
+
+/**
+ *
+ * @param node
+ */
+ChargeCommand::ChargeCommand(ChargingNode* node) {
+    this->node = node;
 }

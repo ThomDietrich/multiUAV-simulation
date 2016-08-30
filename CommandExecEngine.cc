@@ -194,3 +194,31 @@ double HoldPositionCEE::predictConsumption() {
 char* HoldPositionCEE::getCeeTypeString() {
     return (char*) "Hold Position";
 }
+
+/**
+ * ChargeCommand Execution Engine
+ *
+ * @param boundNode
+ * @param command
+ */
+ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command) {
+}
+
+bool ChargeCEE::commandCompleted() {
+    return false;
+}
+
+void ChargeCEE::initializeState() {
+    EV_INFO << "Charge Command initiated" << endl;
+}
+
+void ChargeCEE::updateState(double stepSize) {
+}
+
+double ChargeCEE::getRemainingTime() {
+    return 10;
+}
+
+char* ChargeCEE::getCeeTypeString() {
+    return (char*) "Charge";
+}

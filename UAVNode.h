@@ -32,6 +32,7 @@ class UAVNode : public MobileNode {
     friend class WaypointCEE;
     friend class HoldPositionCEE;
     friend class TakeoffCEE;
+    friend class ChargeCEE;
 
 public:
     UAVNode();

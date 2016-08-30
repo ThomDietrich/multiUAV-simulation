@@ -123,6 +123,9 @@ void UAVNode::selectNextCommand() {
     else if (HoldPositionCommand *command = dynamic_cast<HoldPositionCommand *>(commands.front())) {
         scheduledCEE = new HoldPositionCEE(*this, *command);
     }
+    else if (ChargeCommand *command = dynamic_cast<ChargeCommand *>(commands.front())) {
+        scheduledCEE = new ChargeCEE(*this, *command);
+    }
     else
     throw cRuntimeError("loadNextCommand(): invalid cast.");
 
@@ -159,7 +162,9 @@ void UAVNode::selectNextCommand() {
         // remaining energy to at least go to the charging node
         EV_WARN << "Energy Management: UAV has to go back now!" << endl;
         commandExecEngine = goToChargingNodeCEE;
-        //commands.push_front(chargingCEE);
+        ChargeCommand *chargeCommand = new ChargeCommand(cn);
+        //ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
+        commands.push_front(chargeCommand);
     }
     else if (remaining < predGoToChargingNodeCEE) {
         // not enough remaining energy at all
@@ -189,6 +194,9 @@ void UAVNode::initializeState() {
         break;
         case HOLDPOSITION:
         text += " HP";
+        break;
+        case CHARGE:
+        text += " CH";
         break;
     }
     labelNode->setText(text);
