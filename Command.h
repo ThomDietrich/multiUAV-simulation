@@ -95,6 +95,7 @@ protected:
     ChargingNode *node;
 public:
     ChargeCommand(ChargingNode *node);
+    ChargingNode *getChargingNode();
 };
 
 #endif /* COMMAND_H_ */

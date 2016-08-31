@@ -94,3 +94,7 @@ void HoldPositionCommand::setHoldSeconds(int value) {
 ChargeCommand::ChargeCommand(ChargingNode* node) {
     this->node = node;
 }
+
+ChargingNode* ChargeCommand::getChargingNode() {
+    return this->node;
+}

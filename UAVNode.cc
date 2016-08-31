@@ -108,8 +108,8 @@ void UAVNode::selectNextCommand() {
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
 
     double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
-    EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
-
+    //EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
+    
     //
     // Select next Command -> CEE
     //
@@ -133,8 +133,8 @@ void UAVNode::selectNextCommand() {
     // Get consumption for next Command
     //
     double predScheduledCEE = scheduledCEE->predictConsumption();
-    EV_INFO << "Consumption "<< scheduledCEE->getCeeTypeString() << " command=" << predScheduledCEE << "mAh, " << endl;
-
+    //EV_INFO << "Consumption "<< scheduledCEE->getCeeTypeString() << " command=" << predScheduledCEE << "mAh, " << endl;
+    
     //
     // Get consumption for going to charging node after next command
     //
@@ -144,9 +144,9 @@ void UAVNode::selectNextCommand() {
     goToChargingNodeCEE2->setFromCoordinates(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
 
     double predGoToChargingNodeCEE2 = goToChargingNodeCEE2->predictConsumption();
-    EV_INFO << "Consumption GoToChargingNode (after Command)=" << predGoToChargingNodeCEE2 << "mAh" << endl;
-    EV_INFO << "Consumption Command + GoToChargingNode=" << predScheduledCEE + predGoToChargingNodeCEE2 << "mAh" << endl;
-
+    //EV_INFO << "Consumption GoToChargingNode (after Command)=" << predGoToChargingNodeCEE2 << "mAh" << endl;
+    //EV_INFO << "Consumption Command + GoToChargingNode=" << predScheduledCEE + predGoToChargingNodeCEE2 << "mAh" << endl;
+    
     //
     // Elect and activate the next command/CEE
     //
@@ -165,6 +165,9 @@ void UAVNode::selectNextCommand() {
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         //ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
         commands.push_front(chargeCommand);
+    }
+    else if (battery.isEmpty()) {
+        throw cRuntimeError("UAV just died. :-(");
     }
     else if (remaining < predGoToChargingNodeCEE) {
         // not enough remaining energy at all

@@ -202,21 +202,30 @@ char* HoldPositionCEE::getCeeTypeString() {
  * @param command
  */
 ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command) {
+    this->node = &boundNode;
+    this->command = &command;
+    this->setType(CHARGE);
+    this->setFromCoordinates(node->x, node->y, node->z);
+    this->setToCoordinates(node->x, node->y, node->z);
 }
 
 bool ChargeCEE::commandCompleted() {
-    return false;
+    return (node->battery.isFull()) ? true : false;
 }
 
 void ChargeCEE::initializeState() {
     EV_INFO << "Charge Command initiated" << endl;
+    //TODO connect to Charging station
+    //cMessage *request = new cMessage("startCharge");
+    //this->command->getChargingNode()->scheduleAt(simTime(), request);
 }
 
 void ChargeCEE::updateState(double stepSize) {
+    node->battery.charge(20000 * stepSize / 3600);
 }
 
 double ChargeCEE::getRemainingTime() {
-    return 10;
+    return node->battery.getMissing() / 20000 * 3600;
 }
 
 char* ChargeCEE::getCeeTypeString() {

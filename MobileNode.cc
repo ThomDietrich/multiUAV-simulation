@@ -58,7 +58,8 @@ void MobileNode::initialize(int stage) {
             locatorNode->addChild(trailNode);
         }
         //Initialize Energy storage
-        battery = Battery(par("batteryCapacity"));
+        int capacity = int(par("batteryCapacity"));
+        battery = Battery(capacity, capacity/2 + rand() % capacity/2);
         break;
     }
 }

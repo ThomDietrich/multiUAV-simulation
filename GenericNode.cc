@@ -153,7 +153,9 @@ void GenericNode::handleMessage(cMessage *msg) {
         updateState();
     }
     else {
-        throw cRuntimeError("Unknown message name encountered");
+        std::string message = "Unknown message name encountered: ";
+        message += msg->getFullName();
+        throw cRuntimeError(message.c_str());
     }
 
     if (commandCompleted()) {
