@@ -38,20 +38,22 @@ UAVNode::~UAVNode() {
 void UAVNode::initialize(int stage) {
     MobileNode::initialize(stage);
     switch (stage) {
-        case 0:
-        // fill the track
-        for (int _ = 0; _ < 100; ++_) {
-            //Dirty little hack for enough waypoints
-            readWaypointsFromFile(par("trackFile"));
-        }
-        // initial position
-        x = par("startX");
-        y = par("startY");
-        z = 2;
-        break;
+        case 0: {
+            // fill the track
+            for (int _ = 0; _ < 100; ++_) {
+                //Dirty little hack for enough waypoints
+                readWaypointsFromFile(par("trackFile"));
+            }
+            // initial position
+            x = par("startX");
+            y = par("startY");
+            z = 2;
 
-        case 1:
-        break;
+            break;
+        }
+        case 1: {
+            break;
+        }
     }
 }
 
@@ -281,18 +283,18 @@ double UAVNode::getSpeedFromAngle(double angle) {
  * @return the current used by the UAV in [A]
  */
 double UAVNode::getCurrentFromAngle(double angle) {
-    double samples[11][2] = { //
-        {   -90.0, 16.86701}, //
-        {   -75.6, 17.97695}, //
-        {   -57.9, 17.34978}, //
-        {   -34.8, 17.34384}, //
-        {   -15.6, 15.99054}, //
-        {   000.0, 16.36526}, //
-        {   +15.6, 18.83829}, //
-        {   +34.8, 20.34726}, //
-        {   +57.9, 21.31561}, //
-        {   +75.6, 21.43493}, //
-        {   +90.0, 20.86530}  //
+    double samples[11][3] = { //
+        {   -90.0, 16.86701, 0.7651131}, //
+        {   -75.6, 17.97695, 0.7196844}, //
+        {   -57.9, 17.34978, 0.6684724}, //
+        {   -34.8, 17.34384, 0.8729401}, //
+        {   -15.6, 15.99054, 1.1767867}, //
+        {   000.0, 16.36526, 1.0290515}, //
+        {   +15.6, 18.83829, 2.1043467}, //
+        {   +34.8, 20.34726, 1.4018145}, //
+        {   +57.9, 21.31561, 0.8680334}, //
+        {   +75.6, 21.43493, 0.7625244}, //
+        {   +90.0, 20.86530, 0.7350855}  //
     };
 
     //Catch exactly -90°
@@ -301,10 +303,16 @@ double UAVNode::getCurrentFromAngle(double angle) {
     // simple linear interpolation
     for (int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
-            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
-            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
-            //TODO add deviation
-            return interpol;
+            double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
+            double mean = samples[idx - 1][1] + mean_slope * (angle - samples[idx - 1][0]);
+
+            double stddev_slope = (samples[idx][2] - samples[idx - 1][2]) / (samples[idx][0] - samples[idx - 1][0]);
+            double stddev = samples[idx - 1][2] + stddev_slope * (angle - samples[idx - 1][0]);
+
+            cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+            double result = omnetpp::normal(network->getRNG(0), mean, stddev);
+
+            return result;
         }
     }
 
@@ -313,7 +321,11 @@ double UAVNode::getCurrentFromAngle(double angle) {
 }
 
 double UAVNode::getCurrentHover() {
-    return 18.1;
+    double mean = 18.09;
+    double stddev = 0.36;
+    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+    double result = omnetpp::normal(network->getRNG(0), mean, stddev);
+    return result;
 }
 
 void UAVNode::move() {
