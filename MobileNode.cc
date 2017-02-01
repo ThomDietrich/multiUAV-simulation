@@ -43,7 +43,6 @@ void MobileNode::initialize(int stage) {
         case 0:
         trailLength = par("trailLength");
         trailColor = par("trailColor").stringValue();
-        speed = par("speed");
         break;
 
         case 1:

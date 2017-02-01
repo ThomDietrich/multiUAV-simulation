@@ -22,8 +22,13 @@ using namespace omnetpp;
 
 class Battery {
 protected:
+    /** the size of the battery in mAh (e.g. 2200) */
     double capacity;
+
+    /** the remaining energy in the battery at creation (e.g. 1500) */
     double remaining;
+
+    /** if 'true', the battery is always full and never empty */
     bool infinite;
 public:
     Battery();

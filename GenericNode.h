@@ -66,10 +66,33 @@ protected:
     CommandExecEngine *commandExecEngine = nullptr;
 
     // state
-    double x, y, z; // relative to playground origin in meters
-    double yaw; // horizontal orientation in degrees
-    double pitch; // vertical orientation in degrees. be aware, that yaw and pitch do not directly result in heading
-    
+    double x, y, z; // relative to playground origin (top left) in meters
+
+    /**
+     * yaw/horizontal orientation in degrees
+     * 0° = oriented to the right of the playground
+     * 90° = oriented to the bottom of the playground
+     * 180° = oriented to the left of the playground
+     * 270° = oriented to the top of the playground
+     */
+    double yaw;
+
+    /**
+     * pitch/vertical orientation in degrees
+     * -90° = downwards
+     * 0° = forward (in yaw direction)
+     * 90° = upwards
+     */
+    double pitch;
+
+    /**
+     * climb angle (pitch heading) in degrees
+     * -90° = downwards
+     * 0° = forward (in yaw direction)
+     * 90° = upwards
+     */
+    double climbAngle;
+
     // the node containing the osgEarth data
     osg::observer_ptr<osgEarth::MapNode> mapNode = nullptr;
     // osgEarth node for 3D visualization
@@ -112,6 +135,9 @@ public:
     }
     double getPitch() const override {
         return pitch;
+    }
+    double getClimbAngle() const {
+        return climbAngle;
     }
     
 protected:

@@ -45,17 +45,13 @@ protected:
     osgEarth::Style trailStyle;
     std::string trailColor;
 
-    double speed; // speed in meters per second
+    double speed; //speed (3D) in [m/s]
     Battery battery; //energy storage
     
 public:
     MobileNode();
     virtual ~MobileNode();
 
-    double getSpeed() const {
-        return speed;
-    }
-    
     ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
 
 protected:

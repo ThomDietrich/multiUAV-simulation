@@ -122,14 +122,13 @@ void GenericNode::initialize(int stage) {
 
 void GenericNode::refreshDisplay() const {
     auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
-    double modelheading = fmod((360 + 90 + yaw), 360) - 180;
     double longitude = getLongitude();
     double latitude = getLatitude();
     double altitude = getAltitude();
 
     // update the 3D position of the model node
     locatorNode->getLocator()->setPosition(osg::Vec3d(longitude, latitude, altitude));
-    locatorNode->getLocator()->setOrientation(osg::Vec3d(modelheading, 0, pitch));
+    locatorNode->getLocator()->setOrientation(osg::Vec3d(yaw, 0, pitch));
 
     // re-position the range indicator node
     if (showTxRange) rangeNode->setPosition(GeoPoint(geoSRS, longitude, latitude));

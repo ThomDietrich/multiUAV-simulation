@@ -37,6 +37,9 @@ class UAVNode : public MobileNode {
 public:
     UAVNode();
     virtual ~UAVNode();
+    static double getSpeedFromAngle(double angle);
+    static double getCurrentFromAngle(double angle);
+    static double getCurrentHover();
 
 protected:
     virtual void initialize(int stage) override;
@@ -49,6 +52,9 @@ protected:
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
+
+    //not needed
+    virtual void move();
 
 private:
     static int normalizeAngle(int angle);

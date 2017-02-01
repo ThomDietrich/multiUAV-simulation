@@ -42,9 +42,7 @@ ChannelController *ChannelController::getInstance() {
 }
 
 int ChannelController::findGenericNode(IGenericNode *p) {
-    for (int i = 0; i < (int) nodeList.size(); i++)
-        if (nodeList[i] == p) return i;
-
+    for (int i = 0; i < (int) nodeList.size(); i++) if (nodeList[i] == p) return i;
     return -1;
 }
 
@@ -59,17 +57,18 @@ void ChannelController::removeGenericNode(IGenericNode *p) {
 
 void ChannelController::initialize(int stage) {
     switch (stage) {
-        case 0:
+        case 0: {
             playgroundLat = getSystemModule()->par("playgroundLatitude");
             playgroundLon = getSystemModule()->par("playgroundLongitude");
             connectionColor = par("connectionColor").stringValue();
             showConnections = par("showConnections").boolValue();
             break;
-        case 1:
+        }
+        case 1: {
             auto scene = OsgEarthScene::getInstance()->getScene(); // scene is initialized in stage 0 so we have to do our init in stage 1
             mapNode = osgEarth::MapNode::findMapNode(scene);
             connectionStyle.getOrCreate<LineSymbol>()->stroke()->color() = osgEarth::Color(connectionColor);
-            connectionStyle.getOrCreate<LineSymbol>()->stroke()->width() = 5.0f;
+            connectionStyle.getOrCreate<LineSymbol>()->stroke()->width() = 3.0f;
             connectionStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_ABSOLUTE;
             connectionStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
 
@@ -80,6 +79,7 @@ void ChannelController::initialize(int stage) {
                 mapNode->getModelLayerGroup()->addChild(connectionGraphNode);
             }
             break;
+        }
     }
 }
 

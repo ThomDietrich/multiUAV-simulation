@@ -39,6 +39,8 @@ void ChargingNode::initialize(int stage) {
         break;
 
         case 1:
+        this->labelNode->setText("");
+        this->sublabelNode->setText("");
         break;
     }
 }

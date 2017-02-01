@@ -21,6 +21,7 @@ simple ChargingNode extends GenericNode
     parameters:
         @class(ChargingNode);
         @display("i=block/plug");
-        double posX @unit("m") = default(0m);      // the starting coordinates in meter
-        double posY @unit("m") = default(0m);      // the starting coordinates in meter
+        double posX @unit("m") = default(0m);            // the starting coordinates in meter
+        double posY @unit("m") = default(0m);            // the starting coordinates in meter
+        double chargeCurrent @unit("A") = default(1.0A); // the charging current, assumed as constant 
 }

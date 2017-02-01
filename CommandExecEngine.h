@@ -107,7 +107,7 @@ public:
      * For the energy consumption calculation and prediction
      * The current is dependent on the specific command and command-related parameters (speed etc.)
      *
-     * @return statistical mean current flow (mA)
+     * @return statistical mean current flow (A)
      */
     virtual double getCurrent() {
         return 0;
@@ -132,6 +132,8 @@ class UAVNode;
 
 /**
  * Waypoint Command Execution Engine
+ *
+ * Go from (x0,y0,z0) to (x1,y1,z1) on a straight line
  */
 class WaypointCEE : public CommandExecEngine {
 protected:
@@ -150,6 +152,9 @@ public:
 
 /**
  * Takeoff Command Execution Engine
+ *
+ * Go straight up or straight down.
+ * x and y are NOT considered!
  */
 class TakeoffCEE : public CommandExecEngine {
 protected:
@@ -168,6 +173,8 @@ public:
 
 /**
  * HoldPosition Command Execution Engine
+ *
+ * Stay at (x,y,z) until {@link holdPositionTill}.
  */
 class HoldPositionCEE : public CommandExecEngine {
 protected:
@@ -198,6 +205,7 @@ public:
     void initializeState() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
+    double getCurrent() override;
     char* getCeeTypeString() override;
 };
 

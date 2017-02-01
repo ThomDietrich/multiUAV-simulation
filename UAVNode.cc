@@ -48,7 +48,6 @@ void UAVNode::initialize(int stage) {
         x = par("startX");
         y = par("startY");
         z = 2;
-        speed = par("speed");
         break;
 
         case 1:
@@ -212,7 +211,7 @@ void UAVNode::updateState() {
 
     //update sublabel with battery info
     std::ostringstream strs;
-    strs << battery.getRemainingPercentage() << " %";
+    strs << std::setprecision(1) << std::fixed << speed << " m/s | " << commandExecEngine->getCurrent() << " A | " << battery.getRemainingPercentage() << " % | " << commandExecEngine->getRemainingTime() << " s left";
     std::string str = strs.str();
     sublabelNode->setText(str);
 }
@@ -236,6 +235,89 @@ int UAVNode::normalizeAngle(int angle) {
     while (newAngle > 180)
     newAngle -= 360;
     return newAngle;
+}
+
+/**
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle
+ * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
+ * @return the speed of the UAV in [m/s]
+ */
+double UAVNode::getSpeedFromAngle(double angle) {
+    double samples[11][2] = { //
+        {   -90.0, 1.837303}, //
+        {   -75.6, 1.842921}, //
+        {   -57.9, 2.013429}, //
+        {   -34.8, 2.450476}, //
+        {   -15.6, 3.583821}, //
+        {   000.0, 8.056741}, //
+        {   +15.6, 6.020143}, //
+        {   +34.8, 3.337107}, //
+        {   +57.9, 2.822109}, //
+        {   +75.6, 2.719016}, //
+        {   +90.0, 2.719048}  //
+    };
+
+    //Catch exactly -90°
+    if (angle == samples[0][0]) return samples[0][1];
+
+    // simple linear interpolation
+    for (int idx = 1; idx < sizeof(samples); ++idx) {
+        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
+            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
+            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
+            //TODO add deviation
+            return interpol;
+        }
+    }
+
+    throw cRuntimeError("UAVNode::getSpeedFromAngle() unexpected angle passed");
+    return 0;
+}
+
+/**
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle
+ * Consequently the power usage of the node is based on these factors.
+ * This function will return the battery current drain based on real measurement values and the angle the UAV in ascending/declining flight.
+ * @return the current used by the UAV in [A]
+ */
+double UAVNode::getCurrentFromAngle(double angle) {
+    double samples[11][2] = { //
+        {   -90.0, 16.86701}, //
+        {   -75.6, 17.97695}, //
+        {   -57.9, 17.34978}, //
+        {   -34.8, 17.34384}, //
+        {   -15.6, 15.99054}, //
+        {   000.0, 16.36526}, //
+        {   +15.6, 18.83829}, //
+        {   +34.8, 20.34726}, //
+        {   +57.9, 21.31561}, //
+        {   +75.6, 21.43493}, //
+        {   +90.0, 20.86530}  //
+    };
+
+    //Catch exactly -90°
+    if (angle == samples[0][0]) return samples[0][1];
+
+    // simple linear interpolation
+    for (int idx = 1; idx < sizeof(samples); ++idx) {
+        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
+            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
+            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
+            //TODO add deviation
+            return interpol;
+        }
+    }
+
+    throw cRuntimeError("UAVNode::getCurrentFromAngle() unexpected angle passed");
+    return 0;
+}
+
+double UAVNode::getCurrentHover() {
+    return 18.1;
+}
+
+void UAVNode::move() {
+    //unused.
 }
 
 #endif // WITH_OSG

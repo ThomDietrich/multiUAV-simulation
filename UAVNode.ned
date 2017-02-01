@@ -15,7 +15,6 @@ simple UAVNode extends MobileNode
     parameters:
         @class(UAVNode);
         @display("i=block/broadcast");
-        double speed @unit("mps") = default(10mps);  // the speed of the mobile nodes
         double startX @unit("m") = default(0m);      // the starting coordinates in meter
         double startY @unit("m") = default(0m);      // the starting coordinates in meter
         string trackFile;                            // a file with longitude latitude pairs

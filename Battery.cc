@@ -49,8 +49,7 @@ Battery::Battery(double capacity, double remaining) :
         capacity(capacity), remaining(remaining)
 {
     this->infinite = (capacity == 0) ? true : false;
-    if (remaining > capacity)
-    EV_WARN << "Battery initialized with remaining > capacity" << endl;
+    if (remaining > capacity) EV_WARN << "Battery initialized with remaining > capacity" << endl;
 }
 
 Battery::~Battery() {
@@ -59,7 +58,7 @@ Battery::~Battery() {
 /**
  * Add stored energy.
  *
- * @param amount quantity of energy in mAh to add to the storage
+ * @param amount quantity of energy to add to the storage, in [mAh]
  * @return 'false' if maximum capacity was reached
  */
 bool Battery::charge(double amount) {
@@ -75,7 +74,7 @@ bool Battery::charge(double amount) {
 /**
  * Consume stored energy.
  *
- * @param amount quantity of energy in mAh consumed
+ * @param amount quantity of energy consumed, in [mAh]
  * @return 'false' if more energy was consumed than available
  */
 bool Battery::discharge(double amount) {
@@ -90,7 +89,7 @@ bool Battery::discharge(double amount) {
 }
 
 /**
- * @return difference between maximum capacity and remaining energy in mAh
+ * @return difference between maximum capacity and remaining energy, in [mAh]
  */
 double Battery::getMissing() {
     if (infinite) return 0;
@@ -98,7 +97,7 @@ double Battery::getMissing() {
 }
 
 /**
- * @return remaining energy in mAh
+ * @return remaining energy, in [mAh]
  */
 double Battery::getRemaining() {
     if (infinite) return DBL_MAX;
@@ -106,7 +105,7 @@ double Battery::getRemaining() {
 }
 
 /**
- * @return remaining energy in percentage
+ * @return remaining energy, in percentage
  */
 int Battery::getRemainingPercentage() {
     if (infinite) return 100;
