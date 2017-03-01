@@ -110,7 +110,7 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
             }
         }
     }
-    EV << "ChargingNode selected: " << nearest->getFullName() << endl;
+    //EV << "ChargingNode selected: " << nearest->getFullName() << endl;
     return nearest;
 }
 

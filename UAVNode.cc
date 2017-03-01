@@ -65,24 +65,61 @@ void UAVNode::initialize(int stage) {
  */
 void UAVNode::readWaypointsFromFile(const char *fileName) {
     std::ifstream inputFile(fileName);
+    int lineCnt=1;
+    int cmdId, unknown1, unknown2, commandType;
+    std::string commandName;
+    double p1, p2, p3, p4;
+    double lat, lon, alt;
+    int unknown3;
+
+    // Skip first line (header)
+    std::string str;
+    std::getline(inputFile, str);
+    EV_INFO << "Line " << lineCnt << " skipped" << endl;
+    // Skip second line (home)
+    lineCnt++;
+    std::getline(inputFile, str);
+    EV_INFO << "Line " << lineCnt << " skipped" << endl;
+
     while (true) {
-        std::string commandName;
-        double param1, param2, param3;
-        inputFile >> commandName >> param1 >> param2 >> param3;
+        lineCnt++;
+        inputFile >> cmdId >> unknown1 >> unknown2 >> commandType >> p1 >> p2 >> p3 >> p4 >> lat >> lon >> alt >> unknown3;
+
         if (inputFile.fail()) {
+            EV_INFO << "Line " << lineCnt << " failed" << endl;
             break;
         }
-        if (commandName == "WAYPOINT") {
-            commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(param2), OsgEarthScene::getInstance()->toY(param1), param3));
-        }
-        else if (commandName == "TAKEOFF") {
-            commands.push_back(new TakeoffCommand(param3));
-        }
-        else if (commandName == "HOLDPOSITION") {
-            commands.push_back(new HoldPositionCommand(param3));
-        }
-        else {
-            throw cRuntimeError("readWaypointsFromFile(): Unexpected file content.");
+        EV_INFO << "Line " << lineCnt << " okay" << endl;
+
+        switch (commandType) {
+            case 16: { // WAYPOINT
+                commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
+                break;
+            }
+            case 17: { // LOITER_UNLIM
+                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LOITER_UNLIM");
+                break;
+            }
+            case 19: { // LOITER_TIME
+                commands.push_back(new HoldPositionCommand(p1));
+                break;
+            }
+            case 20: { // RETURN_TO_LAUNCH
+                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: RETURN_TO_LAUNCH");
+                break;
+            }
+            case 21: { // LAND
+                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LAND");
+                break;
+            }
+            case 22: { // TAKEOFF
+                commands.push_back(new TakeoffCommand(alt));
+                break;
+            }
+            default: {
+                throw cRuntimeError("readWaypointsFromFile(): Unexpected file content.");
+                break;
+            }
         }
     }
 }
@@ -107,7 +144,6 @@ void UAVNode::selectNextCommand() {
     ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
-
     double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
     //EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
     
@@ -161,23 +197,22 @@ void UAVNode::selectNextCommand() {
     }
     else if (remaining >= predGoToChargingNodeCEE) {
         // remaining energy to at least go to the charging node
-        EV_WARN << "Energy Management: UAV has to go back now!" << endl;
+        EV_WARN << "Energy Management: UAV will go to charging station " << cn->getFullName() << " now" << endl;
         commandExecEngine = goToChargingNodeCEE;
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         //ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
         commands.push_front(chargeCommand);
     }
     else if (battery.isEmpty()) {
-        throw cRuntimeError("UAV just died. :-(");
+        throw cRuntimeError("Energy Management: UAV just died. :-(");
     }
     else if (remaining < predGoToChargingNodeCEE) {
-        // not enough remaining energy at all
         EV_WARN << "Energy Management: Too late! The UAV is too far from the nearest ChargingNode." << endl;
         commandExecEngine = scheduledCEE;
         commands.pop_front();
     }
     else {
-        throw cRuntimeError("Electing next command based on energy consumption: invalid constellation.");
+        throw cRuntimeError("Energy Management: Electing next command based on energy consumption failed.");
     }
 
 }
@@ -272,7 +307,11 @@ double UAVNode::getSpeedFromAngle(double angle) {
         }
     }
 
-    throw cRuntimeError("UAVNode::getSpeedFromAngle() unexpected angle passed");
+    std::stringstream ss;
+    ss << "UAVNode::getSpeedFromAngle() unexpected angle passed: " << angle;
+    const char* str = ss.str().c_str();
+
+    throw cRuntimeError(str);
     return 0;
 }
 
@@ -316,7 +355,11 @@ double UAVNode::getCurrentFromAngle(double angle) {
         }
     }
 
-    throw cRuntimeError("UAVNode::getCurrentFromAngle() unexpected angle passed");
+    std::stringstream ss;
+    ss << "UAVNode::getCurrentFromAngle() unexpected angle passed: " << angle;
+    const char* str = ss.str().c_str();
+
+    throw cRuntimeError(str);
     return 0;
 }
 

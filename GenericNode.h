@@ -75,7 +75,7 @@ protected:
      * 180° = oriented to the left of the playground
      * 270° = oriented to the top of the playground
      */
-    double yaw;
+    double yaw = 0;
 
     /**
      * pitch/vertical orientation in degrees
@@ -83,7 +83,7 @@ protected:
      * 0° = forward (in yaw direction)
      * 90° = upwards
      */
-    double pitch;
+    double pitch = 0;
 
     /**
      * climb angle (pitch heading) in degrees
@@ -91,7 +91,7 @@ protected:
      * 0° = forward (in yaw direction)
      * 90° = upwards
      */
-    double climbAngle;
+    double climbAngle = 0;
 
     // the node containing the osgEarth data
     osg::observer_ptr<osgEarth::MapNode> mapNode = nullptr;
