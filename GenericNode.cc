@@ -145,7 +145,7 @@ void GenericNode::handleMessage(cMessage *msg) {
         lastUpdate = simTime();
         initializeState();
         msg->setName("update");
-        EV_INFO << "UAV #" << this->getIndex() << " initialized and on its way." << endl;
+        EV_INFO << "UAV initialized and on its way." << endl;
     }
     else if (msg->isName("update")) {
         // update current position to represent position at simTime()
@@ -158,7 +158,7 @@ void GenericNode::handleMessage(cMessage *msg) {
     }
 
     if (commandCompleted()) {
-        EV_INFO << "UAV #" << this->getIndex() << " completed its current command. Selecting next command." << endl;
+        EV_INFO << "Command completed. Selecting next command." << endl;
         selectNextCommand();
         initializeState();
     }

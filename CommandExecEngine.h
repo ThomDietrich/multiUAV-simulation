@@ -43,6 +43,8 @@ protected:
     double x0, y0, z0;
     /// coordinates to where the command is going to
     double x1, y1, z1;
+    /// movement data
+    double yaw = 0, pitch = 0, climbAngle = 0, speed = 0;
 
 public:
     //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
@@ -92,7 +94,9 @@ public:
     
     virtual bool commandCompleted() = 0;
 
-    virtual void initializeState() = 0;
+    virtual void initializeCEE() = 0;
+
+    virtual void setNodeParameters() = 0;
 
     /**
      * Update physical and logical state of the node.
@@ -142,7 +146,8 @@ protected:
 public:
     WaypointCEE(UAVNode &boundNode, WaypointCommand &command);
     bool commandCompleted() override;
-    void initializeState() override;
+    void initializeCEE() override;
+    void setNodeParameters() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;
@@ -163,7 +168,8 @@ protected:
 public:
     TakeoffCEE(UAVNode &boundNode, TakeoffCommand &command);
     bool commandCompleted() override;
-    void initializeState() override;
+    void initializeCEE() override;
+    void setNodeParameters() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;
@@ -184,7 +190,8 @@ protected:
 public:
     HoldPositionCEE(UAVNode &boundNode, HoldPositionCommand &command);
     bool commandCompleted() override;
-    void initializeState() override;
+    void initializeCEE() override;
+    void setNodeParameters() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;
@@ -202,7 +209,8 @@ protected:
 public:
     ChargeCEE(UAVNode &boundNode, ChargeCommand &command);
     bool commandCompleted() override;
-    void initializeState() override;
+    void initializeCEE() override;
+    void setNodeParameters() override;
     void updateState(double stepSize) override;
     double getRemainingTime() override;
     double getCurrent() override;

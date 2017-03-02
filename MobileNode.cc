@@ -94,7 +94,7 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet");
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet.cs");
     //EV_INFO << "MobileNode #" << this->getIndex() << " name: " << this->getFullName() << " parent name: " << osgEarthNet->getFullName() << endl;
-    double minDistance = -1;
+    double minDistance = DBL_MAX;
     ChargingNode *nearest;
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     for (SubmoduleIterator it(network); !it.end(); ++it) {
@@ -104,7 +104,7 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
             ChargingNode *cs = dynamic_cast<ChargingNode *>(mod);
             double distanceSum = fabs(cs->getX() - nodeX) + fabs(cs->getY() - nodeY) + fabs(cs->getZ() - nodeZ);
             //EV << "ChargingNode " << cs->getFullName() << " distanceSum=" << distanceSum << endl;
-            if ((minDistance == -1) || (distanceSum < minDistance)) {
+            if (distanceSum < minDistance) {
                 minDistance = distanceSum;
                 nearest = cs;
             }

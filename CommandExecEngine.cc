@@ -38,34 +38,41 @@ bool WaypointCEE::commandCompleted() {
     return (distanceSum < 1.e-10);
 }
 
-void WaypointCEE::initializeState() {
+void WaypointCEE::initializeCEE() {
     //absolute distance to next waypoint, in meters
     if (this->command == nullptr) {
-        throw cRuntimeError("initializeState(): Command missing.");
+        throw cRuntimeError("initializeCEE(): Command missing.");
     }
     double dx = x1 - node->x;
     double dy = y1 - node->y;
     double dz = z1 - node->z;
     
     //update and store yaw, climbAngle and pitch angles
-    node->yaw = atan2(dy, dx) / M_PI * 180;
-    if (node->yaw < 0) node->yaw += 360;
-    node->climbAngle = atan2(dz, sqrt(dx * dx + dy * dy)) / M_PI * 180;
-    node->pitch = (-1) * node->climbAngle;
+    yaw = atan2(dy, dx) / M_PI * 180;
+    if (yaw < 0) yaw += 360;
+    climbAngle = atan2(dz, sqrt(dx * dx + dy * dy)) / M_PI * 180;
+    pitch = (-1) * climbAngle;
     
     //update speed based on flight angle
-    node->speed = node->getSpeedFromAngle(node->climbAngle);
+    speed = node->getSpeedFromAngle(climbAngle);
+}
+
+void WaypointCEE::setNodeParameters() {
+    node->yaw = yaw;
+    node->pitch = pitch;
+    node->climbAngle = climbAngle;
+    node->speed = speed;
 }
 
 void WaypointCEE::updateState(double stepSize) {
     //distance to move, based on simulation time passed since last update (in [m])
-    double stepDistance = stepSize * node->speed;
+    double stepDistance = stepSize * speed;
     
     //resulting movement broken down to x,y,z (in [m])
-    double stepZ = stepDistance * sin(M_PI * node->climbAngle / 180);
-    double stepXY = stepDistance * cos(M_PI * node->climbAngle / 180);
-    double stepX = stepXY * cos(M_PI * node->yaw / 180);
-    double stepY = stepXY * sin(M_PI * node->yaw / 180);
+    double stepZ = stepDistance * sin(M_PI * climbAngle / 180);
+    double stepXY = stepDistance * cos(M_PI * climbAngle / 180);
+    double stepX = stepXY * cos(M_PI * yaw / 180);
+    double stepY = stepXY * sin(M_PI * yaw / 180);
     node->x += stepX;
     node->y += stepY;
     node->z += stepZ;
@@ -77,18 +84,18 @@ double WaypointCEE::getRemainingTime() {
     double dy = y1 - node->y;
     double dz = z1 - node->z;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
-    return distance / node->speed;
+    return distance / speed;
 }
 
 double WaypointCEE::getCurrent() {
-    return node->getCurrentFromAngle(node->climbAngle);
+    return node->getCurrentFromAngle(climbAngle);
 }
 
 double WaypointCEE::predictConsumption() {
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
-    double time = sqrt(dx * dx + dy * dy + dz * dz) / node->speed;
+    double time = sqrt(dx * dx + dy * dy + dz * dz) / speed;
     //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << time << "s" << endl;
     return (getCurrent() * 1000 * time / 3600);
 }
@@ -113,16 +120,22 @@ bool TakeoffCEE::commandCompleted() {
     return (distanceSum < 1.e-10);
 }
 
-void TakeoffCEE::initializeState() {
-    node->pitch = 0;
-    node->climbAngle = (z1 > node->z) ? 90 : -90;
+void TakeoffCEE::initializeCEE() {
+    pitch = 0;
+    climbAngle = (z1 > node->z) ? 90 : -90;
     
     //update speed based on flight angle
-    node->speed = node->getSpeedFromAngle(node->climbAngle);
+    speed = node->getSpeedFromAngle(climbAngle);
+}
+
+void TakeoffCEE::setNodeParameters() {
+    node->pitch = pitch;
+    node->climbAngle = climbAngle;
+    node->speed = speed;
 }
 
 void TakeoffCEE::updateState(double stepSize) {
-    double stepDistance = node->speed * stepSize;
+    double stepDistance = speed * stepSize;
     if (z1 > node->z)
         node->z += stepDistance;
     else
@@ -132,15 +145,15 @@ void TakeoffCEE::updateState(double stepSize) {
 }
 
 double TakeoffCEE::getRemainingTime() {
-    return fabs(z1 - node->z) / node->speed;
+    return fabs(z1 - node->z) / speed;
 }
 
 double TakeoffCEE::getCurrent() {
-    return node->getCurrentFromAngle(node->climbAngle);
+    return node->getCurrentFromAngle(climbAngle);
 }
 
 double TakeoffCEE::predictConsumption() {
-    double overallTime = fabs(z1 - z0) / node->speed;
+    double overallTime = fabs(z1 - z0) / speed;
     return (getCurrent() * 1000 * overallTime / 3600);
 }
 
@@ -165,10 +178,16 @@ bool HoldPositionCEE::commandCompleted() {
     return (simTime() == this->holdPositionTill) ? true : false;
 }
 
-void HoldPositionCEE::initializeState() {
-    //node->yaw = node->yaw;
-    node->climbAngle = 0;
-    node->pitch = 0;
+void HoldPositionCEE::initializeCEE() {
+    //yaw = yaw;
+    pitch = 0;
+    climbAngle = 0;
+}
+
+void HoldPositionCEE::setNodeParameters() {
+    //node->yaw = yaw;
+    node->pitch = pitch;
+    node->climbAngle = climbAngle;
 }
 
 void HoldPositionCEE::updateState(double stepSize) {
@@ -209,17 +228,31 @@ bool ChargeCEE::commandCompleted() {
     return (node->battery.isFull());
 }
 
-void ChargeCEE::initializeState() {
-    EV_INFO << "Charge Command initiated" << endl;
-    node->climbAngle = 0;
-    node->pitch = 0;
+void ChargeCEE::initializeCEE() {
+    pitch = 0;
+    climbAngle = 0;
     //TODO connect to Charging station
     //cMessage *request = new cMessage("startCharge");
     //this->command->getChargingNode()->scheduleAt(simTime(), request);
 }
 
+void ChargeCEE::setNodeParameters() {
+    node->pitch = pitch;
+    node->climbAngle = climbAngle;
+}
+
 void ChargeCEE::updateState(double stepSize) {
-    node->battery.charge(getCurrent() * 1000 * stepSize / 3600);
+    float chargeAmount = getCurrent() * 1000 * stepSize / 3600;
+    node->battery.charge(chargeAmount);
+    
+    // Charging state log report
+    int statusReport = 20; // reported these much values between 0..100%
+    float statusReportChargeSteps = (node->battery.getCapacity() / statusReport);
+    //EV_DEBUG << "chargeAmount " << chargeAmount << " statusReportChargeSteps " << statusReportChargeSteps << " node->battery.getRemaining() "
+    //        << node->battery.getRemaining() << " fmod " << fmod(node->battery.getRemaining(), statusReportChargeSteps) << endl;
+    if (fmod(node->battery.getRemaining(), statusReportChargeSteps) < chargeAmount) {
+        EV_INFO << "Energy Management: Recharging... " << node->battery.getRemainingPercentage() << "%" << endl;
+    }
 }
 
 double ChargeCEE::getRemainingTime() {
@@ -227,7 +260,7 @@ double ChargeCEE::getRemainingTime() {
 }
 
 double ChargeCEE::getCurrent() {
-    // 3DR Solo: 5200 mAh in 1.5h = 3.5A constant
+// 3DR Solo: 5200 mAh in 1.5h = 3.5A constant
     return 3.5;
 }
 

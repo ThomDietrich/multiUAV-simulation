@@ -33,7 +33,7 @@ Battery::Battery() :
  *
  * @param capacity the size of the battery in mAh (e.g. 2200)
  */
-Battery::Battery(double capacity) :
+Battery::Battery(float capacity) :
         capacity(capacity), remaining(capacity)
 {
     this->infinite = (capacity == 0) ? true : false;
@@ -45,7 +45,7 @@ Battery::Battery(double capacity) :
  * @param capacity the size of the battery in mAh (e.g. 2200)
  * @param remaining the remaining energy in the battery at creation (e.g. 1500)
  */
-Battery::Battery(double capacity, double remaining) :
+Battery::Battery(float capacity, float remaining) :
         capacity(capacity), remaining(remaining)
 {
     this->infinite = (capacity == 0) ? true : false;
@@ -61,7 +61,7 @@ Battery::~Battery() {
  * @param amount quantity of energy to add to the storage, in [mAh]
  * @return 'false' if maximum capacity was reached
  */
-bool Battery::charge(double amount) {
+bool Battery::charge(float amount) {
     if (infinite) return true;
     remaining += amount;
     if (remaining > capacity) {
@@ -77,7 +77,7 @@ bool Battery::charge(double amount) {
  * @param amount quantity of energy consumed, in [mAh]
  * @return 'false' if more energy was consumed than available
  */
-bool Battery::discharge(double amount) {
+bool Battery::discharge(float amount) {
     if (infinite) return true;
     remaining -= amount;
     if (remaining < 0) {
@@ -89,9 +89,16 @@ bool Battery::discharge(double amount) {
 }
 
 /**
+ * @return the absolute capacity of the battery, in [mAh]
+ */
+float Battery::getCapacity() {
+    return capacity;
+}
+
+/**
  * @return difference between maximum capacity and remaining energy, in [mAh]
  */
-double Battery::getMissing() {
+float Battery::getMissing() {
     if (infinite) return 0;
     return capacity - remaining;
 }
@@ -99,8 +106,8 @@ double Battery::getMissing() {
 /**
  * @return remaining energy, in [mAh]
  */
-double Battery::getRemaining() {
-    if (infinite) return DBL_MAX;
+float Battery::getRemaining() {
+    if (infinite) return FLT_MAX;
     return remaining;
 }
 

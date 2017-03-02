@@ -86,11 +86,11 @@ void UAVNode::readWaypointsFromFile(const char *fileName) {
         inputFile >> cmdId >> unknown1 >> unknown2 >> commandType >> p1 >> p2 >> p3 >> p4 >> lat >> lon >> alt >> unknown3;
 
         if (inputFile.fail()) {
-            EV_INFO << "Line " << lineCnt << " failed" << endl;
+            EV_INFO << "Line " << lineCnt << " failed (EOF? TODO)" << endl;
             break;
         }
-        EV_INFO << "Line " << lineCnt << " okay" << endl;
-
+        //EV_INFO << "Line " << lineCnt << " okay" << endl;
+        
         switch (commandType) {
             case 16: { // WAYPOINT
                 commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
@@ -136,14 +136,16 @@ void UAVNode::selectNextCommand() {
     }
 
     double remaining = this->battery.getRemaining();
-    EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
-
+    //EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
+    
     //
     // Get consumption to go to CS now
     //
     ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+    //EV_INFO << "Consumption GoToChargingNode UAV(" << getX() << "," << getY() << "," << getZ() << ") CN(" << cn->getX() << "," << cn->getY() << "," << cn->getZ() << ")" << endl;
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+    goToChargingNodeCEE->initializeCEE();
     double predGoToChargingNodeCEE = goToChargingNodeCEE->predictConsumption();
     //EV_INFO << "Consumption GoToChargingNode=" << predGoToChargingNodeCEE << "mAh " << endl;
     
@@ -169,6 +171,7 @@ void UAVNode::selectNextCommand() {
     //
     // Get consumption for next Command
     //
+    scheduledCEE->initializeCEE();
     double predScheduledCEE = scheduledCEE->predictConsumption();
     //EV_INFO << "Consumption "<< scheduledCEE->getCeeTypeString() << " command=" << predScheduledCEE << "mAh, " << endl;
     
@@ -180,6 +183,7 @@ void UAVNode::selectNextCommand() {
     CommandExecEngine *goToChargingNodeCEE2 = new WaypointCEE(*this, *goToChargingNode2);
     goToChargingNodeCEE2->setFromCoordinates(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
 
+    goToChargingNodeCEE2->initializeCEE();
     double predGoToChargingNodeCEE2 = goToChargingNodeCEE2->predictConsumption();
     //EV_INFO << "Consumption GoToChargingNode (after Command)=" << predGoToChargingNodeCEE2 << "mAh" << endl;
     //EV_INFO << "Consumption Command + GoToChargingNode=" << predScheduledCEE + predGoToChargingNodeCEE2 << "mAh" << endl;
@@ -189,31 +193,36 @@ void UAVNode::selectNextCommand() {
     //
     delete commandExecEngine;
 
-    if (remaining >= predScheduledCEE + predGoToChargingNodeCEE2) {
-        // remaining energy for next command + going to charging node + more
-        EV_INFO << "Energy Management: OK. UAV has enough energy to continue" << endl;
-        commandExecEngine = scheduledCEE;
-        commands.pop_front();
-    }
-    else if (remaining >= predGoToChargingNodeCEE) {
-        // remaining energy to at least go to the charging node
-        EV_WARN << "Energy Management: UAV will go to charging station " << cn->getFullName() << " now" << endl;
-        commandExecEngine = goToChargingNodeCEE;
-        ChargeCommand *chargeCommand = new ChargeCommand(cn);
-        //ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
-        commands.push_front(chargeCommand);
+    if (scheduledCEE->getCeeType() == CHARGE) {
+        EV_INFO << "Energy Management: Recharging now." << endl;
     }
     else if (battery.isEmpty()) {
-        throw cRuntimeError("Energy Management: UAV just died. :-(");
+        EV_ERROR << "Energy Management: One of our precious UAVs just died :-(" << endl;
+        //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
     }
-    else if (remaining < predGoToChargingNodeCEE) {
-        EV_WARN << "Energy Management: Too late! The UAV is too far from the nearest ChargingNode." << endl;
-        commandExecEngine = scheduledCEE;
+    else if (remaining >= predScheduledCEE + predGoToChargingNodeCEE2) {
+        // remaining energy for next command + going to charging node + more
+        EV_INFO << "Energy Management: OK. UAV has enough energy to continue." << endl;
+    }
+    else {    //if (remaining >= predGoToChargingNodeCEE) {
+              // remaining energy to at least go to the charging node
+        EV_WARN << "Energy Management: UAV will go to charging station " << cn->getIndex() << " now." << endl;
+              // Inject charging command after scheduled command
+        ChargeCommand *chargeCommand = new ChargeCommand(cn);
+        Command *scheduledCommand = commands.front();
         commands.pop_front();
+        commands.push_front(chargeCommand);
+        commands.push_front(scheduledCommand);
+        scheduledCEE = goToChargingNodeCEE;
     }
-    else {
-        throw cRuntimeError("Energy Management: Electing next command based on energy consumption failed.");
-    }
+    //else if (remaining < predGoToChargingNodeCEE) {
+    //    EV_WARN << "Energy Management: Too late! The UAV is too far from the nearest ChargingNode. (" << remaining << "<" << predGoToChargingNodeCEE << " mAh)" << endl;
+    //}
+    //else {
+    //    throw cRuntimeError("Energy Management: Electing next command based on energy consumption failed.");
+    //}
+    commandExecEngine = scheduledCEE;
+    commands.pop_front();
 
 }
 
@@ -221,7 +230,8 @@ void UAVNode::initializeState() {
     if (commandExecEngine == nullptr) {
         throw cRuntimeError("initializeState(): Command Engine missing.");
     }
-    commandExecEngine->initializeState();
+    commandExecEngine->initializeCEE();
+    commandExecEngine->setNodeParameters();
 
     std::string text(getFullName());
     switch (commandExecEngine->getCeeType()) {
@@ -242,11 +252,11 @@ void UAVNode::initializeState() {
 }
 
 void UAVNode::updateState() {
-    //distance to move, based on simulation time passed since last update
+//distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-    //update sublabel with battery info
+//update sublabel with battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s | " << commandExecEngine->getCurrent() << " A | " << battery.getRemainingPercentage() << " % | " << commandExecEngine->getRemainingTime() << " s left";
     std::string str = strs.str();
@@ -262,16 +272,6 @@ bool UAVNode::commandCompleted() {
  */
 double UAVNode::nextNeededUpdate() {
     return commandExecEngine->getRemainingTime();
-}
-
-//obsolete
-int UAVNode::normalizeAngle(int angle) {
-    int newAngle = angle;
-    while (newAngle <= -180)
-    newAngle += 360;
-    while (newAngle > 180)
-    newAngle -= 360;
-    return newAngle;
 }
 
 /**
@@ -294,10 +294,10 @@ double UAVNode::getSpeedFromAngle(double angle) {
         {   +90.0, 2.719048}  //
     };
 
-    //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
-    // simple linear interpolation
+// simple linear interpolation
     for (int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
@@ -336,10 +336,10 @@ double UAVNode::getCurrentFromAngle(double angle) {
         {   +90.0, 20.86530, 0.7350855}  //
     };
 
-    //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
-    // simple linear interpolation
+// simple linear interpolation
     for (int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
@@ -372,7 +372,7 @@ double UAVNode::getCurrentHover() {
 }
 
 void UAVNode::move() {
-    //unused.
+//unused.
 }
 
 #endif // WITH_OSG

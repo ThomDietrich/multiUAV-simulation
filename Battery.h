@@ -23,22 +23,23 @@ using namespace omnetpp;
 class Battery {
 protected:
     /** the size of the battery in mAh (e.g. 2200) */
-    double capacity;
+    float capacity;
 
     /** the remaining energy in the battery at creation (e.g. 1500) */
-    double remaining;
+    float remaining;
 
     /** if 'true', the battery is always full and never empty */
     bool infinite;
 public:
     Battery();
-    Battery(double capacity);
-    Battery(double capacity, double remaining);
+    Battery(float capacity);
+    Battery(float capacity, float remaining);
     virtual ~Battery();
-    bool charge(double amount);
-    bool discharge(double amount);
-    double getMissing();
-    double getRemaining();
+    bool charge(float amount);
+    bool discharge(float amount);
+    float getCapacity();
+    float getMissing();
+    float getRemaining();
     int getRemainingPercentage();
     bool isEmpty();
     bool isFull();
