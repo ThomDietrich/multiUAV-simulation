@@ -31,4 +31,6 @@ simple GenericNode
         // simulation
         double timeStep @unit("s") = default(33ms);  // the time granularity of movement calculation
         double startTime @unit("s") = default(0s);   // time when the movement starts
+    gates:
+        inout gate[];
 }

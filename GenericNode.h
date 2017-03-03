@@ -45,8 +45,6 @@ public:
     virtual double getPitch() const = 0;
 };
 
-typedef std::deque<Command*> CommandQueue;
-
 class GenericNode : public cSimpleModule, public IGenericNode {
     
 protected:
@@ -67,7 +65,7 @@ protected:
 
     // state
     double x, y, z; // relative to playground origin (top left) in meters
-
+            
     /**
      * yaw/horizontal orientation in degrees
      * 0° = oriented to the right of the playground
@@ -139,7 +137,9 @@ public:
     double getClimbAngle() const {
         return climbAngle;
     }
-    
+    virtual bool hasCommandsInQueue();
+    virtual void loadCommands(CommandQueue queue);
+
 protected:
     virtual void initialize(int stage) override;
     virtual int numInitStages() const override {

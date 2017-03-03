@@ -16,7 +16,11 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
+#include <omnetpp.h>
 #include <string>
+#include <deque>
+
+using namespace omnetpp;
 
 class Command {
 protected:
@@ -42,6 +46,11 @@ public:
         return z;
     }
 };
+
+/**
+ * A set of commands, generated from `*.waypoints` files, used by Nodes
+ */
+typedef std::deque<Command*> CommandQueue;
 
 /**
  * The vehicle will fly a straight line to the location specified as a lat, lon and altitude (in meters).

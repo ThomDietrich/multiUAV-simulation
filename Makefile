@@ -49,6 +49,7 @@ OBJS = \
     $O/CommandExecEngine.o \
     $O/fallback.o \
     $O/GenericNode.o \
+    $O/MissionControl.o \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
     $O/UAVNode.o
@@ -200,6 +201,16 @@ $O/GenericNode.o: GenericNode.cc \
 	CommandExecEngine.h \
 	GenericNode.h \
 	OsgEarthScene.h
+$O/MissionControl.o: MissionControl.cc \
+	Battery.h \
+	ChargingNode.h \
+	Command.h \
+	CommandExecEngine.h \
+	GenericNode.h \
+	MissionControl.h \
+	MobileNode.h \
+	OsgEarthScene.h \
+	UAVNode.h
 $O/MobileNode.o: MobileNode.cc \
 	Battery.h \
 	ChargingNode.h \

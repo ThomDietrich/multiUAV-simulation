@@ -39,11 +39,6 @@ void UAVNode::initialize(int stage) {
     MobileNode::initialize(stage);
     switch (stage) {
         case 0: {
-            // fill the track
-            for (int _ = 0; _ < 100; ++_) {
-                //Dirty little hack for enough waypoints
-                readWaypointsFromFile(par("trackFile"));
-            }
             // initial position
             x = par("startX");
             y = par("startY");
@@ -58,73 +53,6 @@ void UAVNode::initialize(int stage) {
 }
 
 /**
- * Load commands from a text file.
- * This method is temporary and will be replaced by a Mission Control
- *
- * @param fileName
- */
-void UAVNode::readWaypointsFromFile(const char *fileName) {
-    std::ifstream inputFile(fileName);
-    int lineCnt=1;
-    int cmdId, unknown1, unknown2, commandType;
-    std::string commandName;
-    double p1, p2, p3, p4;
-    double lat, lon, alt;
-    int unknown3;
-
-    // Skip first line (header)
-    std::string str;
-    std::getline(inputFile, str);
-    EV_INFO << "Line " << lineCnt << " skipped" << endl;
-    // Skip second line (home)
-    lineCnt++;
-    std::getline(inputFile, str);
-    EV_INFO << "Line " << lineCnt << " skipped" << endl;
-
-    while (true) {
-        lineCnt++;
-        inputFile >> cmdId >> unknown1 >> unknown2 >> commandType >> p1 >> p2 >> p3 >> p4 >> lat >> lon >> alt >> unknown3;
-
-        if (inputFile.fail()) {
-            EV_INFO << "Line " << lineCnt << " failed (EOF? TODO)" << endl;
-            break;
-        }
-        //EV_INFO << "Line " << lineCnt << " okay" << endl;
-        
-        switch (commandType) {
-            case 16: { // WAYPOINT
-                commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
-                break;
-            }
-            case 17: { // LOITER_UNLIM
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LOITER_UNLIM");
-                break;
-            }
-            case 19: { // LOITER_TIME
-                commands.push_back(new HoldPositionCommand(p1));
-                break;
-            }
-            case 20: { // RETURN_TO_LAUNCH
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: RETURN_TO_LAUNCH");
-                break;
-            }
-            case 21: { // LAND
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LAND");
-                break;
-            }
-            case 22: { // TAKEOFF
-                commands.push_back(new TakeoffCommand(alt));
-                break;
-            }
-            default: {
-                throw cRuntimeError("readWaypointsFromFile(): Unexpected file content.");
-                break;
-            }
-        }
-    }
-}
-
-/**
  * Fetches the next command from the commands queue and creates a corresponding CEE.
  *
  * @throws cRuntimeError if no commands left in queue
@@ -132,7 +60,7 @@ void UAVNode::readWaypointsFromFile(const char *fileName) {
 void UAVNode::selectNextCommand() {
 
     if (commands.size() == 0) {
-        throw cRuntimeError("loadNextCommand(): UAV has no commands left.");
+        throw cRuntimeError("selectNextCommand(): UAV has no commands left.");
     }
 
     double remaining = this->battery.getRemaining();

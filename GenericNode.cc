@@ -114,8 +114,8 @@ void GenericNode::initialize(int stage) {
         mapNode->getModelLayerGroup()->addChild(locatorNode);
 
         // schedule start of the mission for each node (may be delayed by ned parameter)
-        cMessage *timer = new cMessage("startMission");
-        scheduleAt(par("startTime"), timer);
+        //cMessage *timer = new cMessage("startMission");
+        //scheduleAt(par("startTime"), timer);
         break;
     }
 }
@@ -140,7 +140,6 @@ void GenericNode::refreshDisplay() const {
 
 void GenericNode::handleMessage(cMessage *msg) {
     if (msg->isName("startMission")) {
-        //only at the beginning in the simulation, after a delayed 'startTime' in ned file
         selectNextCommand();
         lastUpdate = simTime();
         initializeState();
@@ -158,10 +157,19 @@ void GenericNode::handleMessage(cMessage *msg) {
     }
 
     if (commandCompleted()) {
-        EV_INFO << "Command completed. Selecting next command." << endl;
-        selectNextCommand();
-        initializeState();
+        if (hasCommandsInQueue()) {
+            EV_INFO << "Command completed. Selecting next command." << endl;
+            selectNextCommand();
+            initializeState();
+        }
+        else {
+            EV_INFO << "Command completed. Queue empty." << endl;
+            delete msg;
+            return;
+        }
     }
+
+    //TODO move inside condition
 
     // let the node decide when the next simulation step should happen
     double stepSize = nextNeededUpdate();
@@ -171,6 +179,25 @@ void GenericNode::handleMessage(cMessage *msg) {
     lastUpdate = simTime();
     scheduleAt(lastUpdate + stepSize, msg);
 
+}
+
+/**
+ * Check if the Node has Commands to execute
+ *
+ * @return 'true' if commands are available
+ */
+bool GenericNode::hasCommandsInQueue() {
+    return (not commands.empty());
+}
+
+/**
+ * Load a given command queue as the new command queue of the Node
+ *
+ * @param queue
+ */
+void GenericNode::loadCommands(CommandQueue queue) {
+    if (hasCommandsInQueue()) EV_WARN << "Overwriting existing command queue..." << endl;
+    this->commands = queue;
 }
 
 #endif // WITH_OSG

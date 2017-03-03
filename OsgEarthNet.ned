@@ -27,9 +27,16 @@ network OsgEarthNet
         int numUAVs = default(0);  // the number of UAVs in the field
         int numCSs = default(0);  // the number of charging stations in the field
 
+    types:
+        channel Channel extends ned.DelayChannel {
+            delay = 100ms;
+        }
     submodules:
         osgEarthScene: OsgEarthScene {
             @display("p=74,31");
+        }
+        missionControl: MissionControl {
+            @display("p=74,150");
         }
         channelController: ChannelController {
             @display("p=243,31");
@@ -40,4 +47,11 @@ network OsgEarthNet
         cs[numCSs]: ChargingNode {
             @display("p=150,100");
         }
+
+    connections:
+        missionControl.gate++ <--> Channel <--> uav[0].gate++;
+        missionControl.gate++ <--> Channel <--> uav[1].gate++;
+        missionControl.gate++ <--> Channel <--> uav[2].gate++;
+        missionControl.gate++ <--> Channel <--> uav[3].gate++;
+        missionControl.gate++ <--> Channel <--> uav[4].gate++;
 }
