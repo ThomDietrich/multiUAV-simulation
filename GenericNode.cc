@@ -139,16 +139,42 @@ void GenericNode::refreshDisplay() const {
 }
 
 void GenericNode::handleMessage(cMessage *msg) {
+    double stepSize = 0;
     if (msg->isName("startMission")) {
+        MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
+        loadCommands(mmmsg->getMission());
+        commandsRepeat = mmmsg->getMissionRepeat();
         selectNextCommand();
-        lastUpdate = simTime();
         initializeState();
-        msg->setName("update");
         EV_INFO << "UAV initialized and on its way." << endl;
+        delete msg;
+        msg = new cMessage("update");
+        stepSize = 0;
     }
     else if (msg->isName("update")) {
         // update current position to represent position at simTime()
         updateState();
+
+        // let the node decide when the next simulation step should happen
+        stepSize = nextNeededUpdate();
+        stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
+
+        if (commandCompleted()) {
+            msg->setName("nextCommand");
+            stepSize = 0;
+        }
+    }
+    else if (msg->isName("nextCommand")) {
+        if (not hasCommandsInQueue()) {
+            EV_INFO << "Command completed. Queue empty." << endl;
+            delete msg;
+            return;
+        }
+        EV_INFO << "Command completed. Selecting next command." << endl;
+        selectNextCommand();
+        initializeState();
+        msg->setName("update");
+
     }
     else {
         std::string message = "Unknown message name encountered: ";
@@ -156,29 +182,9 @@ void GenericNode::handleMessage(cMessage *msg) {
         throw cRuntimeError(message.c_str());
     }
 
-    if (commandCompleted()) {
-        if (hasCommandsInQueue()) {
-            EV_INFO << "Command completed. Selecting next command." << endl;
-            selectNextCommand();
-            initializeState();
-        }
-        else {
-            EV_INFO << "Command completed. Queue empty." << endl;
-            delete msg;
-            return;
-        }
-    }
-
-    //TODO move inside condition
-
-    // let the node decide when the next simulation step should happen
-    double stepSize = nextNeededUpdate();
-    stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
-
     // schedule next update
     lastUpdate = simTime();
     scheduleAt(lastUpdate + stepSize, msg);
-
 }
 
 /**

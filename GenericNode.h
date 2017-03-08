@@ -26,6 +26,7 @@
 #include "OsgEarthScene.h"
 #include "Command.h"
 #include "CommandExecEngine.h"
+#include "MissionMsg_m.h"
 
 using namespace omnetpp;
 
@@ -62,6 +63,8 @@ protected:
     CommandQueue commands;
     //instance of CEE subclass, contains current command
     CommandExecEngine *commandExecEngine = nullptr;
+    //repeat commands, rotate queue
+    bool commandsRepeat = false;
 
     // state
     double x, y, z; // relative to playground origin (top left) in meters

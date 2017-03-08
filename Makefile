@@ -52,10 +52,12 @@ OBJS = \
     $O/MissionControl.o \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
-    $O/UAVNode.o
+    $O/UAVNode.o \
+    $O/MissionMsg_m.o
 
 # Message files
-MSGFILES =
+MSGFILES = \
+    MissionMsg.msg
 
 # SM files
 SMFILES =
@@ -175,6 +177,7 @@ $O/ChannelController.o: ChannelController.cc \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
+	MissionMsg_m.h \
 	OsgEarthScene.h
 $O/ChargingNode.o: ChargingNode.cc \
 	Battery.h \
@@ -182,6 +185,7 @@ $O/ChargingNode.o: ChargingNode.cc \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
+	MissionMsg_m.h \
 	MobileNode.h \
 	OsgEarthScene.h
 $O/Command.o: Command.cc \
@@ -192,6 +196,7 @@ $O/CommandExecEngine.o: CommandExecEngine.cc \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
+	MissionMsg_m.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h
@@ -200,6 +205,7 @@ $O/GenericNode.o: GenericNode.cc \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
+	MissionMsg_m.h \
 	OsgEarthScene.h
 $O/MissionControl.o: MissionControl.cc \
 	Battery.h \
@@ -208,15 +214,20 @@ $O/MissionControl.o: MissionControl.cc \
 	CommandExecEngine.h \
 	GenericNode.h \
 	MissionControl.h \
+	MissionMsg_m.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h
+$O/MissionMsg_m.o: MissionMsg_m.cc \
+	Command.h \
+	MissionMsg_m.h
 $O/MobileNode.o: MobileNode.cc \
 	Battery.h \
 	ChargingNode.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
+	MissionMsg_m.h \
 	MobileNode.h \
 	OsgEarthScene.h
 $O/OsgEarthScene.o: OsgEarthScene.cc \
@@ -228,6 +239,7 @@ $O/UAVNode.o: UAVNode.cc \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
+	MissionMsg_m.h \
 	MobileNode.h \
 	OsgEarthScene.h \
 	UAVNode.h

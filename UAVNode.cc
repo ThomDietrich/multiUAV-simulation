@@ -149,9 +149,15 @@ void UAVNode::selectNextCommand() {
     //else {
     //    throw cRuntimeError("Energy Management: Electing next command based on energy consumption failed.");
     //}
+
     commandExecEngine = scheduledCEE;
+    Command *finishedCommand = commands.front();
     commands.pop_front();
 
+    // reinject command (if no charging command)
+    if (commandsRepeat and not dynamic_cast<ChargeCommand *>(finishedCommand)) {
+        commands.push_back(finishedCommand);
+    }
 }
 
 void UAVNode::initializeState() {

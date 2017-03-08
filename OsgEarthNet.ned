@@ -54,4 +54,5 @@ network OsgEarthNet
         missionControl.gate++ <--> Channel <--> uav[2].gate++;
         missionControl.gate++ <--> Channel <--> uav[3].gate++;
         missionControl.gate++ <--> Channel <--> uav[4].gate++;
+        missionControl.gate++ <--> Channel <--> uav[5].gate++;
 }

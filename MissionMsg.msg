@@ -13,28 +13,20 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef __MULTIUAV_MISSIONCONTROL_H_
-#define __MULTIUAV_MISSIONCONTROL_H_
-
-#include <omnetpp.h>
-#include "OsgEarthScene.h"
+cplusplus {{
 #include "Command.h"
-#include "UAVNode.h"
-#include "MissionMsg_m.h"
+typedef std::deque<Command*> CommandQueue;
+}};
 
-using namespace omnetpp;
+class noncobject CommandQueue;
 
-/**
- * TODO - Generated class
- */
-class MissionControl : public cSimpleModule {
-private:
-    CommandQueue queue[3];
-protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
-    virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
-    virtual UAVNode* selectUAVNode();
-};
-
-#endif
+//
+// TODO generated message class
+//
+message MissionMsg {
+    int source = 0;
+    int destination = 0;
+    CommandQueue mission;
+    int missionId;
+    bool missionRepeat = false;
+}

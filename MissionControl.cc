@@ -18,7 +18,10 @@
 Define_Module (MissionControl);
 
 void MissionControl::initialize() {
-    // schedule start of the mission for each node (may be delayed by ned parameter)
+    queue[0] = loadCommandsFromWaypointsFile("BostonParkCircle.waypoints");
+    queue[1] = loadCommandsFromWaypointsFile("BostonParkLine.waypoints");
+    queue[2] = loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints");
+    
     cMessage *start = new cMessage("startScheduling");
     scheduleAt(par("startTime"), start);
 }
@@ -26,16 +29,50 @@ void MissionControl::initialize() {
 void MissionControl::handleMessage(cMessage *msg) {
     if (msg->isName("startScheduling")) {
         EV_INFO << "Mission Control Scheduling started." << endl;
-        CommandQueue test1 = loadCommandsFromWaypointsFile("BostonParkCircle.waypoints");
-        CommandQueue test2 = loadCommandsFromWaypointsFile("BostonParkLine.waypoints");
-        CommandQueue test3 = loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints");
         
-        UAVNode *selected = selectUAVNode();
+        MissionMsg *uavStart;
+        UAVNode *selected;
         
-        selected->loadCommands(test1);
-
-        cMessage *uavStart = new cMessage("startMission");
-        send(uavStart, "gate$o", selected->getIndex());
+        selected = selectUAVNode();
+        if (selected) {
+            selected->loadCommands(queue[0]); //TODO dirty hack
+            uavStart = new MissionMsg("startMission");
+            uavStart->setMissionId(0);
+            uavStart->setMission(queue[0]);
+            uavStart->setMissionRepeat(true);
+            send(uavStart, "gate$o", selected->getIndex());
+        }
+        
+        selected = selectUAVNode();
+        if (selected) {
+            selected->loadCommands(queue[1]); //TODO dirty hack
+            uavStart = new MissionMsg("startMission");
+            uavStart->setMissionId(1);
+            uavStart->setMission(queue[1]);
+            uavStart->setMissionRepeat(true);
+            send(uavStart, "gate$o", selected->getIndex());
+        }
+        
+        selected = selectUAVNode();
+        if (selected) {
+            selected->loadCommands(queue[2]); //TODO dirty hack
+            uavStart = new MissionMsg("startMission");
+            uavStart->setMissionId(2);
+            uavStart->setMission(queue[2]);
+            uavStart->setMissionRepeat(true);
+            send(uavStart, "gate$o", selected->getIndex());
+        }
+        
+        //cMessage *start = new cMessage("startScheduling");
+        //scheduleAt(simTime() + 600, start);
+    }
+    else if (msg->isName("completedMission")) {
+        
+    }
+    else {
+        std::string message = "Unknown message name encountered: ";
+        message += msg->getFullName();
+        throw cRuntimeError(message.c_str());
     }
 }
 
@@ -110,13 +147,14 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
 
 UAVNode* MissionControl::selectUAVNode() {
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
-    UAVNode *result;
+    UAVNode *uav;
     for (SubmoduleIterator it(network); !it.end(); ++it) {
         cModule *mod = *it;
         if (mod->isName("uav")) {
-            EV_INFO << "MissionControl::selectUAVNode(): " << mod->getName() << mod->getFullName() << mod->getFullPath() << endl;
-            result = dynamic_cast<UAVNode *>(mod);
-            if (not result->hasCommandsInQueue()) return result;
+            uav = check_and_cast<UAVNode *>(mod);
+            if (uav->hasCommandsInQueue()) continue;
+            EV_INFO << "MissionControl::selectUAVNode(): " << uav->getName() << uav->getFullName() << uav->getFullPath() << endl;
+            return uav;
         }
     }
     EV_WARN << "MissionControl::selectUAVNode(): No available Nodes found." << endl;
