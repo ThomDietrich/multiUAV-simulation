@@ -27,6 +27,7 @@
 #include "Command.h"
 #include "CommandExecEngine.h"
 #include "MissionMsg_m.h"
+#include "CmdCompletedMsg_m.h"
 
 using namespace omnetpp;
 
@@ -160,6 +161,7 @@ protected:
      */
     virtual void initializeState() = 0;
     virtual double nextNeededUpdate() = 0;
+    virtual simtime_t endOfOperation() = 0;
 };
 
 #endif

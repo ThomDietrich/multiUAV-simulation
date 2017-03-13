@@ -53,10 +53,12 @@ OBJS = \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
     $O/UAVNode.o \
+    $O/CmdCompletedMsg_m.o \
     $O/MissionMsg_m.o
 
 # Message files
 MSGFILES = \
+    CmdCompletedMsg.msg \
     MissionMsg.msg
 
 # SM files
@@ -174,6 +176,7 @@ $O/Battery.o: Battery.cc \
 	Battery.h
 $O/ChannelController.o: ChannelController.cc \
 	ChannelController.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -182,17 +185,21 @@ $O/ChannelController.o: ChannelController.cc \
 $O/ChargingNode.o: ChargingNode.cc \
 	Battery.h \
 	ChargingNode.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
 	MissionMsg_m.h \
 	MobileNode.h \
 	OsgEarthScene.h
+$O/CmdCompletedMsg_m.o: CmdCompletedMsg_m.cc \
+	CmdCompletedMsg_m.h
 $O/Command.o: Command.cc \
 	Command.h
 $O/CommandExecEngine.o: CommandExecEngine.cc \
 	Battery.h \
 	ChargingNode.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -202,6 +209,7 @@ $O/CommandExecEngine.o: CommandExecEngine.cc \
 	UAVNode.h
 $O/GenericNode.o: GenericNode.cc \
 	ChannelController.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -210,6 +218,7 @@ $O/GenericNode.o: GenericNode.cc \
 $O/MissionControl.o: MissionControl.cc \
 	Battery.h \
 	ChargingNode.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -224,6 +233,7 @@ $O/MissionMsg_m.o: MissionMsg_m.cc \
 $O/MobileNode.o: MobileNode.cc \
 	Battery.h \
 	ChargingNode.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \
@@ -236,6 +246,7 @@ $O/UAVNode.o: UAVNode.cc \
 	Battery.h \
 	ChannelController.h \
 	ChargingNode.h \
+	CmdCompletedMsg_m.h \
 	Command.h \
 	CommandExecEngine.h \
 	GenericNode.h \

@@ -24,13 +24,13 @@ using namespace omnetpp;
 
 class Command {
 protected:
-    std::string messageName;
-    void setMessageName(std::string);
-    double x, y, z;  // in meters, relative to playground origin
+    const char *messageName;
+    void setMessageName(const char*);
+    double x, y, z;  // in meters, relative to playground origin, destination
 public:
     Command();
     virtual ~Command();
-    std::string getMessageName() const {
+    const char* getMessageName() {
         return messageName;
     }
     void setX(double);

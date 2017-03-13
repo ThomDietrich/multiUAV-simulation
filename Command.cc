@@ -37,7 +37,7 @@ void Command::setY(double value) {
 void Command::setZ(double value) {
     this->z = value;
 }
-void Command::setMessageName(std::string name) {
+void Command::setMessageName(const char *name) {
     this->messageName = name;
 }
 

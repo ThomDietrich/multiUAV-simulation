@@ -43,7 +43,6 @@ void UAVNode::initialize(int stage) {
             x = par("startX");
             y = par("startY");
             z = 2;
-
             break;
         }
         case 1: {
@@ -149,7 +148,7 @@ void UAVNode::selectNextCommand() {
     //else {
     //    throw cRuntimeError("Energy Management: Electing next command based on energy consumption failed.");
     //}
-
+    
     commandExecEngine = scheduledCEE;
     Command *finishedCommand = commands.front();
     commands.pop_front();
@@ -228,10 +227,10 @@ double UAVNode::getSpeedFromAngle(double angle) {
         {   +90.0, 2.719048}  //
     };
 
-//Catch exactly -90°
+    //Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
-// simple linear interpolation
+    // simple linear interpolation
     for (int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
@@ -305,8 +304,81 @@ double UAVNode::getCurrentHover() {
     return result;
 }
 
+simtime_t UAVNode::endOfOperation() {
+    float energyPredsAggregated = 0;
+    float energyPredGoToChargingNode = 0;
+    int commandsFeasible = 0;
+    double fromX = this->getX();
+    double fromY = this->getY();
+    double fromZ = this->getZ();
+
+    for (int index = 0; index < commands.size(); ++index) {
+        Command *nextCommand = commands.at(index);
+
+        if (ChargeCommand *command = dynamic_cast<ChargeCommand *>(nextCommand)) {
+            //TODO
+        }
+
+        // Get consumption for next command
+        float energyPred = energyForCommand(nextCommand, fromX, fromY, fromZ);
+        energyPredsAggregated += energyPred;
+
+        // Get consumption for going back to the nearest Charging node
+        energyPredGoToChargingNode = energyToNearestCN(nextCommand->getX(), nextCommand->getY(), nextCommand->getZ());
+
+        EV_INFO << "Consumption Aggregated=" << energyPredsAggregated << "mAh" << endl;
+        EV_INFO << "Consumption Command=" << energyPred << "mAh, " << endl;
+        EV_INFO << "Consumption GoToChargingNode=" << energyPredGoToChargingNode << "mAh" << endl;
+        EV_INFO << "Consumption Aggregated + GoToChargingNode=" << energyPredsAggregated + energyPredGoToChargingNode << "mAh" << endl;
+
+        if (battery.getRemaining() > energyPredsAggregated + energyPredGoToChargingNode) {
+            EV_INFO << "Still feasible." << endl;
+            commandsFeasible = index + 1;
+        }
+        fromX = nextCommand->getX();
+        fromY = nextCommand->getY();
+        fromZ = nextCommand->getZ();
+    }
+}
+
 void UAVNode::move() {
 //unused.
+}
+
+float UAVNode::energyForCommand(Command *command, double fromX, double fromY, double fromZ) {
+    // Select next Command -> CEE
+    CommandExecEngine *scheduledCEE = nullptr;
+    if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
+        scheduledCEE = new WaypointCEE(*this, *cmd);
+    }
+    else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
+        scheduledCEE = new TakeoffCEE(*this, *cmd);
+    }
+    else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
+        scheduledCEE = new HoldPositionCEE(*this, *cmd);
+    }
+    else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
+        scheduledCEE = new ChargeCEE(*this, *cmd);
+    }
+    else {
+        throw cRuntimeError("UAVNode::energyForCommand(): invalid cast.");
+    }
+    scheduledCEE->setFromCoordinates(fromX, fromY, fromZ);
+    scheduledCEE->initializeCEE();
+
+    // Get consumption for next Command
+    return scheduledCEE->predictConsumption();
+
+}
+
+float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ) {
+    // Get consumption for flight to nearest charging node
+    ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
+    WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+    goToChargingNodeCEE->setFromCoordinates(fromX, fromY, fromZ);
+    goToChargingNodeCEE->initializeCEE();
+    return goToChargingNodeCEE->predictConsumption();
 }
 
 #endif // WITH_OSG

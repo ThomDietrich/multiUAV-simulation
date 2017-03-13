@@ -34,6 +34,7 @@ public:
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
+    virtual simtime_t endOfOperation() override;
 protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;

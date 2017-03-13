@@ -165,6 +165,12 @@ void GenericNode::handleMessage(cMessage *msg) {
         }
     }
     else if (msg->isName("nextCommand")) {
+        //simtime_t replacementNeeded = 0;
+        //CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
+        //ccmsg->setSourceNode(this->getIndex());
+        //ccmsg->setMessageName(commands.front()->getMessageName());
+        //ccmsg->setReplacementNeeded(replacementNeeded);
+        //send(ccmsg, "gate$o", 0);
         if (not hasCommandsInQueue()) {
             EV_INFO << "Command completed. Queue empty." << endl;
             delete msg;

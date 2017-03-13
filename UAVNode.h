@@ -46,18 +46,17 @@ protected:
     virtual int numInitStages() const override {
         return 2;
     }
-    void readWaypointsFromFile(const char *fileName);
     virtual void selectNextCommand() override;
     virtual void initializeState() override;
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
+    virtual simtime_t endOfOperation() override;
+    virtual float energyForCommand(Command *command, double fromX, double fromY, double fromZ) override;
+    virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
 
     //not needed
     virtual void move();
-
-private:
-    static int normalizeAngle(int angle);
 };
 
 #endif

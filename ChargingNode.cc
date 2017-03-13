@@ -45,6 +45,10 @@ void ChargingNode::initialize(int stage) {
     }
 }
 
+simtime_t ChargingNode::endOfOperation() {
+    return 0;
+}
+
 void ChargingNode::refreshDisplay() const {
     GenericNode::refreshDisplay();
 }
