@@ -111,34 +111,44 @@ public:
     GenericNode();
     virtual ~GenericNode();
 
-    double getX() const override {
+    double getX() const override
+    {
         return x;
     }
-    double getY() const override {
+    double getY() const override
+    {
         return y;
     }
-    double getZ() const override {
+    double getZ() const override
+    {
         return z;
     }
-    double getLatitude() const override {
+    double getLatitude() const override
+    {
         return OsgEarthScene::getInstance()->toLatitude(getY());
     }
-    double getLongitude() const override {
+    double getLongitude() const override
+    {
         return OsgEarthScene::getInstance()->toLongitude(getX());
     }
-    double getAltitude() const override {
+    double getAltitude() const override
+    {
         return getZ();
     }
-    double getTxRange() const override {
+    double getTxRange() const override
+    {
         return txRange;
     }
-    double getYaw() const override {
+    double getYaw() const override
+    {
         return yaw;
     }
-    double getPitch() const override {
+    double getPitch() const override
+    {
         return pitch;
     }
-    double getClimbAngle() const {
+    double getClimbAngle() const
+    {
         return climbAngle;
     }
     virtual bool hasCommandsInQueue();
@@ -146,7 +156,8 @@ public:
 
 protected:
     virtual void initialize(int stage) override;
-    virtual int numInitStages() const override {
+    virtual int numInitStages() const override
+    {
         return 2;
     }
     virtual void handleMessage(cMessage *msg) override;

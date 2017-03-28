@@ -49,7 +49,8 @@ protected:
 public:
     //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
     
-    virtual ~CommandExecEngine() {
+    virtual ~CommandExecEngine()
+    {
     }
     ;
 
@@ -62,33 +63,41 @@ public:
      * @param y
      * @param z
      */
-    void setFromCoordinates(double x, double y, double z) {
+    void setFromCoordinates(double x, double y, double z)
+    {
         this->x0 = x;
         this->y0 = y;
         this->z0 = z;
     }
-    void setToCoordinates(double x, double y, double z) {
+    void setToCoordinates(double x, double y, double z)
+    {
         this->x1 = x;
         this->y1 = y;
         this->z1 = z;
     }
     
-    double getX0() {
+    double getX0()
+    {
         return x0;
     }
-    double getY0() {
+    double getY0()
+    {
         return y0;
     }
-    double getZ0() {
+    double getZ0()
+    {
         return z0;
     }
-    double getX1() {
+    double getX1()
+    {
         return x1;
     }
-    double getY1() {
+    double getY1()
+    {
         return y1;
     }
-    double getZ1() {
+    double getZ1()
+    {
         return z1;
     }
     
@@ -113,7 +122,8 @@ public:
      *
      * @return statistical mean current flow (A)
      */
-    virtual double getCurrent() {
+    virtual double getCurrent()
+    {
         return 0;
     }
     
@@ -121,11 +131,13 @@ public:
      * Predict the overall consumption for the full command execution procedure
      * @return to be consumed energy in mAh
      */
-    virtual double predictConsumption() {
+    virtual double predictConsumption()
+    {
         return 0;
     }
     
-    ceeType getCeeType() {
+    ceeType getCeeType()
+    {
         return type;
     }
     virtual char* getCeeTypeString() = 0;

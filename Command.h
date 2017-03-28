@@ -30,19 +30,23 @@ protected:
 public:
     Command();
     virtual ~Command();
-    const char* getMessageName() {
+    const char* getMessageName()
+    {
         return messageName;
     }
     void setX(double);
     void setY(double);
     void setZ(double);
-    double getX() const {
+    double getX() const
+    {
         return x;
     }
-    double getY() const {
+    double getY() const
+    {
         return y;
     }
-    double getZ() const {
+    double getZ() const
+    {
         return z;
     }
 };
@@ -62,7 +66,8 @@ protected:
 public:
     WaypointCommand(double x, double y, double z);
     void setSpeed(double);
-    double getSpeed() const {
+    double getSpeed() const
+    {
         return speed;
     }
 };
@@ -88,7 +93,8 @@ public:
     HoldPositionCommand(int seconds);
     //HoldPositionCommand(Date till);
     void setHoldSeconds(int value);
-    int getHoldSeconds() const {
+    int getHoldSeconds() const
+    {
         return holdSeconds;
     }
 };

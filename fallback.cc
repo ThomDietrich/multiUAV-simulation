@@ -20,7 +20,7 @@
 using namespace omnetpp;
 
 class OsgEarthScene : public cSimpleModule
-{
+{   
 protected:
     virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
@@ -29,7 +29,7 @@ protected:
 Define_Module(OsgEarthScene);
 
 class GenericNode : public cSimpleModule
-{
+{   
 protected:
     virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
@@ -38,7 +38,7 @@ protected:
 Define_Module(GenericNode);
 
 class ChannelController : public cSimpleModule
-{
+{   
 protected:
     virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};

@@ -52,7 +52,8 @@ Battery::Battery(float capacity, float remaining) :
     if (remaining > capacity) EV_WARN << "Battery initialized with remaining > capacity" << endl;
 }
 
-Battery::~Battery() {
+Battery::~Battery()
+{
 }
 
 /**
@@ -61,7 +62,8 @@ Battery::~Battery() {
  * @param amount quantity of energy to add to the storage, in [mAh]
  * @return 'false' if maximum capacity was reached
  */
-bool Battery::charge(float amount) {
+bool Battery::charge(float amount)
+{
     if (infinite) return true;
     remaining += amount;
     if (remaining > capacity) {
@@ -77,7 +79,8 @@ bool Battery::charge(float amount) {
  * @param amount quantity of energy consumed, in [mAh]
  * @return 'false' if more energy was consumed than available
  */
-bool Battery::discharge(float amount) {
+bool Battery::discharge(float amount)
+{
     if (infinite) return true;
     remaining -= amount;
     if (remaining < 0) {
@@ -91,14 +94,16 @@ bool Battery::discharge(float amount) {
 /**
  * @return the absolute capacity of the battery, in [mAh]
  */
-float Battery::getCapacity() {
+float Battery::getCapacity()
+{
     return capacity;
 }
 
 /**
  * @return difference between maximum capacity and remaining energy, in [mAh]
  */
-float Battery::getMissing() {
+float Battery::getMissing()
+{
     if (infinite) return 0;
     return capacity - remaining;
 }
@@ -106,7 +111,8 @@ float Battery::getMissing() {
 /**
  * @return remaining energy, in [mAh]
  */
-float Battery::getRemaining() {
+float Battery::getRemaining()
+{
     if (infinite) return FLT_MAX;
     return remaining;
 }
@@ -114,7 +120,8 @@ float Battery::getRemaining() {
 /**
  * @return remaining energy, in percentage
  */
-int Battery::getRemainingPercentage() {
+int Battery::getRemainingPercentage()
+{
     if (infinite) return 100;
     return 100 * remaining / capacity;
 }
@@ -122,7 +129,8 @@ int Battery::getRemainingPercentage() {
 /**
  * @return 'true' if energy storage is empty
  */
-bool Battery::isEmpty() {
+bool Battery::isEmpty()
+{
     if (infinite) return false;
     return (remaining <= 0);
 }
@@ -130,7 +138,8 @@ bool Battery::isEmpty() {
 /**
  * @return 'true' if energy storage is completely full
  */
-bool Battery::isFull() {
+bool Battery::isFull()
+{
     if (infinite) return true;
     return (remaining >= capacity);
 }

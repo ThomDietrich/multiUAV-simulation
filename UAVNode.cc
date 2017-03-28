@@ -25,17 +25,20 @@ using namespace omnetpp;
 
 Define_Module(UAVNode);
 
-UAVNode::UAVNode() {
+UAVNode::UAVNode()
+{   
 }
 
-UAVNode::~UAVNode() {
+UAVNode::~UAVNode()
+{   
 }
 
 /**
  * Simulation initialization with two stages, i.e. setup cycles
  * @param stage
  */
-void UAVNode::initialize(int stage) {
+void UAVNode::initialize(int stage)
+{   
     MobileNode::initialize(stage);
     switch (stage) {
         case 0: {
@@ -56,8 +59,8 @@ void UAVNode::initialize(int stage) {
  *
  * @throws cRuntimeError if no commands left in queue
  */
-void UAVNode::selectNextCommand() {
-
+void UAVNode::selectNextCommand()
+{   
     if (commands.size() == 0) {
         throw cRuntimeError("selectNextCommand(): UAV has no commands left.");
     }
@@ -132,9 +135,9 @@ void UAVNode::selectNextCommand() {
         EV_INFO << "Energy Management: OK. UAV has enough energy to continue." << endl;
     }
     else {    //if (remaining >= predGoToChargingNodeCEE) {
-              // remaining energy to at least go to the charging node
+        // remaining energy to at least go to the charging node
         EV_WARN << "Energy Management: UAV will go to charging station " << cn->getIndex() << " now." << endl;
-              // Inject charging command after scheduled command
+        // Inject charging command after scheduled command
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         Command *scheduledCommand = commands.front();
         commands.pop_front();
@@ -159,7 +162,8 @@ void UAVNode::selectNextCommand() {
     }
 }
 
-void UAVNode::initializeState() {
+void UAVNode::initializeState()
+{   
     if (commandExecEngine == nullptr) {
         throw cRuntimeError("initializeState(): Command Engine missing.");
     }
@@ -184,26 +188,30 @@ void UAVNode::initializeState() {
     labelNode->setText(text);
 }
 
-void UAVNode::updateState() {
-//distance to move, based on simulation time passed since last update
+void UAVNode::updateState()
+{   
+    //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-//update sublabel with battery info
+    //update sublabel with battery info
     std::ostringstream strs;
-    strs << std::setprecision(1) << std::fixed << speed << " m/s | " << commandExecEngine->getCurrent() << " A | " << battery.getRemainingPercentage() << " % | " << commandExecEngine->getRemainingTime() << " s left";
+    strs << std::setprecision(1) << std::fixed << speed << " m/s | " << commandExecEngine->getCurrent() << " A | " << battery.getRemainingPercentage()
+    << " % | " << commandExecEngine->getRemainingTime() << " s left";
     std::string str = strs.str();
     sublabelNode->setText(str);
 }
 
-bool UAVNode::commandCompleted() {
+bool UAVNode::commandCompleted()
+{   
     return commandExecEngine->commandCompleted();
 }
 
 /**
  * Get the time in seconds till the end of current command
  */
-double UAVNode::nextNeededUpdate() {
+double UAVNode::nextNeededUpdate()
+{   
     return commandExecEngine->getRemainingTime();
 }
 
@@ -212,7 +220,8 @@ double UAVNode::nextNeededUpdate() {
  * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
  * @return the speed of the UAV in [m/s]
  */
-double UAVNode::getSpeedFromAngle(double angle) {
+double UAVNode::getSpeedFromAngle(double angle)
+{   
     double samples[11][2] = { //
         {   -90.0, 1.837303}, //
         {   -75.6, 1.842921}, //
@@ -254,7 +263,8 @@ double UAVNode::getSpeedFromAngle(double angle) {
  * This function will return the battery current drain based on real measurement values and the angle the UAV in ascending/declining flight.
  * @return the current used by the UAV in [A]
  */
-double UAVNode::getCurrentFromAngle(double angle) {
+double UAVNode::getCurrentFromAngle(double angle)
+{   
     double samples[11][3] = { //
         {   -90.0, 16.86701, 0.7651131}, //
         {   -75.6, 17.97695, 0.7196844}, //
@@ -269,10 +279,10 @@ double UAVNode::getCurrentFromAngle(double angle) {
         {   +90.0, 20.86530, 0.7350855}  //
     };
 
-//Catch exactly -90°
+    //Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
-// simple linear interpolation
+    // simple linear interpolation
     for (int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
@@ -296,7 +306,8 @@ double UAVNode::getCurrentFromAngle(double angle) {
     return 0;
 }
 
-double UAVNode::getCurrentHover() {
+double UAVNode::getCurrentHover()
+{   
     double mean = 18.09;
     double stddev = 0.36;
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
@@ -304,7 +315,8 @@ double UAVNode::getCurrentHover() {
     return result;
 }
 
-simtime_t UAVNode::endOfOperation() {
+simtime_t UAVNode::endOfOperation()
+{   
     float energyPredsAggregated = 0;
     float energyPredGoToChargingNode = 0;
     int commandsFeasible = 0;
@@ -341,11 +353,13 @@ simtime_t UAVNode::endOfOperation() {
     }
 }
 
-void UAVNode::move() {
-//unused.
+void UAVNode::move()
+{   
+    //unused.
 }
 
-float UAVNode::energyForCommand(Command *command, double fromX, double fromY, double fromZ) {
+float UAVNode::energyForCommand(Command *command, double fromX, double fromY, double fromZ)
+{   
     // Select next Command -> CEE
     CommandExecEngine *scheduledCEE = nullptr;
     if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
@@ -371,7 +385,8 @@ float UAVNode::energyForCommand(Command *command, double fromX, double fromY, do
 
 }
 
-float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ) {
+float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
+{   
     // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());

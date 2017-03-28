@@ -18,26 +18,32 @@
 /**
  *
  */
-Command::Command() {
+Command::Command()
+{
     x = 0;
     y = 0;
     z = 0;
     messageName = "";
 }
-Command::~Command() {
+Command::~Command()
+{
     // TODO Auto-generated destructor stub
 }
 
-void Command::setX(double value) {
+void Command::setX(double value)
+{
     this->x = value;
 }
-void Command::setY(double value) {
+void Command::setY(double value)
+{
     this->y = value;
 }
-void Command::setZ(double value) {
+void Command::setZ(double value)
+{
     this->z = value;
 }
-void Command::setMessageName(const char *name) {
+void Command::setMessageName(const char *name)
+{
     this->messageName = name;
 }
 
@@ -47,14 +53,16 @@ void Command::setMessageName(const char *name) {
  * @param y
  * @param z
  */
-WaypointCommand::WaypointCommand(double x, double y, double z) {
+WaypointCommand::WaypointCommand(double x, double y, double z)
+{
     setX(x);
     setY(y);
     setZ(z);
     setMessageName("waypoint");
 }
 
-void WaypointCommand::setSpeed(double value) {
+void WaypointCommand::setSpeed(double value)
+{
     this->speed = value;
 }
 
@@ -62,7 +70,8 @@ void WaypointCommand::setSpeed(double value) {
  *
  * @param altitude
  */
-TakeoffCommand::TakeoffCommand(double altitude) {
+TakeoffCommand::TakeoffCommand(double altitude)
+{
     setX(0);
     setY(0);
     setZ(0);
@@ -70,7 +79,8 @@ TakeoffCommand::TakeoffCommand(double altitude) {
     setMessageName("takeoff");
 }
 
-void TakeoffCommand::setAltitude(double value) {
+void TakeoffCommand::setAltitude(double value)
+{
     setZ(value);
 }
 
@@ -78,12 +88,14 @@ void TakeoffCommand::setAltitude(double value) {
  *
  * @param seconds
  */
-HoldPositionCommand::HoldPositionCommand(int seconds) {
+HoldPositionCommand::HoldPositionCommand(int seconds)
+{
     setHoldSeconds(seconds);
     setMessageName("holdPosition");
 }
 
-void HoldPositionCommand::setHoldSeconds(int value) {
+void HoldPositionCommand::setHoldSeconds(int value)
+{
     this->holdSeconds = value;
 }
 
@@ -91,10 +103,12 @@ void HoldPositionCommand::setHoldSeconds(int value) {
  *
  * @param node
  */
-ChargeCommand::ChargeCommand(ChargingNode* node) {
+ChargeCommand::ChargeCommand(ChargingNode* node)
+{
     this->node = node;
 }
 
-ChargingNode* ChargeCommand::getChargingNode() {
+ChargingNode* ChargeCommand::getChargingNode()
+{
     return this->node;
 }

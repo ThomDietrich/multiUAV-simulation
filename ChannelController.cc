@@ -27,35 +27,43 @@ Define_Module(ChannelController);
 
 ChannelController *ChannelController::instance = nullptr;
 
-ChannelController::ChannelController() {
+ChannelController::ChannelController()
+{
     if (instance) throw cRuntimeError("There can be only one ChannelController instance in the network");
     instance = this;
 }
 
-ChannelController::~ChannelController() {
+ChannelController::~ChannelController()
+{
     instance = nullptr;
 }
 
-ChannelController *ChannelController::getInstance() {
+ChannelController *ChannelController::getInstance()
+{
     if (!instance) throw cRuntimeError("ChannelController::getInstance(): there is no ChannelController module in the network");
     return instance;
 }
 
-int ChannelController::findGenericNode(IGenericNode *p) {
-    for (int i = 0; i < (int) nodeList.size(); i++) if (nodeList[i] == p) return i;
+int ChannelController::findGenericNode(IGenericNode *p)
+{
+    for (int i = 0; i < (int) nodeList.size(); i++)
+        if (nodeList[i] == p) return i;
     return -1;
 }
 
-void ChannelController::addGenericNode(IGenericNode *p) {
+void ChannelController::addGenericNode(IGenericNode *p)
+{
     if (findGenericNode(p) == -1) nodeList.push_back(p);
 }
 
-void ChannelController::removeGenericNode(IGenericNode *p) {
+void ChannelController::removeGenericNode(IGenericNode *p)
+{
     int k = findGenericNode(p);
     if (k != -1) nodeList.erase(nodeList.begin() + k);
 }
 
-void ChannelController::initialize(int stage) {
+void ChannelController::initialize(int stage)
+{
     switch (stage) {
         case 0: {
             playgroundLat = getSystemModule()->par("playgroundLatitude");
@@ -71,7 +79,7 @@ void ChannelController::initialize(int stage) {
             connectionStyle.getOrCreate<LineSymbol>()->stroke()->width() = 3.0f;
             connectionStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_ABSOLUTE;
             connectionStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
-
+            
             if (showConnections) {
                 auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
                 connectionGraphNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
@@ -83,12 +91,13 @@ void ChannelController::initialize(int stage) {
     }
 }
 
-void ChannelController::refreshDisplay() const {
+void ChannelController::refreshDisplay() const
+{
     if (!showConnections) return;
-
+    
     auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
     auto connectionGeometry = new osgEarth::Symbology::MultiGeometry();
-
+    
     for (int i = 0; i < (int) nodeList.size(); ++i) {
         for (int j = i + 1; j < (int) nodeList.size(); ++j) {
             IGenericNode *pi = nodeList[i];
@@ -103,13 +112,14 @@ void ChannelController::refreshDisplay() const {
             }
         }
     }
-
+    
     auto cgraphFeature = new Feature(connectionGeometry, geoSRS, connectionStyle);
     cgraphFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
     connectionGraphNode->setFeature(cgraphFeature);
 }
 
-void ChannelController::handleMessage(cMessage *msg) {
+void ChannelController::handleMessage(cMessage *msg)
+{
     throw cRuntimeError("This module does not process messages");
 }
 

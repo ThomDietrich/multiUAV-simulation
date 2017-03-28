@@ -48,7 +48,8 @@ protected:
     osgEarth::Symbology::Style connectionStyle;
 
     virtual void initialize(int stage) override;
-    virtual int numInitStages() const override {
+    virtual int numInitStages() const override
+    {
         return 2;
     }
     virtual void handleMessage(cMessage *msg) override;

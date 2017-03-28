@@ -18,14 +18,16 @@
 
 using namespace omnetpp;
 
-void CommandExecEngine::setType(ceeType type) {
+void CommandExecEngine::setType(ceeType type)
+{
     this->type = type;
 }
 
 /**
  * Waypoint Command Execution Engine
  */
-WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command) {
+WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command)
+{
     this->node = &boundNode;
     this->command = &command;
     this->setType(WAYPOINT);
@@ -33,12 +35,14 @@ WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command) {
     setToCoordinates(command.getX(), command.getY(), command.getZ());
 }
 
-bool WaypointCEE::commandCompleted() {
+bool WaypointCEE::commandCompleted()
+{
     double distanceSum = fabs(x1 - node->x) + fabs(y1 - node->y) + fabs(z1 - node->z);
     return (distanceSum < 1.e-10);
 }
 
-void WaypointCEE::initializeCEE() {
+void WaypointCEE::initializeCEE()
+{
     //absolute distance to next waypoint, in meters
     if (this->command == nullptr) {
         throw cRuntimeError("initializeCEE(): Command missing.");
@@ -57,14 +61,16 @@ void WaypointCEE::initializeCEE() {
     speed = node->getSpeedFromAngle(climbAngle);
 }
 
-void WaypointCEE::setNodeParameters() {
+void WaypointCEE::setNodeParameters()
+{
     node->yaw = yaw;
     node->pitch = pitch;
     node->climbAngle = climbAngle;
     node->speed = speed;
 }
 
-void WaypointCEE::updateState(double stepSize) {
+void WaypointCEE::updateState(double stepSize)
+{
     //distance to move, based on simulation time passed since last update (in [m])
     double stepDistance = stepSize * speed;
     
@@ -79,7 +85,8 @@ void WaypointCEE::updateState(double stepSize) {
     
     node->battery.discharge(getCurrent() * 1000 * stepSize / 3600); // Q = I * t [mAh]
 }
-double WaypointCEE::getRemainingTime() {
+double WaypointCEE::getRemainingTime()
+{
     double dx = x1 - node->x;
     double dy = y1 - node->y;
     double dz = z1 - node->z;
@@ -87,11 +94,13 @@ double WaypointCEE::getRemainingTime() {
     return distance / speed;
 }
 
-double WaypointCEE::getCurrent() {
+double WaypointCEE::getCurrent()
+{
     return node->getCurrentFromAngle(climbAngle);
 }
 
-double WaypointCEE::predictConsumption() {
+double WaypointCEE::predictConsumption()
+{
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
@@ -100,14 +109,16 @@ double WaypointCEE::predictConsumption() {
     return (getCurrent() * 1000 * time / 3600);
 }
 
-char* WaypointCEE::getCeeTypeString() {
+char* WaypointCEE::getCeeTypeString()
+{
     return (char*) "Waypoint";
 }
 
 /**
  * Takeoff Command Execution Engine
  */
-TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command) {
+TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command)
+{
     this->node = &boundNode;
     this->command = &command;
     this->setType(TAKEOFF);
@@ -115,12 +126,14 @@ TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command) {
     setToCoordinates(node->x, node->y, command.getZ());
 }
 
-bool TakeoffCEE::commandCompleted() {
+bool TakeoffCEE::commandCompleted()
+{
     double distanceSum = fabs(z1 - node->z);
     return (distanceSum < 1.e-10);
 }
 
-void TakeoffCEE::initializeCEE() {
+void TakeoffCEE::initializeCEE()
+{
     pitch = 0;
     climbAngle = (z1 > node->z) ? 90 : -90;
     
@@ -128,13 +141,15 @@ void TakeoffCEE::initializeCEE() {
     speed = node->getSpeedFromAngle(climbAngle);
 }
 
-void TakeoffCEE::setNodeParameters() {
+void TakeoffCEE::setNodeParameters()
+{
     node->pitch = pitch;
     node->climbAngle = climbAngle;
     node->speed = speed;
 }
 
-void TakeoffCEE::updateState(double stepSize) {
+void TakeoffCEE::updateState(double stepSize)
+{
     double stepDistance = speed * stepSize;
     if (z1 > node->z)
         node->z += stepDistance;
@@ -144,27 +159,32 @@ void TakeoffCEE::updateState(double stepSize) {
     node->battery.discharge(getCurrent() * 1000 * stepSize / 3600);
 }
 
-double TakeoffCEE::getRemainingTime() {
+double TakeoffCEE::getRemainingTime()
+{
     return fabs(z1 - node->z) / speed;
 }
 
-double TakeoffCEE::getCurrent() {
+double TakeoffCEE::getCurrent()
+{
     return node->getCurrentFromAngle(climbAngle);
 }
 
-double TakeoffCEE::predictConsumption() {
+double TakeoffCEE::predictConsumption()
+{
     double overallTime = fabs(z1 - z0) / speed;
     return (getCurrent() * 1000 * overallTime / 3600);
 }
 
-char* TakeoffCEE::getCeeTypeString() {
+char* TakeoffCEE::getCeeTypeString()
+{
     return (char*) "Take Off";
 }
 
 /**
  * HoldPosition Command Execution Engine
  */
-HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& command) {
+HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& command)
+{
     this->node = &boundNode;
     this->command = &command;
     this->setType(HOLDPOSITION);
@@ -173,40 +193,48 @@ HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& comman
     this->holdPositionTill = simTime() + this->command->getHoldSeconds();
 }
 
-bool HoldPositionCEE::commandCompleted() {
+bool HoldPositionCEE::commandCompleted()
+{
     if (simTime() > this->holdPositionTill) throw cRuntimeError("Unexpected situation: HoldPosition lasted longer than intended.");
     return (simTime() == this->holdPositionTill) ? true : false;
 }
 
-void HoldPositionCEE::initializeCEE() {
+void HoldPositionCEE::initializeCEE()
+{
     //yaw = yaw;
     pitch = 0;
     climbAngle = 0;
 }
 
-void HoldPositionCEE::setNodeParameters() {
+void HoldPositionCEE::setNodeParameters()
+{
     //node->yaw = yaw;
     node->pitch = pitch;
     node->climbAngle = climbAngle;
 }
 
-void HoldPositionCEE::updateState(double stepSize) {
+void HoldPositionCEE::updateState(double stepSize)
+{
     node->battery.discharge(getCurrent() * 1000 * stepSize / 3600);
 }
 
-double HoldPositionCEE::getRemainingTime() {
+double HoldPositionCEE::getRemainingTime()
+{
     return (this->holdPositionTill - simTime()).dbl();
 }
 
-double HoldPositionCEE::getCurrent() {
+double HoldPositionCEE::getCurrent()
+{
     return node->getCurrentHover();
 }
 
-double HoldPositionCEE::predictConsumption() {
+double HoldPositionCEE::predictConsumption()
+{
     return (getCurrent() * 1000 * this->command->getHoldSeconds() / 3600);
 }
 
-char* HoldPositionCEE::getCeeTypeString() {
+char* HoldPositionCEE::getCeeTypeString()
+{
     return (char*) "Hold Position";
 }
 
@@ -216,7 +244,8 @@ char* HoldPositionCEE::getCeeTypeString() {
  * @param boundNode
  * @param command
  */
-ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command) {
+ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command)
+{
     this->node = &boundNode;
     this->command = &command;
     this->setType(CHARGE);
@@ -224,11 +253,13 @@ ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command) {
     this->setToCoordinates(node->x, node->y, node->z);
 }
 
-bool ChargeCEE::commandCompleted() {
+bool ChargeCEE::commandCompleted()
+{
     return (node->battery.isFull());
 }
 
-void ChargeCEE::initializeCEE() {
+void ChargeCEE::initializeCEE()
+{
     pitch = 0;
     climbAngle = 0;
     //TODO connect to Charging station
@@ -236,12 +267,14 @@ void ChargeCEE::initializeCEE() {
     //this->command->getChargingNode()->scheduleAt(simTime(), request);
 }
 
-void ChargeCEE::setNodeParameters() {
+void ChargeCEE::setNodeParameters()
+{
     node->pitch = pitch;
     node->climbAngle = climbAngle;
 }
 
-void ChargeCEE::updateState(double stepSize) {
+void ChargeCEE::updateState(double stepSize)
+{
     float chargeAmount = getCurrent() * 1000 * stepSize / 3600;
     node->battery.charge(chargeAmount);
     
@@ -255,15 +288,18 @@ void ChargeCEE::updateState(double stepSize) {
     }
 }
 
-double ChargeCEE::getRemainingTime() {
+double ChargeCEE::getRemainingTime()
+{
     return node->battery.getMissing() / (getCurrent() * 1000) * 3600;
 }
 
-double ChargeCEE::getCurrent() {
+double ChargeCEE::getCurrent()
+{
 // 3DR Solo: 5200 mAh in 1.5h = 3.5A constant
     return 3.5;
 }
 
-char* ChargeCEE::getCeeTypeString() {
+char* ChargeCEE::getCeeTypeString()
+{
     return (char*) "Charge";
 }

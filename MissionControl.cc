@@ -15,9 +15,10 @@
 
 #include "MissionControl.h"
 
-Define_Module (MissionControl);
+Define_Module(MissionControl);
 
-void MissionControl::initialize() {
+void MissionControl::initialize()
+{
     missionQueue[0] = loadCommandsFromWaypointsFile("BostonParkCircle.waypoints");
     missionQueue[1] = loadCommandsFromWaypointsFile("BostonParkLine.waypoints");
     missionQueue[2] = loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints");
@@ -26,7 +27,8 @@ void MissionControl::initialize() {
     scheduleAt(par("startTime"), start);
 }
 
-void MissionControl::handleMessage(cMessage *msg) {
+void MissionControl::handleMessage(cMessage *msg)
+{
     if (msg->isName("startScheduling")) {
         EV_INFO << "Mission Control Scheduling started." << endl;
         
@@ -107,7 +109,8 @@ void MissionControl::handleMessage(cMessage *msg) {
  *
  * @param fileName relative path to *.waypoints file
  */
-CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName) {
+CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
+{
     CommandQueue commands;
     std::ifstream inputFile(fileName);
     int lineCnt = 1;
@@ -170,7 +173,8 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
     return commands;
 }
 
-UAVNode* MissionControl::selectUAVNode() {
+UAVNode* MissionControl::selectUAVNode()
+{
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     UAVNode *uav;
     for (SubmoduleIterator it(network); !it.end(); ++it) {

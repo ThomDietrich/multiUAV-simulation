@@ -43,7 +43,8 @@ public:
 
 protected:
     virtual void initialize(int stage) override;
-    virtual int numInitStages() const override {
+    virtual int numInitStages() const override
+    {
         return 2;
     }
     virtual void selectNextCommand() override;

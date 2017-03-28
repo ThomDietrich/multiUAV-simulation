@@ -39,26 +39,31 @@ public:
     virtual ~OsgEarthScene();
 
     static OsgEarthScene *getInstance();
-    virtual osg::Node *getScene() {
+    virtual osg::Node *getScene()
+    {
         return scene;
     }
     // latitude from local y coordinate
-    virtual double toLatitude(double y) {
+    virtual double toLatitude(double y)
+    {
         return playgroundLat - y / 111111;
     }
     // longitude from local x coordinate
-    virtual double toLongitude(double x) {
+    virtual double toLongitude(double x)
+    {
         return playgroundLon + x / 111111 / cos(fabs(playgroundLat / 180 * M_PI));
     }
     // local Y coordinate from latitude
-    virtual double toY(double latitude) {
+    virtual double toY(double latitude)
+    {
         return (playgroundLat - latitude) * 111111;
     }
     // local X coordinate from longitude
-    virtual double toX(double longitude) {
+    virtual double toX(double longitude)
+    {
         return (longitude - playgroundLon) * cos(fabs(playgroundLat / 180 * M_PI)) * 111111;
     }
-
+    
 protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
