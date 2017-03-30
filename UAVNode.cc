@@ -106,12 +106,15 @@ void UAVNode::selectNextCommand()
         //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
     }
     else if (energyRemaining >= energyForSheduled + energyToCNAfter) {
-        EV_INFO << "Energy Management: OK. UAV has enough energy to continue." << endl;
+        EV_INFO << "Energy Management: OK. UAV has enough energy to continue (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
     }
-    else if (energyRemaining < energyToCN) {
-        EV_WARN << "Energy Management: Too late! The UAV is too far from the nearest ChargingNode. (" << energyRemaining << "<" << energyToCN << " mAh)" << endl;
-    }
-    else if (energyRemaining >= energyToCN) {
+    else {
+        if (energyRemaining < energyToCN) {
+            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient (" << energyRemaining << " < " << energyToCN << " mAh)." << endl;
+        }
+        else {
+            EV_INFO << "Energy Management: Going to Charging Node (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+        }
         ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
@@ -120,15 +123,11 @@ void UAVNode::selectNextCommand()
         goToChargingNodeCEE->setFromCoordinates(getX(), getY(), getZ());
         goToChargingNodeCEE->initializeCEE();
 
-        EV_INFO << "Energy Management: Injecting charging command after scheduled command." << endl;
         Command *scheduledCommand = commands.front();
         commands.pop_front();
         commands.push_front(chargeCommand);
         commands.push_front(scheduledCommand);
         scheduledCEE = goToChargingNodeCEE;
-    }
-    else {
-        throw cRuntimeError("Energy Management: Electing next command based on energy consumption failed.");
     }
 
     commandExecEngine = scheduledCEE;
@@ -298,40 +297,48 @@ double UAVNode::getCurrentHover()
 
 simtime_t UAVNode::endOfOperation()
 {   
-    float energyPredsAggregated = 0;
-    float energyPredGoToChargingNode = 0;
+    float energySum = 0;
+    float energyToCNAfter = 0;
     int commandsFeasible = 0;
     double fromX = this->getX();
     double fromY = this->getY();
     double fromZ = this->getZ();
 
-    for (int index = 0; index < commands.size(); ++index) {
-        Command *nextCommand = commands.at(index);
+    while (true) {
+        Command *nextCommand = commands.at(commandsFeasible % commands.size());
 
-        if (ChargeCommand *command = dynamic_cast<ChargeCommand *>(nextCommand)) {
-            //TODO
+        if (dynamic_cast<ChargeCommand *>(nextCommand)) {
+            throw cRuntimeError("endOfOperation(): charge command encountered");
         }
 
         // Get consumption for next command
-        float energyPred = energyForCommand(nextCommand, fromX, fromY, fromZ);
-        energyPredsAggregated += energyPred;
+        float energyForNextCommand = energyForCommand(nextCommand, fromX, fromY, fromZ);
 
         // Get consumption for going back to the nearest Charging node
-        energyPredGoToChargingNode = energyToNearestCN(nextCommand->getX(), nextCommand->getY(), nextCommand->getZ());
+        energyToCNAfter = energyToNearestCN(nextCommand->getX(), nextCommand->getY(), nextCommand->getZ());
 
-        EV_INFO << "Consumption Aggregated=" << energyPredsAggregated << "mAh" << endl;
-        EV_INFO << "Consumption Command=" << energyPred << "mAh, " << endl;
-        EV_INFO << "Consumption GoToChargingNode=" << energyPredGoToChargingNode << "mAh" << endl;
-        EV_INFO << "Consumption Aggregated + GoToChargingNode=" << energyPredsAggregated + energyPredGoToChargingNode << "mAh" << endl;
+        EV_DEBUG << "Consumption Aggregated Commands: " << commandsFeasible << endl;
+        EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
+        EV_DEBUG << "Consumption Command=" << energyForNextCommand << "mAh, " << endl;
+        EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
+        EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCommand + energyToCNAfter << "mAh" << endl;
+        EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
-        if (battery.getRemaining() > energyPredsAggregated + energyPredGoToChargingNode) {
-            EV_INFO << "Still feasible." << endl;
-            commandsFeasible = index + 1;
+        if (battery.getRemaining() < energySum + energyForNextCommand + energyToCNAfter) {
+            EV_INFO << "That's enough." << endl;
+            break;
         }
+
+        EV_DEBUG << "Next command still feasible." << endl;
+        commandsFeasible++;
+        energySum += energyForNextCommand;
+
         fromX = nextCommand->getX();
         fromY = nextCommand->getY();
         fromZ = nextCommand->getZ();
     }
+    EV_INFO << "Finished calculation." << endl;
+    return 0;
 }
 
 float UAVNode::energyForCommand(Command *command, double fromX, double fromY, double fromZ)
@@ -358,7 +365,6 @@ float UAVNode::energyForCommand(Command *command, double fromX, double fromY, do
 
     // Get consumption for next Command
     return scheduledCEE->predictConsumption();
-
 }
 
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
