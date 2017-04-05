@@ -143,6 +143,11 @@ public:
     virtual char* getCeeTypeString() = 0;
 };
 
+/**
+ * A set of command exec engines to be execute by the Node
+ */
+typedef std::deque<CommandExecEngine*> CEEQueue;
+
 //make UAVNode known to be reverse reference type
 class UAVNode;
 

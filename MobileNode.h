@@ -57,7 +57,6 @@ protected:
     virtual void refreshDisplay() const override;
     virtual void handleMessage(cMessage *msg) override;
     ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
-    virtual float energyForCommand(Command *command, double fromX, double fromY, double fromZ) = 0;
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) = 0;
 };
 

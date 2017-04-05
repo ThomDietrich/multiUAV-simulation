@@ -205,18 +205,7 @@ void GenericNode::handleMessage(cMessage *msg)
  */
 bool GenericNode::hasCommandsInQueue()
 {   
-    return (not commands.empty());
-}
-
-/**
- * Load a given command queue as the new command queue of the Node
- *
- * @param queue
- */
-void GenericNode::loadCommands(CommandQueue queue)
-{   
-    if (hasCommandsInQueue()) EV_WARN << "Overwriting existing command queue..." << endl;
-    this->commands = queue;
+    return (not cees.empty());
 }
 
 #endif // WITH_OSG

@@ -54,6 +54,36 @@ void UAVNode::initialize(int stage)
     }
 }
 
+void UAVNode::loadCommands(CommandQueue commands)
+{   
+    if (not cees.empty()) {
+        EV_WARN << "Replacing non-empty CEE queue." << endl;
+        cees.clear();
+    }
+
+    for (int index = 0; index < commands.size(); ++index) {
+        Command *command = commands.at(index);
+        CommandExecEngine *cee = nullptr;
+
+        if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
+            cee = new WaypointCEE(*this, *cmd);
+        }
+        else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
+            cee = new TakeoffCEE(*this, *cmd);
+        }
+        else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
+            cee = new HoldPositionCEE(*this, *cmd);
+        }
+        else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
+            cee = new ChargeCEE(*this, *cmd);
+        }
+        else {
+            throw cRuntimeError("UAVNode::generateCCEsFromCommandQueue(): invalid cast or unexpected command type.");
+        }
+        cees.push_back(cee);
+    }
+}
+
 /**
  * Fetches the next command from the commands queue and creates a corresponding CEE.
  *
@@ -61,43 +91,22 @@ void UAVNode::initialize(int stage)
  */
 void UAVNode::selectNextCommand()
 {   
-    if (commands.size() == 0) {
-        throw cRuntimeError("selectNextCommand(): UAV has no commands left.");
+    if (cees.size() == 0) {
+        throw cRuntimeError("selectNextCommand(): UAV has no commands in CEEs queue left.");
     }
 
-    //
-    // Select next Command and generate CEE
-    //
-    CommandExecEngine *scheduledCEE = nullptr;
-    if (WaypointCommand *command = dynamic_cast<WaypointCommand *>(commands.front())) {
-        scheduledCEE = new WaypointCEE(*this, *command);
-    }
-    else if (TakeoffCommand *command = dynamic_cast<TakeoffCommand *>(commands.front())) {
-        scheduledCEE = new TakeoffCEE(*this, *command);
-    }
-    else if (HoldPositionCommand *command = dynamic_cast<HoldPositionCommand *>(commands.front())) {
-        scheduledCEE = new HoldPositionCEE(*this, *command);
-    }
-    else if (ChargeCommand *command = dynamic_cast<ChargeCommand *>(commands.front())) {
-        scheduledCEE = new ChargeCEE(*this, *command);
-    }
-    else throw cRuntimeError("loadNextCommand(): invalid cast.");
-
+    CommandExecEngine *scheduledCEE = cees.front();
     scheduledCEE->setFromCoordinates(getX(), getY(), getZ());
     scheduledCEE->initializeCEE();
 
     float energyForSheduled = scheduledCEE->predictConsumption();
-    float energyToCN = energyToNearestCN(getX(), getY(), getZ());
-    float energyToCNAfter = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
+    float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
+    float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
     float energyRemaining = this->battery.getRemaining();
 
     //EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
     
-    //
     // Elect and activate the next command/CEE
-    //
-    delete commandExecEngine;
-
     if (scheduledCEE->getCeeType() == CHARGE) {
         EV_INFO << "Energy Management: Recharging now." << endl;
     }
@@ -105,40 +114,45 @@ void UAVNode::selectNextCommand()
         EV_ERROR << "Energy Management: One of our precious UAVs just died :-(" << endl;
         //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
     }
-    else if (energyRemaining >= energyForSheduled + energyToCNAfter) {
+    else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
         EV_INFO << "Energy Management: OK. UAV has enough energy to continue (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
     }
     else {
-        if (energyRemaining < energyToCN) {
-            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient (" << energyRemaining << " < " << energyToCN << " mAh)." << endl;
+        // Go To Charging Node now
+        if (energyRemaining < energyToCNNow) {
+            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
         }
         else {
             EV_INFO << "Energy Management: Going to Charging Node (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
+
+        // Find nearest ChargingNode
         ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
-        ChargeCommand *chargeCommand = new ChargeCommand(cn);
+
+        // Generate WaypointCEE
         WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
         CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
 
-        goToChargingNodeCEE->setFromCoordinates(getX(), getY(), getZ());
-        goToChargingNodeCEE->initializeCEE();
+        // Generate ChargeCEE
+        ChargeCommand *chargeCommand = new ChargeCommand(cn);
+        ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
 
-        Command *scheduledCommand = commands.front();
-        commands.pop_front();
-        commands.push_front(chargeCommand);
-        commands.push_front(scheduledCommand);
-        scheduledCEE = goToChargingNodeCEE;
+        // Add WaypointCEE and ChargeCEE to the CEEs queue
+        cees.push_front(chargeCEE);
+        cees.push_front(goToChargingNodeCEE);
     }
 
-    commandExecEngine = scheduledCEE;
-    Command *finishedCommand = commands.front();
-    commands.pop_front();
+    commandExecEngine = cees.front();
+    commandExecEngine->setFromCoordinates(getX(), getY(), getZ());
+    commandExecEngine->initializeCEE();
+    cees.pop_front();
 
     // reinject command (if no charging or takeoff command)
     if (commandsRepeat
-            && not dynamic_cast<ChargeCommand *>(finishedCommand)
-            && not dynamic_cast<TakeoffCommand *>(finishedCommand)) {
-        commands.push_back(finishedCommand);
+            && not (commandExecEngine->getCeeType() == CHARGE)
+            && not (commandExecEngine->getCeeType() == TAKEOFF)
+    ) { 
+        cees.push_back(commandExecEngine);
     }
 }
 
@@ -304,67 +318,46 @@ simtime_t UAVNode::endOfOperation()
     double fromY = this->getY();
     double fromZ = this->getZ();
 
+    //TODO Add current Execution Engine consumption
+    
     while (true) {
-        Command *nextCommand = commands.at(commandsFeasible % commands.size());
+        CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
 
-        if (dynamic_cast<ChargeCommand *>(nextCommand)) {
+        if (nextCEE->getCeeType() == CHARGE) {
             throw cRuntimeError("endOfOperation(): charge command encountered");
         }
 
         // Get consumption for next command
-        float energyForNextCommand = energyForCommand(nextCommand, fromX, fromY, fromZ);
+        nextCEE->setFromCoordinates(getX(), getY(), getZ());
+        nextCEE->initializeCEE();
+
+        float energyForNextCEE = nextCEE->predictConsumption();
 
         // Get consumption for going back to the nearest Charging node
-        energyToCNAfter = energyToNearestCN(nextCommand->getX(), nextCommand->getY(), nextCommand->getZ());
+        energyToCNAfter = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
 
         EV_DEBUG << "Consumption Aggregated Commands: " << commandsFeasible << endl;
         EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
-        EV_DEBUG << "Consumption Command=" << energyForNextCommand << "mAh, " << endl;
+        EV_DEBUG << "Consumption Command=" << energyForNextCEE << "mAh, " << endl;
         EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
-        EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCommand + energyToCNAfter << "mAh" << endl;
+        EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCEE + energyToCNAfter << "mAh" << endl;
         EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
-        if (battery.getRemaining() < energySum + energyForNextCommand + energyToCNAfter) {
+        if (battery.getRemaining() < energySum + energyForNextCEE + energyToCNAfter) {
             EV_INFO << "That's enough." << endl;
             break;
         }
 
         EV_DEBUG << "Next command still feasible." << endl;
         commandsFeasible++;
-        energySum += energyForNextCommand;
+        energySum += energyForNextCEE;
 
-        fromX = nextCommand->getX();
-        fromY = nextCommand->getY();
-        fromZ = nextCommand->getZ();
+        fromX = nextCEE->getX1();
+        fromY = nextCEE->getY1();
+        fromZ = nextCEE->getZ1();
     }
     EV_INFO << "Finished calculation." << endl;
     return 0;
-}
-
-float UAVNode::energyForCommand(Command *command, double fromX, double fromY, double fromZ)
-{   
-    // Select next Command -> CEE
-    CommandExecEngine *scheduledCEE = nullptr;
-    if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
-        scheduledCEE = new WaypointCEE(*this, *cmd);
-    }
-    else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
-        scheduledCEE = new TakeoffCEE(*this, *cmd);
-    }
-    else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
-        scheduledCEE = new HoldPositionCEE(*this, *cmd);
-    }
-    else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
-        scheduledCEE = new ChargeCEE(*this, *cmd);
-    }
-    else {
-        throw cRuntimeError("UAVNode::energyForCommand(): invalid cast.");
-    }
-    scheduledCEE->setFromCoordinates(fromX, fromY, fromZ);
-    scheduledCEE->initializeCEE();
-
-    // Get consumption for next Command
-    return scheduledCEE->predictConsumption();
 }
 
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)

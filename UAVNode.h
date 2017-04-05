@@ -37,6 +37,7 @@ class UAVNode : public MobileNode {
 public:
     UAVNode();
     virtual ~UAVNode();
+    virtual void loadCommands(CommandQueue commands) override;
     static double getSpeedFromAngle(double angle);
     static double getCurrentFromAngle(double angle);
     static double getCurrentHover();
@@ -53,7 +54,6 @@ protected:
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual simtime_t endOfOperation() override;
-    virtual float energyForCommand(Command *command, double fromX, double fromY, double fromZ) override;
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
 
     //not needed

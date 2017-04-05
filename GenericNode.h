@@ -60,8 +60,8 @@ protected:
     bool showTxRange;
     double txRange;
 
-    //queue, contains future commands
-    CommandQueue commands;
+    //queue, contains future command exec engines
+    CEEQueue cees;
     //instance of CEE subclass, contains current command
     CommandExecEngine *commandExecEngine = nullptr;
     //repeat commands, rotate queue
@@ -152,7 +152,7 @@ public:
         return climbAngle;
     }
     virtual bool hasCommandsInQueue();
-    virtual void loadCommands(CommandQueue queue);
+    virtual void loadCommands(CommandQueue commands) = 0;
 
 protected:
     virtual void initialize(int stage) override;
