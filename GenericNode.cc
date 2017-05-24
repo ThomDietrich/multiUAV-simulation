@@ -170,22 +170,22 @@ void GenericNode::handleMessage(cMessage *msg)
         }
     }
     else if (msg->isName("nextCommand")) {
-        //simtime_t replacementNeeded = 0;
-        //CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        //ccmsg->setSourceNode(this->getIndex());
-        //ccmsg->setMessageName(commands.front()->getMessageName());
-        //ccmsg->setReplacementNeeded(replacementNeeded);
-        //send(ccmsg, "gate$o", 0);
         if (not hasCommandsInQueue()) {
             EV_INFO << "Command completed. Queue empty." << endl;
             delete msg;
             return;
         }
+        ExchangeInfo *exchangeInfo = endOfOperation();
+        CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
+        ccmsg->setSourceNode(this->getIndex());
+        //ccmsg->setMessageName(commands.front()->getMessageName());
+        //ccmsg->
+        send(ccmsg, "gate$o", 0);
+
         EV_INFO << "Command completed. Selecting next command." << endl;
         selectNextCommand();
         initializeState();
         msg->setName("update");
-        endOfOperation();
     }
     else {
         std::string message = "Unknown message name encountered: ";

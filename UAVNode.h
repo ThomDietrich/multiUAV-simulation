@@ -53,7 +53,7 @@ protected:
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
-    virtual simtime_t endOfOperation() override;
+    virtual ExchangeInfo* endOfOperation() override;
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
 
     //not needed

@@ -19,6 +19,7 @@
 #include <osgEarth/MapNode>
 #include <osgEarth/Capabilities>
 #include <osgEarthAnnotation/RectangleNode>
+
 #include "OsgEarthScene.h"
 
 using namespace omnetpp;

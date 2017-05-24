@@ -13,6 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
+#ifdef WITH_OSG
 #include "MissionControl.h"
 
 Define_Module(MissionControl);
@@ -189,3 +190,5 @@ UAVNode* MissionControl::selectUAVNode()
     EV_WARN << "MissionControl::selectUAVNode(): No available Nodes found." << endl;
     return nullptr;
 }
+
+#endif // WITH_OSG

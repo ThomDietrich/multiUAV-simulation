@@ -114,6 +114,8 @@ public:
      */
     virtual void updateState(double stepSize) = 0;
 
+    virtual double getDuration() = 0;
+
     virtual double getRemainingTime() = 0;
 
     /**
@@ -166,6 +168,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
+    double getDuration() override;
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
@@ -188,6 +191,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
+    double getDuration() override;
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
@@ -210,6 +214,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
+    double getDuration() override;
     double getRemainingTime() override;
     double getCurrent() override;
     double predictConsumption() override;
@@ -229,6 +234,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
+    double getDuration() override;
     double getRemainingTime() override;
     double getCurrent() override;
     char* getCeeTypeString() override;

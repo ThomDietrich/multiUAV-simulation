@@ -14,7 +14,7 @@
 // 
 
 #ifdef WITH_OSG
-#include <ChargingNode.h>
+#include "ChargingNode.h"
 
 Define_Module(ChargingNode);
 
@@ -50,7 +50,7 @@ void ChargingNode::initialize(int stage)
 
 /// TODO: Decouple Charging Node from GenericNode
 
-simtime_t ChargingNode::endOfOperation()
+ExchangeInfo* ChargingNode::endOfOperation()
 {   
     return 0;
 }

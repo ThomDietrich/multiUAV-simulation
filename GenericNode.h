@@ -26,10 +26,13 @@
 #include "OsgEarthScene.h"
 #include "Command.h"
 #include "CommandExecEngine.h"
+#include "ExchangeInfo.h"
 #include "MissionMsg_m.h"
 #include "CmdCompletedMsg_m.h"
 
 using namespace omnetpp;
+
+class ExchangeInfo;
 
 /**
  * Interface to be implemented by nodes to be able to register in ChannelController.
@@ -72,26 +75,26 @@ protected:
             
     /**
      * yaw/horizontal orientation in degrees
-     * 0° = oriented to the right of the playground
-     * 90° = oriented to the bottom of the playground
-     * 180° = oriented to the left of the playground
-     * 270° = oriented to the top of the playground
+     * 0Â° = oriented to the right of the playground
+     * 90Â° = oriented to the bottom of the playground
+     * 180Â° = oriented to the left of the playground
+     * 270Â° = oriented to the top of the playground
      */
     double yaw = 0;
 
     /**
      * pitch/vertical orientation in degrees
-     * -90° = downwards
-     * 0° = forward (in yaw direction)
-     * 90° = upwards
+     * -90Â° = downwards
+     * 0Â° = forward (in yaw direction)
+     * 90Â° = upwards
      */
     double pitch = 0;
 
     /**
      * climb angle (pitch heading) in degrees
-     * -90° = downwards
-     * 0° = forward (in yaw direction)
-     * 90° = upwards
+     * -90Â° = downwards
+     * 0Â° = forward (in yaw direction)
+     * 90Â° = upwards
      */
     double climbAngle = 0;
 
@@ -172,7 +175,7 @@ protected:
      */
     virtual void initializeState() = 0;
     virtual double nextNeededUpdate() = 0;
-    virtual simtime_t endOfOperation() = 0;
+    virtual ExchangeInfo* endOfOperation() = 0;
 };
 
 #endif

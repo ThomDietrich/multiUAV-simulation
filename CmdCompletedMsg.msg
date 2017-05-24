@@ -13,11 +13,17 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
+//cplusplus {{
+//    #include "ExchangeInfo.h"
+//}};
+
+//class noncobject ExchangeInfo;
+
 //
 // TODO generated message class
 //
 message CmdCompletedMsg {
 	int sourceNode;
     string messageName;
-    simtime_t replacementNeeded;
+    //ExchangeInfo exchangeInfo;
 }

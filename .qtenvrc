@@ -1,3 +1,5 @@
 [General]
 default-configname=CommandMovement
 default-runnumber=0
+last-configname=CommandMovement
+last-runnumber=0

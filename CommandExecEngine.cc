@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include <CommandExecEngine.h>
+#include "CommandExecEngine.h"
 #include "UAVNode.h"
 
 using namespace omnetpp;
@@ -85,6 +85,16 @@ void WaypointCEE::updateState(double stepSize)
     
     node->battery.discharge(getCurrent() * 1000 * stepSize / 3600); // Q = I * t [mAh]
 }
+
+double WaypointCEE::getDuration()
+{
+    double dx = x1 - x0;
+    double dy = y1 - y0;
+    double dz = z1 - z0;
+    double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    return distance / speed;
+}
+
 double WaypointCEE::getRemainingTime()
 {
     double dx = x1 - node->x;
@@ -159,6 +169,11 @@ void TakeoffCEE::updateState(double stepSize)
     node->battery.discharge(getCurrent() * 1000 * stepSize / 3600);
 }
 
+double TakeoffCEE::getDuration()
+{
+    return fabs(z1 - z0) / speed;
+}
+
 double TakeoffCEE::getRemainingTime()
 {
     return fabs(z1 - node->z) / speed;
@@ -216,6 +231,11 @@ void HoldPositionCEE::setNodeParameters()
 void HoldPositionCEE::updateState(double stepSize)
 {
     node->battery.discharge(getCurrent() * 1000 * stepSize / 3600);
+}
+
+double HoldPositionCEE::getDuration()
+{
+    return (this->command->getHoldSeconds());
 }
 
 double HoldPositionCEE::getRemainingTime()
@@ -286,6 +306,11 @@ void ChargeCEE::updateState(double stepSize)
     if (fmod(node->battery.getRemaining(), statusReportChargeSteps) < chargeAmount) {
         EV_INFO << "Energy Management: Recharging... " << node->battery.getRemainingPercentage() << "%" << endl;
     }
+}
+
+double ChargeCEE::getDuration()
+{
+    return node->battery.getCapacity() / (getCurrent() * 1000) * 3600;
 }
 
 double ChargeCEE::getRemainingTime()

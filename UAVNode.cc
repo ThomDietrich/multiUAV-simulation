@@ -14,12 +14,13 @@
 //
 
 #ifdef WITH_OSG
-#include "UAVNode.h"
-#include "OsgEarthScene.h"
-#include "ChannelController.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
+
+#include "UAVNode.h"
+#include "OsgEarthScene.h"
+#include "ChannelController.h"
 
 using namespace omnetpp;
 
@@ -230,7 +231,7 @@ double UAVNode::getSpeedFromAngle(double angle)
         {   +90.0, 2.719048}  //
     };
 
-    //Catch exactly -90°
+    //Catch exactly -90Â°
     if (angle == samples[0][0]) return samples[0][1];
 
     // simple linear interpolation
@@ -273,7 +274,7 @@ double UAVNode::getCurrentFromAngle(double angle)
         {   +90.0, 20.86530, 0.7350855}  //
     };
 
-    //Catch exactly -90°
+    //Catch exactly -90Â°
     if (angle == samples[0][0]) return samples[0][1];
 
     // simple linear interpolation
@@ -309,11 +310,12 @@ double UAVNode::getCurrentHover()
     return result;
 }
 
-simtime_t UAVNode::endOfOperation()
+ExchangeInfo* UAVNode::endOfOperation()
 {   
     float energySum = 0;
     float energyToCNAfter = 0;
     int commandsFeasible = 0;
+    float durrationOfCommands = 0;
     double fromX = this->getX();
     double fromY = this->getY();
     double fromZ = this->getZ();
@@ -351,13 +353,20 @@ simtime_t UAVNode::endOfOperation()
         EV_DEBUG << "Next command still feasible." << endl;
         commandsFeasible++;
         energySum += energyForNextCEE;
+        durrationOfCommands += nextCEE->getDuration();
 
         fromX = nextCEE->getX1();
         fromY = nextCEE->getY1();
         fromZ = nextCEE->getZ1();
     }
     EV_INFO << "Finished calculation." << endl;
-    return 0;
+    ExchangeInfo *result = new ExchangeInfo();
+    //result->nodeToExchange = this;
+    //result->timestamp = simTime() + durrationOfCommands;
+    //result->x = fromX;
+    //result->y = fromY;
+    //result->z = fromZ;
+    return result;
 }
 
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
