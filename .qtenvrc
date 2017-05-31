@@ -1,5 +1,3 @@
 [General]
-default-configname=CommandMovement
-default-runnumber=0
-last-configname=CommandMovement
+last-configname=multiUAV-Movement-Offline
 last-runnumber=0

@@ -16,14 +16,17 @@
 #ifndef __GENERICNODE_H__
 #define __GENERICNODE_H__
 
-#include <osgEarth/MapNode>
-#include <osgEarthAnnotation/CircleNode>
-#include <osgEarthAnnotation/LabelNode>
-#include <osgEarthAnnotation/FeatureNode>
-#include <osgEarthUtil/ObjectLocator>
 
 #include <omnetpp.h>
+
+#include <osgEarth/MapNode>
+#include <osgEarthAnnotation/CircleNode>
+#include <osgEarthAnnotation/FeatureNode>
+#include <osgEarthAnnotation/LabelNode>
+#include <osgEarthUtil/ObjectLocator>
+
 #include "OsgEarthScene.h"
+
 #include "Command.h"
 #include "CommandExecEngine.h"
 #include "ExchangeInfo.h"

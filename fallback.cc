@@ -13,14 +13,14 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-#ifndef WITH_OSG
+#if !defined(WITH_OSG) || !defined(WITH_OSGEARTH)
 #include <omnetpp.h>
 
 // fallback code used in case OpenSceneGraph and osgEarth is not present on the system
 using namespace omnetpp;
 
 class OsgEarthScene : public cSimpleModule
-{   
+{
 protected:
     virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
@@ -29,7 +29,7 @@ protected:
 Define_Module(OsgEarthScene);
 
 class GenericNode : public cSimpleModule
-{   
+{
 protected:
     virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
@@ -38,7 +38,7 @@ protected:
 Define_Module(GenericNode);
 
 class ChannelController : public cSimpleModule
-{   
+{
 protected:
     virtual void initialize() {throw cRuntimeError("This example requires OpenSceneGraph and osgEarth installed");}
     virtual void handleMessage(cMessage *msg) {};
@@ -46,4 +46,4 @@ protected:
 
 Define_Module(ChannelController);
 
-#endif // WITH_OSG
+#endif // WITH_OSG , WITH_OSGEARTH

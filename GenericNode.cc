@@ -13,17 +13,17 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-#ifdef WITH_OSG
+#if defined(WITH_OSG) && defined(WITH_OSGEARTH)
+#include "GenericNode.h"
+#include "OsgEarthScene.h"
+#include "ChannelController.h"
+
 #include <osg/Node>
 #include <osg/PositionAttitudeTransform>
 #include <osgEarth/Capabilities>
 #include <osgEarthAnnotation/LabelNode>
 #include <osgEarthSymbology/Geometry>
 #include <osgEarthFeatures/Feature>
-
-#include "GenericNode.h"
-#include "OsgEarthScene.h"
-#include "ChannelController.h"
 
 using namespace omnetpp;
 

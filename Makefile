@@ -1,12 +1,12 @@
 #
-# OMNeT++/OMNEST Makefile for multiUAV
+# OMNeT++/OMNEST Makefile for multiUAV-simulation
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -O out -DWITH_OSG
+#  opp_makemake -f --deep -DWITH_OSG -DWITH_OSGEARTH
 #
 
 # Name of target to be created (-o option)
-TARGET = multiUAV$(EXE_SUFFIX)
+TARGET = multiUAV-simulation$(EXE_SUFFIX)
 
 # User interface (uncomment one) (-u option)
 USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LIBS)
@@ -76,7 +76,7 @@ include $(CONFIGFILE)
 # Simulation kernel and user interface libraries
 OMNETPP_LIBS = $(OPPMAIN_LIB) $(USERIF_LIBS) $(KERNEL_LIBS) $(SYS_LIBS)
 
-COPTS = $(CFLAGS) $(IMPORT_DEFINES) -DWITH_OSG $(INCLUDE_PATH) -I$(OMNETPP_INCL_DIR)
+COPTS = $(CFLAGS) $(IMPORT_DEFINES) -DWITH_OSG -DWITH_OSGEARTH $(INCLUDE_PATH) -I$(OMNETPP_INCL_DIR)
 MSGCOPTS = $(INCLUDE_PATH)
 SMCOPTS =
 

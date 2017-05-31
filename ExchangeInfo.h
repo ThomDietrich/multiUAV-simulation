@@ -29,8 +29,8 @@ class ExchangeInfo {
 public:
     ExchangeInfo();
     virtual ~ExchangeInfo();
-    //simtime_t timestamp;
-    //double x, y, z;
+    simtime_t timestamp;
+    double x, y, z;
     //GenericNode* nodeToExchange;
 //private:
 };
