@@ -24,4 +24,3 @@ ExchangeInfo::~ExchangeInfo()
 {
     // TODO Auto-generated destructor stub
 }
-

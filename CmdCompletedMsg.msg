@@ -19,9 +19,6 @@
 
 //class noncobject ExchangeInfo;
 
-//
-// TODO generated message class
-//
 message CmdCompletedMsg {
 	int sourceNode;
     string messageName;

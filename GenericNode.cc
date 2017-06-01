@@ -124,8 +124,8 @@ void GenericNode::initialize(int stage)
 }
 
 void GenericNode::refreshDisplay() const
-{   
-    auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
+{
+    auto geoSRS = mapNode->getMapSRS(); //->getGeographicSRS();
     double longitude = getLongitude();
     double latitude = getLatitude();
     double altitude = getAltitude();
@@ -157,13 +157,9 @@ void GenericNode::handleMessage(cMessage *msg)
         stepSize = 0;
     }
     else if (msg->isName("update")) {
-        // update current position to represent position at simTime()
         updateState();
-
-        // let the node decide when the next simulation step should happen
         stepSize = nextNeededUpdate();
         stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
-
         if (commandCompleted()) {
             msg->setName("nextCommand");
             stepSize = 0;
@@ -175,12 +171,13 @@ void GenericNode::handleMessage(cMessage *msg)
             delete msg;
             return;
         }
-        ExchangeInfo *exchangeInfo = endOfOperation();
-        CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        ccmsg->setSourceNode(this->getIndex());
+
+        //ExchangeInfo *exchangeInfo = endOfOperation();
+        //CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
+        //ccmsg->setSourceNode(this->getIndex());
         //ccmsg->setMessageName(commands.front()->getMessageName());
         //ccmsg->
-        send(ccmsg, "gate$o", 0);
+        //send(ccmsg, "gate$o", 0);
 
         EV_INFO << "Command completed. Selecting next command." << endl;
         selectNextCommand();

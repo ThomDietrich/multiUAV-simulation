@@ -18,12 +18,9 @@
 
 #include <omnetpp.h>
 
-//#include "GenericNode.h"
+//#include "UAVNode.h"
 
 using namespace omnetpp;
-
-//make GenericNode known to be reverse reference type
-//class GenericNode;
 
 class ExchangeInfo {
 public:
@@ -31,7 +28,7 @@ public:
     virtual ~ExchangeInfo();
     simtime_t timestamp;
     double x, y, z;
-    //GenericNode* nodeToExchange;
+    //UAVNode* nodeToExchange;
 //private:
 };
 

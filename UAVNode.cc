@@ -62,7 +62,7 @@ void UAVNode::loadCommands(CommandQueue commands)
         cees.clear();
     }
 
-    for (int index = 0; index < commands.size(); ++index) {
+    for (u_int index = 0; index < commands.size(); ++index) {
         Command *command = commands.at(index);
         CommandExecEngine *cee = nullptr;
 
@@ -235,7 +235,7 @@ double UAVNode::getSpeedFromAngle(double angle)
     if (angle == samples[0][0]) return samples[0][1];
 
     // simple linear interpolation
-    for (int idx = 1; idx < sizeof(samples); ++idx) {
+    for (u_int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
             double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
@@ -278,7 +278,7 @@ double UAVNode::getCurrentFromAngle(double angle)
     if (angle == samples[0][0]) return samples[0][1];
 
     // simple linear interpolation
-    for (int idx = 1; idx < sizeof(samples); ++idx) {
+    for (u_int idx = 1; idx < sizeof(samples); ++idx) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
             double mean = samples[idx - 1][1] + mean_slope * (angle - samples[idx - 1][0]);
@@ -362,10 +362,10 @@ ExchangeInfo* UAVNode::endOfOperation()
     EV_INFO << "Finished calculation." << endl;
     ExchangeInfo *result = new ExchangeInfo();
     //result->nodeToExchange = this;
-    //result->timestamp = simTime() + durrationOfCommands;
-    //result->x = fromX;
-    //result->y = fromY;
-    //result->z = fromZ;
+    result->timestamp = simTime() + durrationOfCommands;
+    result->x = fromX;
+    result->y = fromY;
+    result->z = fromZ;
     return result;
 }
 
