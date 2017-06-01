@@ -108,7 +108,7 @@ void UAVNode::selectNextCommand()
     //EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
     
     // Elect and activate the next command/CEE
-    if (scheduledCEE->getCeeType() == CHARGE) {
+    if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
         EV_INFO << "Energy Management: Recharging now." << endl;
     }
     else if (battery.isEmpty()) {
@@ -150,8 +150,8 @@ void UAVNode::selectNextCommand()
 
     // reinject command (if no charging or takeoff command)
     if (commandsRepeat
-            && not (commandExecEngine->getCeeType() == CHARGE)
-            && not (commandExecEngine->getCeeType() == TAKEOFF)
+            && not (commandExecEngine->getCeeType() == CeeType::CHARGE)
+            && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF)
     ) { 
         cees.push_back(commandExecEngine);
     }
@@ -167,16 +167,16 @@ void UAVNode::initializeState()
 
     std::string text(getFullName());
     switch (commandExecEngine->getCeeType()) {
-        case WAYPOINT:
+        case CeeType::WAYPOINT:
         text += " WP";
         break;
-        case TAKEOFF:
+        case CeeType::TAKEOFF:
         text += " TO";
         break;
-        case HOLDPOSITION:
+        case CeeType::HOLDPOSITION:
         text += " HP";
         break;
-        case CHARGE:
+        case CeeType::CHARGE:
         text += " CH";
         break;
     }
@@ -325,7 +325,7 @@ ExchangeInfo* UAVNode::endOfOperation()
     while (true) {
         CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
 
-        if (nextCEE->getCeeType() == CHARGE) {
+        if (nextCEE->getCeeType() == CeeType::CHARGE) {
             throw cRuntimeError("endOfOperation(): charge command encountered");
         }
 

@@ -24,7 +24,7 @@ using namespace omnetpp;
 //make MobileNode known to be reverse reference type
 class MobileNode;
 
-enum ceeType {
+enum class CeeType {
     WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE
 };
 
@@ -36,8 +36,8 @@ class CommandExecEngine {
 protected:
     //SubclassNode *node;
     Command *command;
-    ceeType type;
-    void setType(ceeType type);
+    CeeType type;
+    void setType(CeeType type);
 
     /// coordinates from where the command will be executed
     double x0, y0, z0;
@@ -138,7 +138,7 @@ public:
         return 0;
     }
     
-    ceeType getCeeType()
+    CeeType getCeeType()
     {
         return type;
     }

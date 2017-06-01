@@ -18,7 +18,7 @@
 
 using namespace omnetpp;
 
-void CommandExecEngine::setType(ceeType type)
+void CommandExecEngine::setType(CeeType type)
 {
     this->type = type;
 }
@@ -30,7 +30,7 @@ WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command)
 {
     this->node = &boundNode;
     this->command = &command;
-    this->setType(WAYPOINT);
+    this->setType(CeeType::WAYPOINT);
     setFromCoordinates(node->x, node->y, node->z);
     setToCoordinates(command.getX(), command.getY(), command.getZ());
 }
@@ -131,7 +131,7 @@ TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command)
 {
     this->node = &boundNode;
     this->command = &command;
-    this->setType(TAKEOFF);
+    this->setType(CeeType::TAKEOFF);
     setFromCoordinates(node->x, node->y, node->z);
     setToCoordinates(node->x, node->y, command.getZ());
 }
@@ -202,7 +202,7 @@ HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& comman
 {
     this->node = &boundNode;
     this->command = &command;
-    this->setType(HOLDPOSITION);
+    this->setType(CeeType::HOLDPOSITION);
     setFromCoordinates(node->x, node->y, node->z);
     setToCoordinates(node->x, node->y, node->z);
     this->holdPositionTill = simTime() + this->command->getHoldSeconds();
@@ -268,7 +268,7 @@ ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command)
 {
     this->node = &boundNode;
     this->command = &command;
-    this->setType(CHARGE);
+    this->setType(CeeType::CHARGE);
     this->setFromCoordinates(node->x, node->y, node->z);
     this->setToCoordinates(node->x, node->y, node->z);
 }
