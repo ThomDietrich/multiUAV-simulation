@@ -15,7 +15,7 @@ out/
 *.lib
 *.exe
 *.o
-*.obj
+#*.obj # Do not ignore blender exported model file
 *.pdb
 *.idb
 *.manifest

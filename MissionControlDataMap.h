@@ -13,6 +13,7 @@
 #include <unordered_map>
 
 #include "ExchangeInfo.h"
+#include "GenericNode.h"
 
 using namespace omnetpp;
 
@@ -28,14 +29,15 @@ enum class NodeStatus {
  */
 typedef struct {
     int nodeId;
+    GenericNode* node;
     NodeStatus status;
     ExchangeInfo exchangeInfo;
-} nodeData;
+} NodeData;
 
 /**
  * A map of all nodes managed by the MissionControl.
  * key: the nodeId
  */
-typedef std::unordered_map<int, nodeData> NodeDataMap;
+typedef std::unordered_map<int, NodeData*> NodeDataMap;
 
 #endif /* MISSIONCONTROLDATAMAP_H_ */

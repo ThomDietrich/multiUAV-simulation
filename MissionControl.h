@@ -21,6 +21,8 @@
 #include "OsgEarthScene.h"
 #include "Command.h"
 #include "UAVNode.h"
+#include "MobileNode.h"
+#include "GenericNode.h"
 #include "MissionMsg_m.h"
 #include "CmdCompletedMsg_m.h"
 #include "MissionControlDataMap.h"
@@ -39,6 +41,7 @@ protected:
     virtual void handleMessage(cMessage *msg);
     virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
     virtual UAVNode* selectUAVNode();
+    virtual GenericNode* selectIdleNode();
 };
 
 #endif

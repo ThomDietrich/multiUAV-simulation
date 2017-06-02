@@ -3,15 +3,15 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 #ifdef WITH_OSG
 #include "MissionControl.h"
@@ -23,7 +23,22 @@ void MissionControl::initialize()
     missionQueue[0] = loadCommandsFromWaypointsFile("BostonParkCircle.waypoints");
     missionQueue[1] = loadCommandsFromWaypointsFile("BostonParkLine.waypoints");
     missionQueue[2] = loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints");
-    
+
+    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+    for (SubmoduleIterator it(network); !it.end(); ++it) {
+        cModule *mod = *it;
+        if (mod->isName("uav")) {
+            EV_INFO << "MissionControl::initialize(): Adding node to managedNodes " << mod->getFullPath() << endl;
+            NodeData *node = new NodeData();
+            node->node = check_and_cast<GenericNode *>(mod);
+            node->nodeId = node->node->getIndex();
+            node->status = NodeStatus::IDLE;
+            //node->exchangeInfo = nullptr;
+            std::pair<int, NodeData*> nodePair(mod->getIndex(), node);
+            managedNodes.insert(nodePair);
+        }
+    }
+
     cMessage *start = new cMessage("startScheduling");
     scheduleAt(par("startTime"), start);
 }
@@ -32,10 +47,10 @@ void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
         EV_INFO << "Mission Control Scheduling started." << endl;
-        
+
         MissionMsg *uavStart;
         UAVNode *selected;
-        
+
         selected = selectUAVNode();
         if (selected) {
             selected->loadCommands(missionQueue[0]); //TODO dirty hack
@@ -120,7 +135,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
     double p1, p2, p3, p4;
     double lat, lon, alt;
     int unknown3;
-    
+
     // Skip first line (header)
     std::string str;
     std::getline(inputFile, str);
@@ -129,17 +144,17 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
     lineCnt++;
     std::getline(inputFile, str);
     EV_INFO << "Line " << lineCnt << " skipped (2)" << endl;
-    
+
     while (true) {
         lineCnt++;
         inputFile >> cmdId >> unknown1 >> unknown2 >> commandType >> p1 >> p2 >> p3 >> p4 >> lat >> lon >> alt >> unknown3;
-        
+
         if (inputFile.fail()) { //TODO differentiate between EOF and failure
             EV_INFO << "Line " << lineCnt << " failed (EOF)" << endl;
             break;
         }
         //EV_INFO << "Line " << lineCnt << " okay" << endl;
-        
+
         switch (commandType) {
             case 16: { // WAYPOINT
                 commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
@@ -188,6 +203,12 @@ UAVNode* MissionControl::selectUAVNode()
         }
     }
     EV_WARN << "MissionControl::selectUAVNode(): No available Nodes found." << endl;
+    return nullptr;
+}
+
+GenericNode* MissionControl::selectIdleNode()
+{
+    EV_WARN << "MissionControl::selectIdleNode(): No idle nodes found." << endl;
     return nullptr;
 }
 
