@@ -54,7 +54,7 @@ public:
 };
 
 class GenericNode : public cSimpleModule, public IGenericNode {
-    
+
 protected:
     // configuration
     double timeStep;
@@ -75,7 +75,7 @@ protected:
 
     // state
     double x, y, z; // relative to playground origin (top left) in meters
-            
+
     /**
      * yaw/horizontal orientation in degrees
      * 0° = oriented to the right of the playground
@@ -112,7 +112,7 @@ protected:
     // second label beneath labelNode
     osg::ref_ptr<osgEarth::Annotation::LabelNode> sublabelNode = nullptr;
     // trail annotation
-    
+
 public:
     GenericNode();
     virtual ~GenericNode();

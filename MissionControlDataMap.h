@@ -10,7 +10,7 @@
 
 #include <omnetpp.h>
 
-#include <unordered_map>
+#include <map>
 
 #include "ExchangeInfo.h"
 #include "GenericNode.h"
@@ -21,7 +21,7 @@ using namespace omnetpp;
  * The overall status of a node, as seen by the MissionControl.
  */
 enum class NodeStatus {
-    IDLE, MISSION, CHARGE, DEAD
+    IDLE, PROVISION, MISSION, MAINTENANCE, CHARGE, DEAD
 };
 
 /**
@@ -38,6 +38,6 @@ typedef struct {
  * A map of all nodes managed by the MissionControl.
  * key: the nodeId
  */
-typedef std::unordered_map<int, NodeData*> NodeDataMap;
+typedef std::map<int, NodeData*> NodeDataMap;
 
 #endif /* MISSIONCONTROLDATAMAP_H_ */

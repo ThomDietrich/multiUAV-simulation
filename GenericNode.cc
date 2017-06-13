@@ -32,16 +32,16 @@ using namespace osgEarth::Annotation;
 using namespace osgEarth::Features;
 
 GenericNode::GenericNode()
-{   
+{
     // Ignore Warning: members are initialized in "initialize(int stage)"
 }
 
 GenericNode::~GenericNode()
-{   
+{
 }
 
 void GenericNode::initialize(int stage)
-{   
+{
     switch (stage) {
         case 0:
         timeStep = par("timeStep");
@@ -143,7 +143,7 @@ void GenericNode::refreshDisplay() const
 }
 
 void GenericNode::handleMessage(cMessage *msg)
-{   
+{
     double stepSize = 0;
     if (msg->isName("startMission")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
@@ -201,7 +201,7 @@ void GenericNode::handleMessage(cMessage *msg)
  * @return 'true' if commands are available
  */
 bool GenericNode::hasCommandsInQueue()
-{   
+{
     return (not cees.empty());
 }
 

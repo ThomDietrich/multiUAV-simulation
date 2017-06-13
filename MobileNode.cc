@@ -47,7 +47,7 @@ void MobileNode::initialize(int stage)
             trailLength = par("trailLength");
             trailColor = par("trailColor").stringValue();
             break;
-            
+
         case 1:
             // create a node containing a track showing the past trail of the model
             if (trailLength > 0) {
@@ -55,7 +55,7 @@ void MobileNode::initialize(int stage)
                 trailStyle.getOrCreate<LineSymbol>()->stroke()->width() = 50.0f;
                 trailStyle.getOrCreate<AltitudeSymbol>()->clamping() = AltitudeSymbol::CLAMP_RELATIVE_TO_TERRAIN;
                 trailStyle.getOrCreate<AltitudeSymbol>()->technique() = AltitudeSymbol::TECHNIQUE_DRAPE;
-                auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
+                auto geoSRS = mapNode->getMapSRS(); //->getGeographicSRS();
                 trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
                 locatorNode->addChild(trailNode);
             }
@@ -69,7 +69,7 @@ void MobileNode::initialize(int stage)
 void MobileNode::refreshDisplay() const
 {
     GenericNode::refreshDisplay();
-    auto geoSRS = mapNode->getMapSRS()->getGeographicSRS();
+    auto geoSRS = mapNode->getMapSRS(); //->getGeographicSRS();
     // if we are showing the model's track, update geometry in the trackNode
     if (trailNode) {
         // create and assign a new feature containing the updated geometry
@@ -88,7 +88,7 @@ void MobileNode::handleMessage(cMessage *msg)
         // store the new position to be able to create a track later
         //TODO fix
         //trail.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
-        
+
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
         if (trail.size() > trailLength) trail.erase(trail.begin());
     }

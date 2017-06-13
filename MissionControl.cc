@@ -20,23 +20,25 @@ Define_Module(MissionControl);
 
 void MissionControl::initialize()
 {
-    missionQueue[0] = loadCommandsFromWaypointsFile("BostonParkCircle.waypoints");
-    missionQueue[1] = loadCommandsFromWaypointsFile("BostonParkLine.waypoints");
-    missionQueue[2] = loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints");
+    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
+    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
+    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
 
+    // Add all GenericNodes to managedNodes list (map)
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     for (SubmoduleIterator it(network); !it.end(); ++it) {
-        cModule *mod = *it;
-        if (mod->isName("uav")) {
-            EV_INFO << "MissionControl::initialize(): Adding node to managedNodes " << mod->getFullPath() << endl;
-            NodeData *node = new NodeData();
-            node->node = check_and_cast<GenericNode *>(mod);
-            node->nodeId = node->node->getIndex();
-            node->status = NodeStatus::IDLE;
-            //node->exchangeInfo = nullptr;
-            std::pair<int, NodeData*> nodePair(mod->getIndex(), node);
-            managedNodes.insert(nodePair);
+        cModule *module = *it;
+        if (not module->isName("uav")) {
+            continue;
         }
+        NodeData *nodedata = new NodeData();
+        nodedata->node = check_and_cast<MobileNode *>(module);
+        nodedata->nodeId = module->getIndex();
+        nodedata->status = NodeStatus::IDLE;
+        //node->exchangeInfo = nullptr;
+        EV_DEBUG << __func__ << "(): Adding " << module->getFullName() << " to managedNodes" << endl;
+        std::pair<int, NodeData*> nodePair(module->getIndex(), nodedata);
+        managedNodes.insert(nodePair);
     }
 
     cMessage *start = new cMessage("startScheduling");
@@ -46,69 +48,32 @@ void MissionControl::initialize()
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
-        EV_INFO << "Mission Control Scheduling started." << endl;
+        MissionMsg *nodeStartMission;
+        GenericNode *idleNode;
 
-        MissionMsg *uavStart;
-        UAVNode *selected;
+        for (u_int i = 0; i < missionQueue.size(); ++i) {
+            EV_DEBUG << i << " von " << missionQueue.size() << endl;
+            idleNode = selectIdleNode();
+            if (not idleNode) throw cRuntimeError("startScheduling: No nodes left to schedule.");
 
-        selected = selectUAVNode();
-        if (selected) {
-            selected->loadCommands(missionQueue[0]); //TODO dirty hack
-            uavStart = new MissionMsg("startMission");
-            uavStart->setMissionId(0);
-            uavStart->setMission(missionQueue[0]);
-            uavStart->setMissionRepeat(true);
-            send(uavStart, "gate$o", selected->getIndex());
-        }
-        selected = selectUAVNode();
-        if (selected) {
-            selected->loadCommands(missionQueue[0]); //TODO dirty hack
-            uavStart = new MissionMsg("startMission");
-            uavStart->setMissionId(0);
-            uavStart->setMission(missionQueue[0]);
-            uavStart->setMissionRepeat(true);
-            send(uavStart, "gate$o", selected->getIndex());
-        }
-        selected = selectUAVNode();
-        if (selected) {
-            selected->loadCommands(missionQueue[1]); //TODO dirty hack
-            uavStart = new MissionMsg("startMission");
-            uavStart->setMissionId(1);
-            uavStart->setMission(missionQueue[1]);
-            uavStart->setMissionRepeat(true);
-            send(uavStart, "gate$o", selected->getIndex());
-        }
-        selected = selectUAVNode();
-        if (selected) {
-            selected->loadCommands(missionQueue[1]); //TODO dirty hack
-            uavStart = new MissionMsg("startMission");
-            uavStart->setMissionId(1);
-            uavStart->setMission(missionQueue[1]);
-            uavStart->setMissionRepeat(true);
-            send(uavStart, "gate$o", selected->getIndex());
-        }
-        selected = selectUAVNode();
-        if (selected) {
-            selected->loadCommands(missionQueue[2]); //TODO dirty hack
-            uavStart = new MissionMsg("startMission");
-            uavStart->setMissionId(2);
-            uavStart->setMission(missionQueue[2]);
-            uavStart->setMissionRepeat(true);
-            send(uavStart, "gate$o", selected->getIndex());
-        }
-        selected = selectUAVNode();
-        if (selected) {
-            selected->loadCommands(missionQueue[2]); //TODO dirty hack
-            uavStart = new MissionMsg("startMission");
-            uavStart->setMissionId(2);
-            uavStart->setMission(missionQueue[2]);
-            uavStart->setMissionRepeat(true);
-            send(uavStart, "gate$o", selected->getIndex());
+            nodeStartMission = new MissionMsg("startMission");
+            nodeStartMission->setMissionId(i);
+            nodeStartMission->setMission(missionQueue.at(i));
+            nodeStartMission->setMissionRepeat(true);
+            send(nodeStartMission, "gate$o", idleNode->getIndex());
+
+            // Mark node as with mission
+            managedNodes.at(idleNode->getIndex())->status = NodeStatus::PROVISION;
         }
     }
     else if (msg->isName("commandCompleted")) {
         CmdCompletedMsg *ccmsg = check_and_cast<CmdCompletedMsg *>(msg);
         EV_INFO << "commandCompleted message received" << endl;
+        NodeData* nodeData = managedNodes.at(ccmsg->getSourceNode());
+        if (nodeData->status == NodeStatus::PROVISION) {
+            EV_INFO << "Node switching over to nodeStatus MISSION" << endl;
+            nodeData->status = NodeStatus::MISSION;
+        }
         delete ccmsg;
     }
     else {
@@ -189,26 +154,23 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
     return commands;
 }
 
+[[deprecated]]
 UAVNode* MissionControl::selectUAVNode()
 {
-    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
-    UAVNode *uav;
-    for (SubmoduleIterator it(network); !it.end(); ++it) {
-        cModule *mod = *it;
-        if (mod->isName("uav")) {
-            uav = check_and_cast<UAVNode *>(mod);
-            if (uav->hasCommandsInQueue()) continue;
-            EV_INFO << "MissionControl::selectUAVNode(): " << uav->getFullPath() << endl;
-            return uav;
-        }
-    }
-    EV_WARN << "MissionControl::selectUAVNode(): No available Nodes found." << endl;
+    EV_WARN << __func__ << "(): Deprecated." << endl;
     return nullptr;
 }
 
 GenericNode* MissionControl::selectIdleNode()
 {
-    EV_WARN << "MissionControl::selectIdleNode(): No idle nodes found." << endl;
+    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        if (it->second->status == NodeStatus::IDLE) {
+            GenericNode* node = check_and_cast<MobileNode *>(it->second->node);
+            EV_INFO << __func__ << "(): " << node->getFullPath() << endl;
+            return node;
+        }
+    }
+    EV_WARN << __func__ << "(): No available Nodes found." << endl;
     return nullptr;
 }
 

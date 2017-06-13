@@ -18,6 +18,8 @@
 
 #include <omnetpp.h>
 
+#include <deque>
+
 #include "OsgEarthScene.h"
 #include "Command.h"
 #include "UAVNode.h"
@@ -35,7 +37,7 @@ using namespace omnetpp;
 class MissionControl : public cSimpleModule {
 private:
     NodeDataMap managedNodes;
-    CommandQueue missionQueue[3];
+    std::deque<CommandQueue> missionQueue;
 protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);

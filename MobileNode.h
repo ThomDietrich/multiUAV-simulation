@@ -23,7 +23,6 @@
 #include <osgEarthUtil/ObjectLocator>
 
 #include <omnetpp.h>
-#include "GenericNode.h"
 #include "ChargingNode.h"
 #include "Battery.h"
 
@@ -36,7 +35,7 @@ class ChargingNode;
  * model's track can be shown along with its label.
  */
 class MobileNode : public GenericNode {
-    
+
 protected:
     //trail (recently visited points)
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> trailNode = nullptr;
@@ -47,7 +46,7 @@ protected:
 
     double speed; //speed (3D) in [m/s]
     Battery battery; //energy storage
-    
+
 public:
     MobileNode();
     virtual ~MobileNode();

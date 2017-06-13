@@ -24,8 +24,9 @@
 #include <osgEarthFeatures/Feature>
 
 #include <omnetpp.h>
-#include "OsgEarthScene.h"
+
 #include "GenericNode.h"
+#include "OsgEarthScene.h"
 
 using namespace omnetpp;
 
