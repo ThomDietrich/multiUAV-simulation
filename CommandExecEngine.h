@@ -3,15 +3,15 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 #ifndef COMMANDEXECENGINE_H_
 #define COMMANDEXECENGINE_H_
@@ -48,7 +48,7 @@ protected:
 
 public:
     //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
-    
+
     virtual ~CommandExecEngine()
     {
     }
@@ -75,7 +75,7 @@ public:
         this->y1 = y;
         this->z1 = z;
     }
-    
+
     double getX0()
     {
         return x0;
@@ -100,11 +100,24 @@ public:
     {
         return z1;
     }
-    
+
+    /**
+     * Check wether or not the current command has reached its completion.
+     * Depending on the command compares the current position and state of the node with the abort criterion of the command.
+     */
     virtual bool commandCompleted() = 0;
 
+    /**
+     * Initialize the CEE itself.
+     * The method does not modify the befriended node, see setNodeParameters().
+     */
     virtual void initializeCEE() = 0;
 
+    /**
+     * Transfer CEE parameters to the befriended node.
+     * Call this method (after initializeCEE()) if a CEE should actually be executed by the node.
+     * Do not call if you just want to pre-simulate effects (e.g. consumption) of the CEE.
+     */
     virtual void setNodeParameters() = 0;
 
     /**
@@ -114,8 +127,15 @@ public:
      */
     virtual void updateState(double stepSize) = 0;
 
+    /*
+     * Get the overall duration expected for the CEE.
+     */
     virtual double getDuration() = 0;
 
+    /*
+     * Get the remaining time the CEE is still active.
+     * Is the same as getDuration() before execution of the CEE.
+     */
     virtual double getRemainingTime() = 0;
 
     /**
@@ -128,7 +148,7 @@ public:
     {
         return 0;
     }
-    
+
     /**
      * Predict the overall consumption for the full command execution procedure
      * @return to be consumed energy in mAh
@@ -137,11 +157,18 @@ public:
     {
         return 0;
     }
-    
+
+    /*
+     *
+     */
     CeeType getCeeType()
     {
         return type;
     }
+
+    /*
+     *
+     */
     virtual char* getCeeTypeString() = 0;
 };
 

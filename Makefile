@@ -35,7 +35,7 @@ OBJS = \
     $O/ChargingNode.o \
     $O/Command.o \
     $O/CommandExecEngine.o \
-    $O/ExchangeInfo.o \
+    $O/ExchangeData.o \
     $O/fallback.o \
     $O/GenericNode.o \
     $O/MissionControl.o \

@@ -157,10 +157,14 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
 [[deprecated]]
 UAVNode* MissionControl::selectUAVNode()
 {
-    EV_WARN << __func__ << "(): Deprecated." << endl;
+    EV_WARN << __func__ << "(): Deprecated. Maybe reuse later" << endl;
     return nullptr;
 }
 
+/*
+ * Choose a free Node from the managedNodes map.
+ * Selection happens by lowest module index and amongst the IDLE nodes.
+ */
 GenericNode* MissionControl::selectIdleNode()
 {
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
@@ -170,7 +174,7 @@ GenericNode* MissionControl::selectIdleNode()
             return node;
         }
     }
-    EV_WARN << __func__ << "(): No available Nodes found." << endl;
+    throw cRuntimeError("MissionControl::selectIdleNode(): No available Nodes found. This case is not handled yet.");
     return nullptr;
 }
 
