@@ -13,23 +13,14 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef EXCHANGEINFO_H_
-#define EXCHANGEINFO_H_
+#include "ExchangeData.h"
 
-#include <omnetpp.h>
+ExchangeData::ExchangeData()
+{
+    // TODO Auto-generated constructor stub
+}
 
-//#include "UAVNode.h"
-
-using namespace omnetpp;
-
-class ExchangeInfo {
-public:
-    ExchangeInfo();
-    virtual ~ExchangeInfo();
-    simtime_t timestamp;
-    double x, y, z;
-    //UAVNode* nodeToExchange;
-//private:
-};
-
-#endif /* EXCHANGEINFO_H_ */
+ExchangeData::~ExchangeData()
+{
+    // TODO Auto-generated destructor stub
+}

@@ -310,7 +310,7 @@ double UAVNode::getCurrentHover()
     return result;
 }
 
-ExchangeInfo* UAVNode::endOfOperation()
+ExchangeData* UAVNode::endOfOperation()
 {   
     float energySum = 0;
     float energyToCNAfter = 0;
@@ -360,7 +360,7 @@ ExchangeInfo* UAVNode::endOfOperation()
         fromZ = nextCEE->getZ1();
     }
     EV_INFO << "Finished calculation." << endl;
-    ExchangeInfo *result = new ExchangeInfo();
+    ExchangeData *result = new ExchangeData();
     //result->nodeToExchange = this;
     result->timestamp = simTime() + durrationOfCommands;
     result->x = fromX;

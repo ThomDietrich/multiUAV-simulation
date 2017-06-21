@@ -12,7 +12,7 @@
 
 #include <map>
 
-#include "ExchangeInfo.h"
+#include "ExchangeData.h"
 #include "GenericNode.h"
 
 using namespace omnetpp;
@@ -31,7 +31,7 @@ typedef struct {
     int nodeId;
     GenericNode* node;
     NodeStatus status;
-    ExchangeInfo exchangeInfo;
+    ExchangeData exchangeInfo;
 } NodeData;
 
 /**

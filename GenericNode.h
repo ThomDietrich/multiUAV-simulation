@@ -29,13 +29,13 @@
 
 #include "Command.h"
 #include "CommandExecEngine.h"
-#include "ExchangeInfo.h"
 #include "MissionMsg_m.h"
 #include "CmdCompletedMsg_m.h"
+#include "ExchangeData.h"
 
 using namespace omnetpp;
 
-class ExchangeInfo;
+class ExchangeData;
 
 /**
  * Interface to be implemented by nodes to be able to register in ChannelController.
@@ -178,7 +178,7 @@ protected:
      */
     virtual void initializeState() = 0;
     virtual double nextNeededUpdate() = 0;
-    virtual ExchangeInfo* endOfOperation() = 0;
+    virtual ExchangeData* endOfOperation() = 0;
 };
 
 #endif

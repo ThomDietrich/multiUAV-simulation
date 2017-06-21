@@ -35,7 +35,7 @@ public:
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
-    virtual ExchangeInfo* endOfOperation() override;
+    virtual ExchangeData* endOfOperation() override;
 protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
