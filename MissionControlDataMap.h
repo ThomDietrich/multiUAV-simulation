@@ -12,8 +12,8 @@
 
 #include <map>
 
-#include "ExchangeData.h"
 #include "GenericNode.h"
+#include "ReplacementData.h"
 
 using namespace omnetpp;
 
@@ -28,10 +28,9 @@ enum class NodeStatus {
  * A summarized view on a node needed by the MissionControl for node management.
  */
 typedef struct {
-    int nodeId;
     GenericNode* node;
     NodeStatus status;
-    ExchangeData exchangeInfo;
+    ReplacementData* replacementData;
 } NodeData;
 
 /**

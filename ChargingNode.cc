@@ -50,7 +50,7 @@ void ChargingNode::initialize(int stage)
 
 /// TODO: Decouple Charging Node from GenericNode
 
-ExchangeData* ChargingNode::endOfOperation()
+ReplacementData* ChargingNode::endOfOperation()
 {
     return 0;
 }

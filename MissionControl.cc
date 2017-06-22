@@ -33,9 +33,8 @@ void MissionControl::initialize()
         }
         NodeData *nodedata = new NodeData();
         nodedata->node = check_and_cast<MobileNode *>(module);
-        nodedata->nodeId = module->getIndex();
         nodedata->status = NodeStatus::IDLE;
-        //node->exchangeInfo = nullptr;
+        nodedata->replacementData = nullptr;
         EV_DEBUG << __func__ << "(): Adding " << module->getFullName() << " to managedNodes" << endl;
         std::pair<int, NodeData*> nodePair(module->getIndex(), nodedata);
         managedNodes.insert(nodePair);
@@ -162,7 +161,7 @@ UAVNode* MissionControl::selectUAVNode()
 }
 
 /*
- * Choose a free Node from the managedNodes map.
+ * Choose a free node from the managedNodes map.
  * Selection happens by lowest module index and amongst the IDLE nodes.
  */
 GenericNode* MissionControl::selectIdleNode()

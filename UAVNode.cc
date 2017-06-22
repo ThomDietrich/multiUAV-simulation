@@ -27,11 +27,11 @@ using namespace omnetpp;
 Define_Module(UAVNode);
 
 UAVNode::UAVNode()
-{   
+{
 }
 
 UAVNode::~UAVNode()
-{   
+{
 }
 
 /**
@@ -39,7 +39,7 @@ UAVNode::~UAVNode()
  * @param stage
  */
 void UAVNode::initialize(int stage)
-{   
+{
     MobileNode::initialize(stage);
     switch (stage) {
         case 0: {
@@ -56,7 +56,7 @@ void UAVNode::initialize(int stage)
 }
 
 void UAVNode::loadCommands(CommandQueue commands)
-{   
+{
     if (not cees.empty()) {
         EV_WARN << "Replacing non-empty CEE queue." << endl;
         cees.clear();
@@ -91,7 +91,7 @@ void UAVNode::loadCommands(CommandQueue commands)
  * @throws cRuntimeError if no commands left in queue
  */
 void UAVNode::selectNextCommand()
-{   
+{
     if (cees.size() == 0) {
         throw cRuntimeError("selectNextCommand(): UAV has no commands in CEEs queue left.");
     }
@@ -106,7 +106,7 @@ void UAVNode::selectNextCommand()
     float energyRemaining = this->battery.getRemaining();
 
     //EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
-    
+
     // Elect and activate the next command/CEE
     if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
         EV_INFO << "Energy Management: Recharging now." << endl;
@@ -152,13 +152,13 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat
             && not (commandExecEngine->getCeeType() == CeeType::CHARGE)
             && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF)
-    ) { 
+    ) {
         cees.push_back(commandExecEngine);
     }
 }
 
 void UAVNode::initializeState()
-{   
+{
     if (commandExecEngine == nullptr) {
         throw cRuntimeError("initializeState(): Command Engine missing.");
     }
@@ -184,7 +184,7 @@ void UAVNode::initializeState()
 }
 
 void UAVNode::updateState()
-{   
+{
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
@@ -198,7 +198,7 @@ void UAVNode::updateState()
 }
 
 bool UAVNode::commandCompleted()
-{   
+{
     return commandExecEngine->commandCompleted();
 }
 
@@ -206,7 +206,7 @@ bool UAVNode::commandCompleted()
  * Get the time in seconds till the end of current command
  */
 double UAVNode::nextNeededUpdate()
-{   
+{
     return commandExecEngine->getRemainingTime();
 }
 
@@ -216,7 +216,7 @@ double UAVNode::nextNeededUpdate()
  * @return the speed of the UAV in [m/s]
  */
 double UAVNode::getSpeedFromAngle(double angle)
-{   
+{
     double samples[11][2] = { //
         {   -90.0, 1.837303}, //
         {   -75.6, 1.842921}, //
@@ -259,7 +259,7 @@ double UAVNode::getSpeedFromAngle(double angle)
  * @return the current used by the UAV in [A]
  */
 double UAVNode::getCurrentFromAngle(double angle)
-{   
+{
     double samples[11][3] = { //
         {   -90.0, 16.86701, 0.7651131}, //
         {   -75.6, 17.97695, 0.7196844}, //
@@ -302,7 +302,7 @@ double UAVNode::getCurrentFromAngle(double angle)
 }
 
 double UAVNode::getCurrentHover()
-{   
+{
     double mean = 18.09;
     double stddev = 0.36;
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
@@ -310,8 +310,8 @@ double UAVNode::getCurrentHover()
     return result;
 }
 
-ExchangeData* UAVNode::endOfOperation()
-{   
+ReplacementData* UAVNode::endOfOperation()
+{
     float energySum = 0;
     float energyToCNAfter = 0;
     int commandsFeasible = 0;
@@ -321,7 +321,7 @@ ExchangeData* UAVNode::endOfOperation()
     double fromZ = this->getZ();
 
     //TODO Add current Execution Engine consumption
-    
+
     while (true) {
         CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
 
@@ -360,9 +360,9 @@ ExchangeData* UAVNode::endOfOperation()
         fromZ = nextCEE->getZ1();
     }
     EV_INFO << "Finished calculation." << endl;
-    ExchangeData *result = new ExchangeData();
+    ReplacementData *result = new ReplacementData();
     //result->nodeToExchange = this;
-    result->timestamp = simTime() + durrationOfCommands;
+    result->timeOfReplacement = simTime() + durrationOfCommands;
     result->x = fromX;
     result->y = fromY;
     result->z = fromZ;
@@ -370,7 +370,7 @@ ExchangeData* UAVNode::endOfOperation()
 }
 
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
-{   
+{
     // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
@@ -381,7 +381,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 }
 
 void UAVNode::move()
-{   
+{
     //unused.
 }
 

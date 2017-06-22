@@ -35,12 +35,12 @@ OBJS = \
     $O/ChargingNode.o \
     $O/Command.o \
     $O/CommandExecEngine.o \
-    $O/ExchangeData.o \
     $O/fallback.o \
     $O/GenericNode.o \
     $O/MissionControl.o \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
+    $O/ReplacementData.o \
     $O/UAVNode.o \
     $O/CmdCompletedMsg_m.o \
     $O/MissionMsg_m.o
