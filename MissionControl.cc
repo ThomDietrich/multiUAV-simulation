@@ -32,7 +32,7 @@ void MissionControl::initialize()
             continue;
         }
         NodeData *nodedata = new NodeData();
-        nodedata->node = check_and_cast<MobileNode *>(module);
+        nodedata->node = check_and_cast<GenericNode *>(module);
         nodedata->status = NodeStatus::IDLE;
         nodedata->replacementData = nullptr;
         EV_DEBUG << __func__ << "(): Adding " << module->getFullName() << " to managedNodes" << endl;

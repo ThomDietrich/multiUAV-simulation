@@ -102,7 +102,7 @@ public:
     }
 
     /**
-     * Check wether or not the current command has reached its completion.
+     * Check whether or not the current CEE has reached its completion.
      * Depending on the command compares the current position and state of the node with the abort criterion of the command.
      */
     virtual bool commandCompleted() = 0;

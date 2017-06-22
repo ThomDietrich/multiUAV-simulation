@@ -36,6 +36,7 @@ UAVNode::~UAVNode()
 
 /**
  * Simulation initialization with two stages, i.e. setup cycles
+ *
  * @param stage
  */
 void UAVNode::initialize(int stage)
@@ -55,35 +56,6 @@ void UAVNode::initialize(int stage)
     }
 }
 
-void UAVNode::loadCommands(CommandQueue commands)
-{
-    if (not cees.empty()) {
-        EV_WARN << "Replacing non-empty CEE queue." << endl;
-        cees.clear();
-    }
-
-    for (u_int index = 0; index < commands.size(); ++index) {
-        Command *command = commands.at(index);
-        CommandExecEngine *cee = nullptr;
-
-        if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
-            cee = new WaypointCEE(*this, *cmd);
-        }
-        else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
-            cee = new TakeoffCEE(*this, *cmd);
-        }
-        else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
-            cee = new HoldPositionCEE(*this, *cmd);
-        }
-        else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
-            cee = new ChargeCEE(*this, *cmd);
-        }
-        else {
-            throw cRuntimeError("UAVNode::generateCCEsFromCommandQueue(): invalid cast or unexpected command type.");
-        }
-        cees.push_back(cee);
-    }
-}
 
 /**
  * Fetches the next command from the commands queue and creates a corresponding CEE.
@@ -157,6 +129,11 @@ void UAVNode::selectNextCommand()
     }
 }
 
+/**
+ * Initialize physical and logical state of the node based on the current CEE.
+ * This method is normally called once at the beginning of the CEE execution life cycle.
+ * Also update the visible label in the visualization to reflect the current command type of the UAV.
+ */
 void UAVNode::initializeState()
 {
     if (commandExecEngine == nullptr) {
@@ -183,6 +160,11 @@ void UAVNode::initializeState()
     labelNode->setText(text);
 }
 
+/*
+ * Update physical and logical state of the node based on the current CEE.
+ * This method is normally called at every simulation step of the CEE execution life cycle.
+ * Also update the visible sublabel in the visualization to reflect the current state of the UAV.
+ */
 void UAVNode::updateState()
 {
     //distance to move, based on simulation time passed since last update
@@ -197,6 +179,10 @@ void UAVNode::updateState()
     sublabelNode->setText(str);
 }
 
+/**
+ * Check whether or not the current CEE has reached its completion.
+ * Depending on the command compares the current position and state of the node with the abort criterion of the command.
+ */
 bool UAVNode::commandCompleted()
 {
     return commandExecEngine->commandCompleted();
@@ -211,52 +197,60 @@ double UAVNode::nextNeededUpdate()
 }
 
 /**
- * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle
- * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
- * @return the speed of the UAV in [m/s]
+ * Load a queue of commands, generate cees out of these and store them as the cees to be executed by the node.
  */
-double UAVNode::getSpeedFromAngle(double angle)
+void UAVNode::loadCommands(CommandQueue commands)
 {
-    double samples[11][2] = { //
-        {   -90.0, 1.837303}, //
-        {   -75.6, 1.842921}, //
-        {   -57.9, 2.013429}, //
-        {   -34.8, 2.450476}, //
-        {   -15.6, 3.583821}, //
-        {   000.0, 8.056741}, //
-        {   +15.6, 6.020143}, //
-        {   +34.8, 3.337107}, //
-        {   +57.9, 2.822109}, //
-        {   +75.6, 2.719016}, //
-        {   +90.0, 2.719048}  //
-    };
-
-    //Catch exactly -90°
-    if (angle == samples[0][0]) return samples[0][1];
-
-    // simple linear interpolation
-    for (u_int idx = 1; idx < sizeof(samples); ++idx) {
-        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
-            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
-            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
-            //TODO add deviation
-            return interpol;
-        }
+    if (not cees.empty()) {
+        EV_WARN << "Replacing non-empty CEE queue." << endl;
+        cees.clear();
     }
 
-    std::stringstream ss;
-    ss << "UAVNode::getSpeedFromAngle() unexpected angle passed: " << angle;
-    const char* str = ss.str().c_str();
+    for (u_int index = 0; index < commands.size(); ++index) {
+        Command *command = commands.at(index);
+        CommandExecEngine *cee = nullptr;
 
-    throw cRuntimeError(str);
-    return 0;
+        if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
+            cee = new WaypointCEE(*this, *cmd);
+        }
+        else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
+            cee = new TakeoffCEE(*this, *cmd);
+        }
+        else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
+            cee = new HoldPositionCEE(*this, *cmd);
+        }
+        else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
+            cee = new ChargeCEE(*this, *cmd);
+        }
+        else {
+            throw cRuntimeError("UAVNode::generateCCEsFromCommandQueue(): invalid cast or unexpected command type.");
+        }
+        cees.push_back(cee);
+    }
 }
 
 /**
- * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle
+ * Calculate the electrical current flow during hover / hold position maneuver (no movement)
+ * The calculation is based on predetermined statistical values and a gaussian normal distribution.
+ *
+ * @return The current used by the UAV in [A]
+ */
+double UAVNode::getCurrentHover()
+{
+    double mean = 18.09;
+    double stddev = 0.36;
+    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+    double result = omnetpp::normal(network->getRNG(0), mean, stddev);
+    return result;
+}
+
+/**
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
  * Consequently the power usage of the node is based on these factors.
  * This function will return the battery current drain based on real measurement values and the angle the UAV in ascending/declining flight.
- * @return the current used by the UAV in [A]
+ *
+ * @param the ascent/decline angle, range: -90..+90°
+ * @return The current used by the UAV in [A]
  */
 double UAVNode::getCurrentFromAngle(double angle)
 {
@@ -301,15 +295,57 @@ double UAVNode::getCurrentFromAngle(double angle)
     return 0;
 }
 
-double UAVNode::getCurrentHover()
+/**
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
+ * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
+ *
+ * @param the ascent/decline angle, range: -90..+90°
+ * @return the speed of the UAV in [m/s]
+ */
+double UAVNode::getSpeedFromAngle(double angle)
 {
-    double mean = 18.09;
-    double stddev = 0.36;
-    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
-    double result = omnetpp::normal(network->getRNG(0), mean, stddev);
-    return result;
+    double samples[11][2] = { //
+            { -90.0, 1.837303 }, //
+                    { -75.6, 1.842921 }, //
+                    { -57.9, 2.013429 }, //
+                    { -34.8, 2.450476 }, //
+                    { -15.6, 3.583821 }, //
+                    { 000.0, 8.056741 }, //
+                    { +15.6, 6.020143 }, //
+                    { +34.8, 3.337107 }, //
+                    { +57.9, 2.822109 }, //
+                    { +75.6, 2.719016 }, //
+                    { +90.0, 2.719048 }  //
+            };
+
+    //Catch exactly -90°
+    if (angle == samples[0][0]) return samples[0][1];
+
+    // simple linear interpolation
+    for (u_int idx = 1; idx < sizeof(samples); ++idx) {
+        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
+            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
+            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
+            //TODO add deviation
+            return interpol;
+        }
+    }
+
+    std::stringstream ss;
+    ss << "UAVNode::getSpeedFromAngle() unexpected angle passed: " << angle;
+    const char* str = ss.str().c_str();
+
+    throw cRuntimeError(str);
+    return 0;
 }
 
+/**
+ * Iterates over all future CEEs and predicts their consumptions.
+ * The consumption plus the needed energy to go back to a charging station are then compared against the remaining battery capacity.
+ * Result of the calculation is the feasible amount of commands and the place of last possible replacement.
+ *
+ * @return ReplacementData for the last point of replacement
+ */
 ReplacementData* UAVNode::endOfOperation()
 {
     float energySum = 0;
@@ -361,7 +397,7 @@ ReplacementData* UAVNode::endOfOperation()
     }
     EV_INFO << "Finished calculation." << endl;
     ReplacementData *result = new ReplacementData();
-    //result->nodeToExchange = this;
+    result->nodeToReplace = this;
     result->timeOfReplacement = simTime() + durrationOfCommands;
     result->x = fromX;
     result->y = fromY;
@@ -369,6 +405,12 @@ ReplacementData* UAVNode::endOfOperation()
     return result;
 }
 
+/*
+ * Determine the nearest charging node and predict the energy needed to go there.
+ *
+ * @param The origin coordinates
+ * @return The current used by the UAV in [A]
+ */
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 {
     // Get consumption for flight to nearest charging node
@@ -380,9 +422,9 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
     return goToChargingNodeCEE->predictConsumption();
 }
 
-void UAVNode::move()
-{
-    //unused.
-}
+//void UAVNode::move()
+//{
+//    //unused.
+//}
 
 #endif // WITH_OSG

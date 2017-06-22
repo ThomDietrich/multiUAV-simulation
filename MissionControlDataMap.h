@@ -35,7 +35,7 @@ typedef struct {
 
 /**
  * A map of all nodes managed by the MissionControl.
- * key: the nodeId
+ * key: the nodeIndex of a GenericNode
  */
 typedef std::map<int, NodeData*> NodeDataMap;
 

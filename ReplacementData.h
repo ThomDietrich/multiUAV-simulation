@@ -18,8 +18,8 @@
 
 #include <omnetpp.h>
 
-//#include "UAVNode.h"
-class UAVNode;
+//#include "GenericNode.h"
+class GenericNode;
 
 using namespace omnetpp;
 
@@ -31,9 +31,27 @@ class ReplacementData {
 public:
     ReplacementData();
     virtual ~ReplacementData();
-    //
-    UAVNode* nodeToReplace;
+
+    /**
+     * The node to be replaced by another
+     */
+    GenericNode* nodeToReplace;
+
+    /**
+     * The node replacing the other one. This field is optional.
+     */
+    GenericNode* nodeReplacing = nullptr;
+
+    /**
+     * When the replacement should take place.
+     * Might be calculated by the node based on it's prediction for future maneuvers.
+     */
     simtime_t timeOfReplacement;
+
+    /**
+     * Where the replacement should take place.
+     * Might be calculated by the node based on it's prediction for future maneuvers.
+     */
     double x, y, z;
 //private:
 };
