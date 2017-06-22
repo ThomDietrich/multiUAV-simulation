@@ -31,6 +31,7 @@ typedef struct {
     GenericNode* node;
     NodeStatus status;
     ReplacementData* replacementData;
+    cMessage* replacementMessage;
 } NodeData;
 
 /**

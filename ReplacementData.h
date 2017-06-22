@@ -40,7 +40,7 @@ public:
     /**
      * The node replacing the other one. This field is optional.
      */
-    GenericNode* nodeReplacing = nullptr;
+    GenericNode* replacingNode = nullptr;
 
     /**
      * When the replacement should take place.

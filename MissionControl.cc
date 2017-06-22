@@ -36,7 +36,7 @@ void MissionControl::initialize()
         nodedata->status = NodeStatus::IDLE;
         nodedata->replacementData = nullptr;
         EV_DEBUG << __func__ << "(): Adding " << module->getFullName() << " to managedNodes" << endl;
-        std::pair<int, NodeData*> nodePair(module->getIndex(), nodedata);
+        std::pair<int, NodeData*> nodePair(nodedata->node->getIndex(), nodedata);
         managedNodes.insert(nodePair);
     }
 
@@ -47,22 +47,26 @@ void MissionControl::initialize()
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
-        MissionMsg *nodeStartMission;
         GenericNode *idleNode;
 
-        for (u_int i = 0; i < missionQueue.size(); ++i) {
-            EV_DEBUG << i << " von " << missionQueue.size() << endl;
+        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++) {
             idleNode = selectIdleNode();
             if (not idleNode) throw cRuntimeError("startScheduling: No nodes left to schedule.");
 
-            nodeStartMission = new MissionMsg("startMission");
-            nodeStartMission->setMissionId(i);
-            nodeStartMission->setMission(missionQueue.at(i));
+            CommandQueue mission = *it;
+            int missionId = it - missionQueue.begin();
+
+            // Generate and send out start mission message
+            MissionMsg *nodeStartMission = new MissionMsg("startMission");
+            nodeStartMission->setMissionId(missionId);
+            nodeStartMission->setMission(mission);
             nodeStartMission->setMissionRepeat(true);
             send(nodeStartMission, "gate$o", idleNode->getIndex());
 
             // Mark node as with mission
             managedNodes.at(idleNode->getIndex())->status = NodeStatus::PROVISION;
+
+            EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << idleNode->getFullName() << ", node in state PROVISION." << endl;
         }
     }
     else if (msg->isName("commandCompleted")) {
@@ -73,7 +77,11 @@ void MissionControl::handleMessage(cMessage *msg)
             EV_INFO << "Node switching over to nodeStatus MISSION" << endl;
             nodeData->status = NodeStatus::MISSION;
         }
-        delete ccmsg;
+        nodeData->replacementData = &ccmsg->getReplacementData();
+        cMessage *replaceMsg = new cMessage("provisionReplacement");
+        nodeData->replacementMessage = replaceMsg;
+        cancelEvent(replaceMsg);
+        scheduleAt(nodeData->replacementData->timeOfReplacement, replaceMsg);
     }
     else {
         std::string message = "Unknown message name encountered: ";
@@ -169,7 +177,7 @@ GenericNode* MissionControl::selectIdleNode()
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
         if (it->second->status == NodeStatus::IDLE) {
             GenericNode* node = check_and_cast<MobileNode *>(it->second->node);
-            EV_INFO << __func__ << "(): " << node->getFullPath() << endl;
+            //EV_DEBUG << __func__ << "(): " << node->getFullPath() << endl;
             return node;
         }
     }

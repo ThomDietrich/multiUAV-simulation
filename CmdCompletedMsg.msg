@@ -13,14 +13,13 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-//cplusplus {{
-//    #include "ExchangeInfo.h"
-//}};
+cplusplus {{
+    #include "ReplacementData.h"
+}};
 
-//class noncobject ExchangeInfo;
+class noncobject ReplacementData;
 
 message CmdCompletedMsg {
 	int sourceNode;
-    string messageName;
-    //ExchangeInfo exchangeInfo;
+    ReplacementData replacementData;
 }

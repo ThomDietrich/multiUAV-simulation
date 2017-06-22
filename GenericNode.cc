@@ -166,19 +166,21 @@ void GenericNode::handleMessage(cMessage *msg)
         }
     }
     else if (msg->isName("nextCommand")) {
+        // Build and Send a Command Completed Message
+        ReplacementData *replacementData = endOfOperation();
+        CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
+        ccmsg->setSourceNode(this->getIndex());
+        ccmsg->setReplacementData(*replacementData);
+        send(ccmsg, "gate$o", 0);
+
+        // Check if further commands are available
         if (not hasCommandsInQueue()) {
-            EV_INFO << "Command completed. Queue empty." << endl;
+            EV_WARN << "Command completed. Queue empty." << endl;
             delete msg;
             return;
         }
 
-        //ExchangeInfo *exchangeInfo = endOfOperation();
-        //CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        //ccmsg->setSourceNode(this->getIndex());
-        //ccmsg->setMessageName(commands.front()->getMessageName());
-        //ccmsg->
-        //send(ccmsg, "gate$o", 0);
-
+        // Prepare next command to execute
         EV_INFO << "Command completed. Selecting next command." << endl;
         selectNextCommand();
         initializeState();

@@ -56,7 +56,6 @@ void UAVNode::initialize(int stage)
     }
 }
 
-
 /**
  * Fetches the next command from the commands queue and creates a corresponding CEE.
  *
@@ -88,15 +87,18 @@ void UAVNode::selectNextCommand()
         //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
     }
     else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
-        EV_INFO << "Energy Management: OK. UAV has enough energy to continue (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+        EV_INFO << "Energy Management: OK. UAV has enough energy to continue (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage()
+                << "%)." << endl;
     }
     else {
         // Go To Charging Node now
         if (energyRemaining < energyToCNNow) {
-            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
+            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient (" << energyRemaining << " < " << energyToCNNow << " mAh)."
+                    << endl;
         }
         else {
-            EV_INFO << "Energy Management: Going to Charging Node (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+            EV_INFO << "Energy Management: Going to Charging Node (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)."
+                    << endl;
         }
 
         // Find nearest ChargingNode
@@ -121,10 +123,7 @@ void UAVNode::selectNextCommand()
     cees.pop_front();
 
     // reinject command (if no charging or takeoff command)
-    if (commandsRepeat
-            && not (commandExecEngine->getCeeType() == CeeType::CHARGE)
-            && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF)
-    ) {
+    if (commandsRepeat && not (commandExecEngine->getCeeType() == CeeType::CHARGE) && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF)) {
         cees.push_back(commandExecEngine);
     }
 }
@@ -145,17 +144,17 @@ void UAVNode::initializeState()
     std::string text(getFullName());
     switch (commandExecEngine->getCeeType()) {
         case CeeType::WAYPOINT:
-        text += " WP";
-        break;
+            text += " WP";
+            break;
         case CeeType::TAKEOFF:
-        text += " TO";
-        break;
+            text += " TO";
+            break;
         case CeeType::HOLDPOSITION:
-        text += " HP";
-        break;
+            text += " HP";
+            break;
         case CeeType::CHARGE:
-        text += " CH";
-        break;
+            text += " CH";
+            break;
     }
     labelNode->setText(text);
 }
@@ -174,7 +173,7 @@ void UAVNode::updateState()
     //update sublabel with battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s | " << commandExecEngine->getCurrent() << " A | " << battery.getRemainingPercentage()
-    << " % | " << commandExecEngine->getRemainingTime() << " s left";
+            << " % | " << commandExecEngine->getRemainingTime() << " s left";
     std::string str = strs.str();
     sublabelNode->setText(str);
 }
@@ -255,18 +254,18 @@ double UAVNode::getCurrentHover()
 double UAVNode::getCurrentFromAngle(double angle)
 {
     double samples[11][3] = { //
-        {   -90.0, 16.86701, 0.7651131}, //
-        {   -75.6, 17.97695, 0.7196844}, //
-        {   -57.9, 17.34978, 0.6684724}, //
-        {   -34.8, 17.34384, 0.8729401}, //
-        {   -15.6, 15.99054, 1.1767867}, //
-        {   000.0, 16.36526, 1.0290515}, //
-        {   +15.6, 18.83829, 2.1043467}, //
-        {   +34.8, 20.34726, 1.4018145}, //
-        {   +57.9, 21.31561, 0.8680334}, //
-        {   +75.6, 21.43493, 0.7625244}, //
-        {   +90.0, 20.86530, 0.7350855}  //
-    };
+            { -90.0, 16.86701, 0.7651131 }, //
+                    { -75.6, 17.97695, 0.7196844 }, //
+                    { -57.9, 17.34978, 0.6684724 }, //
+                    { -34.8, 17.34384, 0.8729401 }, //
+                    { -15.6, 15.99054, 1.1767867 }, //
+                    { 000.0, 16.36526, 1.0290515 }, //
+                    { +15.6, 18.83829, 2.1043467 }, //
+                    { +34.8, 20.34726, 1.4018145 }, //
+                    { +57.9, 21.31561, 0.8680334 }, //
+                    { +75.6, 21.43493, 0.7625244 }, //
+                    { +90.0, 20.86530, 0.7350855 }  //
+            };
 
     //Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
@@ -382,11 +381,12 @@ ReplacementData* UAVNode::endOfOperation()
         EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
         if (battery.getRemaining() < energySum + energyForNextCEE + energyToCNAfter) {
-            EV_INFO << "That's enough." << endl;
+            EV_DEBUG << "Command " << commandsFeasible << " not feasible." << endl;
             break;
         }
-
-        EV_DEBUG << "Next command still feasible." << endl;
+        else {
+            EV_DEBUG << "Command " << commandsFeasible << " still feasible." << endl;
+        }
         commandsFeasible++;
         energySum += energyForNextCEE;
         durrationOfCommands += nextCEE->getDuration();
@@ -395,7 +395,7 @@ ReplacementData* UAVNode::endOfOperation()
         fromY = nextCEE->getY1();
         fromZ = nextCEE->getZ1();
     }
-    EV_INFO << "Finished calculation." << endl;
+    EV_INFO << "Finished endOfOperation calculation." << endl;
     ReplacementData *result = new ReplacementData();
     result->nodeToReplace = this;
     result->timeOfReplacement = simTime() + durrationOfCommands;
@@ -422,9 +422,9 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
     return goToChargingNodeCEE->predictConsumption();
 }
 
-//void UAVNode::move()
-//{
-//    //unused.
-//}
+void UAVNode::move()
+{
+    //unused.
+}
 
 #endif // WITH_OSG
