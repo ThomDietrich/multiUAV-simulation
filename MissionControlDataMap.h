@@ -21,7 +21,7 @@ using namespace omnetpp;
  * The overall status of a node, as seen by the MissionControl.
  */
 enum class NodeStatus {
-    IDLE, PROVISION, MISSION, MAINTENANCE, CHARGE, DEAD
+    IDLE, RESERVED, PROVISIONING, MISSION, MAINTENANCE, CHARGING, DEAD
 };
 
 /**
@@ -30,8 +30,8 @@ enum class NodeStatus {
 typedef struct {
     GenericNode* node;
     NodeStatus status;
-    ReplacementData* replacementData;
-    cMessage* replacementMessage;
+    ReplacementData* replacementData = nullptr;
+    cMessage* replacementMsg = nullptr;
 } NodeData;
 
 /**

@@ -64,7 +64,7 @@ void MissionControl::handleMessage(cMessage *msg)
             send(nodeStartMission, "gate$o", idleNode->getIndex());
 
             // Mark node as with mission
-            managedNodes.at(idleNode->getIndex())->status = NodeStatus::PROVISION;
+            managedNodes.at(idleNode->getIndex())->status = NodeStatus::PROVISIONING;
 
             EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << idleNode->getFullName() << ", node in state PROVISION." << endl;
         }
@@ -73,15 +73,11 @@ void MissionControl::handleMessage(cMessage *msg)
         CmdCompletedMsg *ccmsg = check_and_cast<CmdCompletedMsg *>(msg);
         EV_INFO << "commandCompleted message received" << endl;
         NodeData* nodeData = managedNodes.at(ccmsg->getSourceNode());
-        if (nodeData->status == NodeStatus::PROVISION) {
+        if (nodeData->status == NodeStatus::PROVISIONING) {
             EV_INFO << "Node switching over to nodeStatus MISSION" << endl;
             nodeData->status = NodeStatus::MISSION;
         }
-        nodeData->replacementData = &ccmsg->getReplacementData();
-        cMessage *replaceMsg = new cMessage("provisionReplacement");
-        nodeData->replacementMessage = replaceMsg;
-        cancelEvent(replaceMsg);
-        scheduleAt(nodeData->replacementData->timeOfReplacement, replaceMsg);
+        handleReplacementMessage(ccmsg->getReplacementData());
     }
     else {
         std::string message = "Unknown message name encountered: ";
@@ -168,7 +164,7 @@ UAVNode* MissionControl::selectUAVNode()
     return nullptr;
 }
 
-/*
+/**
  * Choose a free node from the managedNodes map.
  * Selection happens by lowest module index and amongst the IDLE nodes.
  */
@@ -183,6 +179,34 @@ GenericNode* MissionControl::selectIdleNode()
     }
     throw cRuntimeError("MissionControl::selectIdleNode(): No available Nodes found. This case is not handled yet.");
     return nullptr;
+}
+
+/**
+ * Update the managedNodes map with the replacement request by a node.
+ * After each update, reschedule the replacement process, i.e. the 'provisionReplacement' self-message.
+ *
+ * @param replData Incoming ReplacementData
+ */
+void MissionControl::handleReplacementMessage(ReplacementData replData)
+{
+    NodeData* nodeData = managedNodes.at(replData.nodeToReplace->getIndex());
+    nodeData->replacementData = &replData;
+
+    // Delete and reschedule if old msg available
+    if (nodeData->replacementMsg != nullptr) {
+        cancelEvent(nodeData->replacementMsg);
+    }
+    // If not available reserve an idle node as the replacing node
+    if (nodeData->replacementData->replacingNode == nullptr) {
+        nodeData->replacementData->replacingNode = selectIdleNode();
+        nodeData->status = NodeStatus::RESERVED;
+    }
+    //TODO unclear: nodes in NodeData are of GenericNode but only MobileNode knows movement
+    UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeData->replacementData->replacingNode);
+
+    cMessage *replacementMsg = new cMessage("provisionReplacement");
+    nodeData->replacementMsg = replacementMsg;
+    scheduleAt(nodeData->replacementData->timeOfReplacement, replacementMsg);
 }
 
 #endif // WITH_OSG

@@ -94,7 +94,6 @@ void MobileNode::handleMessage(cMessage *msg)
     }
 }
 
-//TODO move to helpers
 ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ)
 {
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet");

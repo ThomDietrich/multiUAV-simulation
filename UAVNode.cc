@@ -246,12 +246,12 @@ double UAVNode::getCurrentHover()
 /**
  * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
  * Consequently the power usage of the node is based on these factors.
- * This function will return the battery current drain based on real measurement values and the angle the UAV in ascending/declining flight.
+ * This function will return the battery current drain based on real measurement values and the angle of the UAV in ascending/declining flight.
  *
  * @param the ascent/decline angle, range: -90..+90°
  * @return The current used by the UAV in [A]
  */
-double UAVNode::getCurrentFromAngle(double angle)
+double UAVNode::getCurrentMovement(double angle)
 {
     double samples[11][3] = { //
             { -90.0, 16.86701, 0.7651131 }, //
@@ -301,7 +301,7 @@ double UAVNode::getCurrentFromAngle(double angle)
  * @param the ascent/decline angle, range: -90..+90°
  * @return the speed of the UAV in [m/s]
  */
-double UAVNode::getSpeedFromAngle(double angle)
+double UAVNode::getSpeed(double angle)
 {
     double samples[11][2] = { //
             { -90.0, 1.837303 }, //

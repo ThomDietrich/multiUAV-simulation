@@ -55,7 +55,7 @@ protected:
     virtual void initialize(int stage) override;
     virtual void refreshDisplay() const override;
     virtual void handleMessage(cMessage *msg) override;
-    ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
+    static ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) = 0;
 };
 

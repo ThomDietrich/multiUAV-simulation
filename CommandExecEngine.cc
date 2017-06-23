@@ -58,7 +58,7 @@ void WaypointCEE::initializeCEE()
     pitch = (-1) * climbAngle;
     
     //update speed based on flight angle
-    speed = node->getSpeedFromAngle(climbAngle);
+    speed = node->getSpeed(climbAngle);
 }
 
 void WaypointCEE::setNodeParameters()
@@ -106,7 +106,7 @@ double WaypointCEE::getRemainingTime()
 
 double WaypointCEE::getCurrent()
 {
-    return node->getCurrentFromAngle(climbAngle);
+    return node->getCurrentMovement(climbAngle);
 }
 
 double WaypointCEE::predictConsumption()
@@ -148,7 +148,7 @@ void TakeoffCEE::initializeCEE()
     climbAngle = (z1 > node->z) ? 90 : -90;
     
     //update speed based on flight angle
-    speed = node->getSpeedFromAngle(climbAngle);
+    speed = node->getSpeed(climbAngle);
 }
 
 void TakeoffCEE::setNodeParameters()
@@ -181,7 +181,7 @@ double TakeoffCEE::getRemainingTime()
 
 double TakeoffCEE::getCurrent()
 {
-    return node->getCurrentFromAngle(climbAngle);
+    return node->getCurrentMovement(climbAngle);
 }
 
 double TakeoffCEE::predictConsumption()

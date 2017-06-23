@@ -44,6 +44,7 @@ protected:
     virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
     virtual UAVNode* selectUAVNode();
     virtual GenericNode* selectIdleNode();
+    virtual void handleReplacementMessage(ReplacementData replData);
 };
 
 #endif
