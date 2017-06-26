@@ -21,8 +21,8 @@ Define_Module(MissionControl);
 void MissionControl::initialize()
 {
     missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
+    //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
+    //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
 
     // Add all GenericNodes to managedNodes list (map)
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
@@ -79,12 +79,67 @@ void MissionControl::handleMessage(cMessage *msg)
         }
         handleReplacementMessage(ccmsg->getReplacementData());
     }
+    else if (msg->isName("provisionReplacement")) {
+        EV_INFO << "provisionReplacement message received" << endl;
+        NodeData* nodeData = nullptr;
+        for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+            if (it->second->replacementMsg == msg) {
+                EV_INFO << "gefunden" << endl;
+                nodeData = it->second;
+            }
+        }
+        if (nodeData == nullptr) {
+            throw cRuntimeError("provisionReplacement message not found amongst the managed nodes.");
+        }
+
+    }
     else {
         std::string message = "Unknown message name encountered: ";
         message += msg->getFullName();
         throw cRuntimeError(message.c_str());
     }
     delete msg;
+}
+
+/**
+ * Update the managedNodes map with the replacement request by a node.
+ * After each update, reschedule the replacement process, i.e. the 'provisionReplacement' self-message.
+ *
+ * @param replData Incoming ReplacementData
+ */
+void MissionControl::handleReplacementMessage(ReplacementData replData)
+{
+    NodeData* nodeData = managedNodes.at(replData.nodeToReplace->getIndex());
+    nodeData->replacementData = &replData;
+
+    // If not available reserve an idle node as the replacing node
+    if (nodeData->replacementData->replacingNode == nullptr) {
+        nodeData->replacementData->replacingNode = selectIdleNode();
+        nodeData->status = NodeStatus::RESERVED;
+    }
+    //TODO unclear: nodes in NodeData are of GenericNode but only MobileNode knows movement
+    UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeData->replacementData->replacingNode);
+
+    //Retrieve provisioning time
+    CommandQueue commands;
+    commands.push_back(new WaypointCommand(nodeData->replacementData->x, nodeData->replacementData->y, nodeData->replacementData->z));
+    simtime_t timeOfReplacement = nodeData->replacementData->timeOfReplacement;
+    double timeForProvisioning = replacingUavNode->estimateCommandsDuration(commands);
+    simtime_t timeOfProvisioning = timeOfReplacement - timeForProvisioning;
+    EV_INFO << "Provisioning planning: time of replacement=" << timeOfReplacement << "; time for provisioning=" << timeForProvisioning
+            << "; time of provisioning=" << timeOfProvisioning << endl;
+
+    cMessage *replacementMsg = new cMessage("provisionReplacement");
+
+    if (simTime() < timeOfProvisioning) {
+        // Delete and reschedule if old msg available
+        if (nodeData->replacementMsg != nullptr) {
+            cancelEvent(nodeData->replacementMsg);
+            delete nodeData->replacementMsg;
+        }
+        nodeData->replacementMsg = replacementMsg;
+        scheduleAt(timeOfProvisioning, replacementMsg);
+    }
 }
 
 /**
@@ -179,34 +234,6 @@ GenericNode* MissionControl::selectIdleNode()
     }
     throw cRuntimeError("MissionControl::selectIdleNode(): No available Nodes found. This case is not handled yet.");
     return nullptr;
-}
-
-/**
- * Update the managedNodes map with the replacement request by a node.
- * After each update, reschedule the replacement process, i.e. the 'provisionReplacement' self-message.
- *
- * @param replData Incoming ReplacementData
- */
-void MissionControl::handleReplacementMessage(ReplacementData replData)
-{
-    NodeData* nodeData = managedNodes.at(replData.nodeToReplace->getIndex());
-    nodeData->replacementData = &replData;
-
-    // Delete and reschedule if old msg available
-    if (nodeData->replacementMsg != nullptr) {
-        cancelEvent(nodeData->replacementMsg);
-    }
-    // If not available reserve an idle node as the replacing node
-    if (nodeData->replacementData->replacingNode == nullptr) {
-        nodeData->replacementData->replacingNode = selectIdleNode();
-        nodeData->status = NodeStatus::RESERVED;
-    }
-    //TODO unclear: nodes in NodeData are of GenericNode but only MobileNode knows movement
-    UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeData->replacementData->replacingNode);
-
-    cMessage *replacementMsg = new cMessage("provisionReplacement");
-    nodeData->replacementMsg = replacementMsg;
-    scheduleAt(nodeData->replacementData->timeOfReplacement, replacementMsg);
 }
 
 #endif // WITH_OSG

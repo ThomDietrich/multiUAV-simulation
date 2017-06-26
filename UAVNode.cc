@@ -229,6 +229,42 @@ void UAVNode::loadCommands(CommandQueue commands)
 }
 
 /**
+ * Delete the current commands/CEEs from nodes memory
+ */
+void UAVNode::clearCommands()
+{
+    cees.clear();
+}
+
+/**
+ * Load a CommandQueue, calculate the overall flight time, forget CommandQueue.
+ * This method will ignore the Repeat property.
+ *
+ * @return Time needed for the commands in the command queue
+ */
+double UAVNode::estimateCommandsDuration(CommandQueue commands)
+{
+    double duration = 0;
+    loadCommands(commands);
+    double fromX = this->getX();
+    double fromY = this->getY();
+    double fromZ = this->getZ();
+
+    for (auto it = cees.begin(); it != cees.end(); ++it) {
+        CommandExecEngine *nextCEE = *it;
+        nextCEE->setFromCoordinates(fromX, fromY, fromZ);
+        nextCEE->initializeCEE();
+        duration += nextCEE->getDuration();
+        fromX = nextCEE->getX1();
+        fromY = nextCEE->getY1();
+        fromZ = nextCEE->getZ1();
+    }
+
+    clearCommands();
+    return duration;
+}
+
+/**
  * Calculate the electrical current flow during hover / hold position maneuver (no movement)
  * The calculation is based on predetermined statistical values and a gaussian normal distribution.
  *
@@ -365,7 +401,7 @@ ReplacementData* UAVNode::endOfOperation()
         }
 
         // Get consumption for next command
-        nextCEE->setFromCoordinates(getX(), getY(), getZ());
+        nextCEE->setFromCoordinates(fromX, fromY, fromZ);
         nextCEE->initializeCEE();
 
         float energyForNextCEE = nextCEE->predictConsumption();
@@ -373,10 +409,10 @@ ReplacementData* UAVNode::endOfOperation()
         // Get consumption for going back to the nearest Charging node
         energyToCNAfter = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
 
-        EV_DEBUG << "Consumption Aggregated Commands: " << commandsFeasible << endl;
-        EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
-        EV_DEBUG << "Consumption Command=" << energyForNextCEE << "mAh, " << endl;
-        EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
+        //EV_DEBUG << "Consumption Aggregated Commands: " << commandsFeasible << endl;
+        //EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
+        //EV_DEBUG << "Consumption Command=" << energyForNextCEE << "mAh, " << endl;
+        //EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
         EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCEE + energyToCNAfter << "mAh" << endl;
         EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
@@ -385,7 +421,7 @@ ReplacementData* UAVNode::endOfOperation()
             break;
         }
         else {
-            EV_DEBUG << "Command " << commandsFeasible << " still feasible." << endl;
+            //EV_DEBUG << "Command " << commandsFeasible << " still feasible." << endl;
         }
         commandsFeasible++;
         energySum += energyForNextCEE;
@@ -395,7 +431,7 @@ ReplacementData* UAVNode::endOfOperation()
         fromY = nextCEE->getY1();
         fromZ = nextCEE->getZ1();
     }
-    EV_INFO << "Finished endOfOperation calculation." << endl;
+    //EV_INFO << "Finished endOfOperation calculation." << endl;
     ReplacementData *result = new ReplacementData();
     result->nodeToReplace = this;
     result->timeOfReplacement = simTime() + durrationOfCommands;

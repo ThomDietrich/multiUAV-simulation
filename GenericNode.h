@@ -159,6 +159,7 @@ public:
     }
     virtual bool hasCommandsInQueue();
     virtual void loadCommands(CommandQueue commands) = 0;
+    virtual void clearCommands() = 0;
 
 protected:
     virtual void initialize(int stage) override;

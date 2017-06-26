@@ -59,6 +59,10 @@ void ChargingNode::loadCommands(CommandQueue commands)
 {
 }
 
+void ChargingNode::clearCommands()
+{
+}
+
 void ChargingNode::refreshDisplay() const
 {
     GenericNode::refreshDisplay();

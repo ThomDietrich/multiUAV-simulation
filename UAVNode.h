@@ -38,6 +38,8 @@ public:
     UAVNode();
     virtual ~UAVNode();
     virtual void loadCommands(CommandQueue commands) override;
+    virtual void clearCommands() override;
+    virtual double estimateCommandsDuration(CommandQueue commands);
     static double getCurrentHover();
     static double getCurrentMovement(double angle);
     static double getSpeed(double angle);
