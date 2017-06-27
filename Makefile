@@ -38,6 +38,7 @@ OBJS = \
     $O/fallback.o \
     $O/GenericNode.o \
     $O/MissionControl.o \
+    $O/MissionControlDataMap.o \
     $O/MobileNode.o \
     $O/OsgEarthScene.o \
     $O/ReplacementData.o \
