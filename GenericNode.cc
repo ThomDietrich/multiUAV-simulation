@@ -147,7 +147,7 @@ void GenericNode::handleMessage(cMessage *msg)
     double stepSize = 0;
     if (msg->isName("startMission")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
-        loadCommands(mmmsg->getMission());
+        if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         commandsRepeat = mmmsg->getMissionRepeat();
         selectNextCommand();
         initializeState();

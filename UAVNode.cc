@@ -237,19 +237,17 @@ void UAVNode::clearCommands()
 }
 
 /**
- * Load a CommandQueue, calculate the overall flight time, forget CommandQueue.
+ * Calculate the overall flight time of a CommandQueue.
  * This method will ignore the Repeat property.
  *
  * @return Time needed for the commands in the command queue
  */
-double UAVNode::estimateCommandsDuration(CommandQueue commands)
+double UAVNode::estimateCommandsDuration()
 {
     double duration = 0;
-    loadCommands(commands);
     double fromX = this->getX();
     double fromY = this->getY();
     double fromZ = this->getZ();
-
     for (auto it = cees.begin(); it != cees.end(); ++it) {
         CommandExecEngine *nextCEE = *it;
         nextCEE->setFromCoordinates(fromX, fromY, fromZ);
@@ -259,8 +257,6 @@ double UAVNode::estimateCommandsDuration(CommandQueue commands)
         fromY = nextCEE->getY1();
         fromZ = nextCEE->getZ1();
     }
-
-    clearCommands();
     return duration;
 }
 

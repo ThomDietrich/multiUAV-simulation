@@ -81,17 +81,27 @@ void MissionControl::handleMessage(cMessage *msg)
     }
     else if (msg->isName("provisionReplacement")) {
         EV_INFO << "provisionReplacement message received" << endl;
+
+        // Identify node requesting replacement
         NodeData* nodeData = nullptr;
         for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
             if (it->second->replacementMsg == msg) {
-                EV_INFO << "gefunden" << endl;
                 nodeData = it->second;
+                break;
             }
         }
         if (nodeData == nullptr) {
             throw cRuntimeError("provisionReplacement message not found amongst the managed nodes.");
         }
+        GenericNode *replacingNode = nodeData->replacementData->replacingNode;
 
+        MissionMsg *nodeStartMission = new MissionMsg("startProvision");
+        send(nodeStartMission, "gate$o", replacingNode->getIndex());
+
+        managedNodes.at(replacingNode->getIndex())->status = NodeStatus::PROVISIONING;
+
+        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex() << " (replacing node " << nodeData->node->getIndex()
+                << ")" << endl;
     }
     else {
         std::string message = "Unknown message name encountered: ";
@@ -104,13 +114,14 @@ void MissionControl::handleMessage(cMessage *msg)
 /**
  * Update the managedNodes map with the replacement request by a node.
  * After each update, reschedule the replacement process, i.e. the 'provisionReplacement' self-message.
+ * Method will reserve a node as soon as the first replacement message arrives for one node executing a mission.
  *
  * @param replData Incoming ReplacementData
  */
 void MissionControl::handleReplacementMessage(ReplacementData replData)
 {
     NodeData* nodeData = managedNodes.at(replData.nodeToReplace->getIndex());
-    nodeData->replacementData = &replData;
+    nodeData->replacementData = new ReplacementData(replData);
 
     // If not available reserve an idle node as the replacing node
     if (nodeData->replacementData->replacingNode == nullptr) {
@@ -119,15 +130,16 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     }
     //TODO unclear: nodes in NodeData are of GenericNode but only MobileNode knows movement
     UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeData->replacementData->replacingNode);
+    EV_INFO << __func__ << "(): Node " << replacingUavNode->getIndex() << " reserved for replacement." << endl;
 
     //Retrieve provisioning time
     CommandQueue commands;
     commands.push_back(new WaypointCommand(nodeData->replacementData->x, nodeData->replacementData->y, nodeData->replacementData->z));
     simtime_t timeOfReplacement = nodeData->replacementData->timeOfReplacement;
-    double timeForProvisioning = replacingUavNode->estimateCommandsDuration(commands);
+    replacingUavNode->clearCommands();
+    replacingUavNode->loadCommands(commands);
+    double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
     simtime_t timeOfProvisioning = timeOfReplacement - timeForProvisioning;
-    EV_INFO << "Provisioning planning: time of replacement=" << timeOfReplacement << "; time for provisioning=" << timeForProvisioning
-            << "; time of provisioning=" << timeOfProvisioning << endl;
 
     cMessage *replacementMsg = new cMessage("provisionReplacement");
 
@@ -139,6 +151,8 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         }
         nodeData->replacementMsg = replacementMsg;
         scheduleAt(timeOfProvisioning, replacementMsg);
+        EV_INFO << "Provisioning scheduled at " << timeOfProvisioning << ": node " << nodeData->replacementData->replacingNode->getIndex()
+                << " will replace node " << nodeData->replacementData->nodeToReplace->getIndex() << endl;
     }
 }
 
