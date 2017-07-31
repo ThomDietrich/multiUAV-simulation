@@ -3,15 +3,15 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 #include "CommandExecEngine.h"
 #include "UAVNode.h"
@@ -50,15 +50,18 @@ void WaypointCEE::initializeCEE()
     double dx = x1 - node->x;
     double dy = y1 - node->y;
     double dz = z1 - node->z;
-    
+
     //update and store yaw, climbAngle and pitch angles
     yaw = atan2(dy, dx) / M_PI * 180;
     if (yaw < 0) yaw += 360;
     climbAngle = atan2(dz, sqrt(dx * dx + dy * dy)) / M_PI * 180;
     pitch = (-1) * climbAngle;
-    
+
     //update speed based on flight angle
     speed = node->getSpeed(climbAngle);
+
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
 }
 
 void WaypointCEE::setNodeParameters()
@@ -73,7 +76,7 @@ void WaypointCEE::updateState(double stepSize)
 {
     //distance to move, based on simulation time passed since last update (in [m])
     double stepDistance = stepSize * speed;
-    
+
     //resulting movement broken down to x,y,z (in [m])
     double stepZ = stepDistance * sin(M_PI * climbAngle / 180);
     double stepXY = stepDistance * cos(M_PI * climbAngle / 180);
@@ -82,8 +85,8 @@ void WaypointCEE::updateState(double stepSize)
     node->x += stepX;
     node->y += stepY;
     node->z += stepZ;
-    
-    node->battery.discharge(getCurrent() * 1000 * stepSize / 3600); // Q = I * t [mAh]
+
+    node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
 double WaypointCEE::getDuration()
@@ -104,19 +107,20 @@ double WaypointCEE::getRemainingTime()
     return distance / speed;
 }
 
-double WaypointCEE::getCurrent()
-{
-    return node->getCurrentMovement(climbAngle);
-}
-
-double WaypointCEE::predictConsumption()
+double WaypointCEE::getProbableConsumption(bool normalized, float percentile)
 {
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
-    double time = sqrt(dx * dx + dy * dy + dz * dz) / speed;
-    //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << time << "s" << endl;
-    return (getCurrent() * 1000 * time / 3600);
+    double duration = sqrt(dx * dx + dy * dy + dz * dz) / speed;
+    //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s" << endl;
+    double completeConsumption = node->getMovementConsumption(climbAngle, duration, percentile);
+    if (normalized) {
+        return completeConsumption / duration;
+    }
+    else {
+        return completeConsumption;
+    }
 }
 
 char* WaypointCEE::getCeeTypeString()
@@ -146,9 +150,12 @@ void TakeoffCEE::initializeCEE()
 {
     pitch = 0;
     climbAngle = (z1 > node->z) ? 90 : -90;
-    
+
     //update speed based on flight angle
     speed = node->getSpeed(climbAngle);
+
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
 }
 
 void TakeoffCEE::setNodeParameters()
@@ -165,8 +172,8 @@ void TakeoffCEE::updateState(double stepSize)
         node->z += stepDistance;
     else
         node->z -= stepDistance;
-    
-    node->battery.discharge(getCurrent() * 1000 * stepSize / 3600);
+
+    node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
 double TakeoffCEE::getDuration()
@@ -179,15 +186,16 @@ double TakeoffCEE::getRemainingTime()
     return fabs(z1 - node->z) / speed;
 }
 
-double TakeoffCEE::getCurrent()
+double TakeoffCEE::getProbableConsumption(bool normalized, float percentile)
 {
-    return node->getCurrentMovement(climbAngle);
-}
-
-double TakeoffCEE::predictConsumption()
-{
-    double overallTime = fabs(z1 - z0) / speed;
-    return (getCurrent() * 1000 * overallTime / 3600);
+    double duration = fabs(z1 - z0) / speed;
+    double completeConsumption = node->getMovementConsumption(climbAngle, duration, percentile);
+    if (normalized) {
+        return completeConsumption / duration;
+    }
+    else {
+        return completeConsumption;
+    }
 }
 
 char* TakeoffCEE::getCeeTypeString()
@@ -219,6 +227,9 @@ void HoldPositionCEE::initializeCEE()
     //yaw = yaw;
     pitch = 0;
     climbAngle = 0;
+
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
 }
 
 void HoldPositionCEE::setNodeParameters()
@@ -230,7 +241,7 @@ void HoldPositionCEE::setNodeParameters()
 
 void HoldPositionCEE::updateState(double stepSize)
 {
-    node->battery.discharge(getCurrent() * 1000 * stepSize / 3600);
+    node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
 double HoldPositionCEE::getDuration()
@@ -243,14 +254,16 @@ double HoldPositionCEE::getRemainingTime()
     return (this->holdPositionTill - simTime()).dbl();
 }
 
-double HoldPositionCEE::getCurrent()
+double HoldPositionCEE::getProbableConsumption(bool normalized, float percentile)
 {
-    return node->getCurrentHover();
-}
-
-double HoldPositionCEE::predictConsumption()
-{
-    return (getCurrent() * 1000 * this->command->getHoldSeconds() / 3600);
+    double duration = this->command->getHoldSeconds();
+    double completeConsumption = node->getHoverConsumption(duration, percentile);
+    if (normalized) {
+        return completeConsumption / duration;
+    }
+    else {
+        return completeConsumption;
+    }
 }
 
 char* HoldPositionCEE::getCeeTypeString()
@@ -285,6 +298,8 @@ void ChargeCEE::initializeCEE()
     //TODO connect to Charging station
     //cMessage *request = new cMessage("startCharge");
     //this->command->getChargingNode()->scheduleAt(simTime(), request);
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
 }
 
 void ChargeCEE::setNodeParameters()
@@ -295,9 +310,9 @@ void ChargeCEE::setNodeParameters()
 
 void ChargeCEE::updateState(double stepSize)
 {
-    float chargeAmount = getCurrent() * 1000 * stepSize / 3600;
+    float chargeAmount = fabs(consumptionPerSecond * stepSize);
     node->battery.charge(chargeAmount);
-    
+
     // Charging state log report
     int statusReport = 20; // reported these much values between 0..100%
     float statusReportChargeSteps = (node->battery.getCapacity() / statusReport);
@@ -310,18 +325,20 @@ void ChargeCEE::updateState(double stepSize)
 
 double ChargeCEE::getDuration()
 {
-    return node->battery.getCapacity() / (getCurrent() * 1000) * 3600;
+    return node->battery.getCapacity() / fabs(consumptionPerSecond);
 }
 
 double ChargeCEE::getRemainingTime()
 {
-    return node->battery.getMissing() / (getCurrent() * 1000) * 3600;
+    return node->battery.getMissing() / fabs(consumptionPerSecond);
 }
 
-double ChargeCEE::getCurrent()
+double ChargeCEE::getProbableConsumption(bool normalized, float percentile)
 {
-// 3DR Solo: 5200 mAh in 1.5h = 3.5A constant
-    return 3.5;
+    if (normalized == false) EV_WARN << __func__ << "(): non-normalized currently not supported for ChargeCEE" << endl;
+    if (percentile != NAN) EV_WARN << __func__ << "(): percentile not supported for ChargeCEE" << endl;
+    // 3DR Solo: 5200 mAh in 1.5h = 3.5A constant -> 3.5Ah = 3500 mAh -> 0,97222 mAh / s
+    return -0.97222;
 }
 
 char* ChargeCEE::getCeeTypeString()

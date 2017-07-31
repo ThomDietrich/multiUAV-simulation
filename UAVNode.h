@@ -20,6 +20,7 @@
 #include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
+#include <boost/math/distributions/normal.hpp>
 
 using namespace omnetpp;
 
@@ -40,8 +41,8 @@ public:
     virtual void loadCommands(CommandQueue commands) override;
     virtual void clearCommands() override;
     virtual double estimateCommandsDuration();
-    static double getCurrentHover();
-    static double getCurrentMovement(double angle);
+    static double getHoverConsumption(float duration, float percentile = NAN);
+    static double getMovementConsumption(float angle, float duration, float percentile = NAN);
     static double getSpeed(double angle);
 
 protected:

@@ -46,6 +46,10 @@ protected:
     /// movement data
     double yaw = 0, pitch = 0, climbAngle = 0, speed = 0;
 
+    /// consumption for this CEE (drawn from stochastic distribution
+    /// Normalized to mAh/s
+    double consumptionPerSecond = 0;
+
 public:
     //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
 
@@ -127,38 +131,39 @@ public:
      */
     virtual void updateState(double stepSize) = 0;
 
-    /*
+    /**
      * Get the overall duration expected for the CEE.
      */
     virtual double getDuration() = 0;
 
-    /*
+    /**
      * Get the remaining time the CEE is still active.
      * Is the same as getDuration() before execution of the CEE.
      */
     virtual double getRemainingTime() = 0;
 
     /**
-     * For the energy consumption calculation and prediction
-     * The current is dependent on the specific command and command-related parameters (speed etc.)
+     * Generate one probable energy consumption by the CEE.
+     * The consumption dependents on the specific command and command-related parameters (speed etc.)
+     * The result is drawn from a stochastic distribution.
      *
-     * @return statistical mean current flow (A)
+     * @param normalized Decide if the full consumption should be returned (false) or a normalized energy amount per second (true)
+     * @return statistical consumption, in [mAh] (normalized == false) or [mAh/s] (normalized == true)
      */
-    virtual double getCurrent()
-    {
-        return 0;
-    }
+    virtual double getProbableConsumption(bool normalized = true, float percentile = NAN) = 0;
 
     /**
      * Predict the overall consumption for the full command execution procedure
-     * @return to be consumed energy in mAh
+     *
+     * @param percentile The percentile to apply to the inverse normal distribution function, in the range 0..1
+     * @return The energy to be consumed for the whole CEE, in [mAh]
      */
-    virtual double predictConsumption()
+    virtual double predictFullConsumption(float percentile)
     {
-        return 0;
+        return getProbableConsumption(false, percentile);
     }
 
-    /*
+    /**
      *
      */
     CeeType getCeeType()
@@ -166,10 +171,19 @@ public:
         return type;
     }
 
-    /*
+    /**
      *
      */
     virtual char* getCeeTypeString() = 0;
+
+    /**
+     *
+     * @return normalized consumption, in [mAh/s]
+     */
+    double getConsumptionPerSecond()
+    {
+        return consumptionPerSecond;
+    }
 };
 
 /**
@@ -197,8 +211,7 @@ public:
     void updateState(double stepSize) override;
     double getDuration() override;
     double getRemainingTime() override;
-    double getCurrent() override;
-    double predictConsumption() override;
+    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
 };
 
@@ -220,8 +233,7 @@ public:
     void updateState(double stepSize) override;
     double getDuration() override;
     double getRemainingTime() override;
-    double getCurrent() override;
-    double predictConsumption() override;
+    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
 };
 
@@ -243,8 +255,7 @@ public:
     void updateState(double stepSize) override;
     double getDuration() override;
     double getRemainingTime() override;
-    double getCurrent() override;
-    double predictConsumption() override;
+    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
 };
 
@@ -263,7 +274,7 @@ public:
     void updateState(double stepSize) override;
     double getDuration() override;
     double getRemainingTime() override;
-    double getCurrent() override;
+    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
 };
 
