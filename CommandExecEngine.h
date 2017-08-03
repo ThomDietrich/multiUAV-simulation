@@ -39,6 +39,8 @@ protected:
     CeeType type;
     void setType(CeeType type);
 
+    int commandId;
+
     /// coordinates from where the command will be executed
     double x0, y0, z0;
     /// coordinates to where the command is going to
@@ -46,7 +48,7 @@ protected:
     /// movement data
     double yaw = 0, pitch = 0, climbAngle = 0, speed = 0;
 
-    /// consumption for this CEE (drawn from stochastic distribution
+    /// consumption for this CEE (drawn from stochastic distribution)
     /// Normalized to mAh/s
     double consumptionPerSecond = 0;
 
@@ -57,6 +59,15 @@ public:
     {
     }
     ;
+
+    int getCommandId()
+    {
+        return commandId;
+    }
+    void setCommandId(int commandId)
+    {
+        this->commandId = commandId;
+    }
 
     /**
      * Adopt the coordinates the command will be executed from, needed for consumption prediction.

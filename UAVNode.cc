@@ -157,6 +157,7 @@ void UAVNode::initializeState()
             break;
     }
     labelNode->setText(text);
+    EV_INFO << "Consumption drawn for CEE: " << commandExecEngine->getConsumptionPerSecond() << "mAh/s * " << commandExecEngine->getDuration() << "s" << endl;
 }
 
 /*
@@ -224,6 +225,7 @@ void UAVNode::loadCommands(CommandQueue commands)
         else {
             throw cRuntimeError("UAVNode::generateCCEsFromCommandQueue(): invalid cast or unexpected command type.");
         }
+        cee->setCommandId(index);
         cees.push_back(cee);
     }
 }
@@ -271,8 +273,8 @@ double UAVNode::estimateCommandsDuration()
  */
 double UAVNode::getHoverConsumption(float duration, float percentile)
 {
-    double mean = 18.09;
-    double stddev = 0.36;
+    double mean = 18.09;  // mean current, in [A]
+    double stddev = 0.36; // deviation of the mean, in [A]
     if (isnan(percentile)) {
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
         return omnetpp::normal(network->getRNG(0), mean, stddev) * 1000 * duration / 3600;
@@ -295,26 +297,27 @@ double UAVNode::getHoverConsumption(float duration, float percentile)
  * @param angle The ascent/decline angle, range: -90..+90°
  * @param duration Duration of the maneuver, in [s]
  * @param percentile The percentile in the range 0..1
- * @return The current used by the UAV in [A]
+ * @return The current used by the UAV in [mAh]
  */
 double UAVNode::getMovementConsumption(float angle, float duration, float percentile)
 {
     double mean;
     double stddev;
     const u_int numAngles = 11;
-    double samples[numAngles][3] = { //
+    double samples[numAngles][3] = {
+    // angle [°], mean current [A], current deviation [A]
             { -90.0, 16.86701, 0.7651131 }, //
-                    { -75.6, 17.97695, 0.7196844 }, //
-                    { -57.9, 17.34978, 0.6684724 }, //
-                    { -34.8, 17.34384, 0.8729401 }, //
-                    { -15.6, 15.99054, 1.1767867 }, //
-                    { 000.0, 16.36526, 1.0290515 }, //
-                    { +15.6, 18.83829, 2.1043467 }, //
-                    { +34.8, 20.34726, 1.4018145 }, //
-                    { +57.9, 21.31561, 0.8680334 }, //
-                    { +75.6, 21.43493, 0.7625244 }, //
-                    { +90.0, 20.86530, 0.7350855 }  //
-            };
+            { -75.6, 17.97695, 0.7196844 }, //
+            { -57.9, 17.34978, 0.6684724 }, //
+            { -34.8, 17.34384, 0.8729401 }, //
+            { -15.6, 15.99054, 1.1767867 }, //
+            { 000.0, 16.36526, 1.0290515 }, //
+            { +15.6, 18.83829, 2.1043467 }, //
+            { +34.8, 20.34726, 1.4018145 }, //
+            { +57.9, 21.31561, 0.8680334 }, //
+            { +75.6, 21.43493, 0.7625244 }, //
+            { +90.0, 20.86530, 0.7350855 }  //
+    };
 
     //Catch exactly -90°
     if (angle == samples[0][0]) {
@@ -358,19 +361,20 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
 double UAVNode::getSpeed(double angle)
 {
     const u_int numAngles = 11;
-    double samples[numAngles][2] = { //
+    double samples[numAngles][2] = {
+    // angle [°], mean speed [m/s]
             { -90.0, 1.837303 }, //
-                    { -75.6, 1.842921 }, //
-                    { -57.9, 2.013429 }, //
-                    { -34.8, 2.450476 }, //
-                    { -15.6, 3.583821 }, //
-                    { 000.0, 8.056741 }, //
-                    { +15.6, 6.020143 }, //
-                    { +34.8, 3.337107 }, //
-                    { +57.9, 2.822109 }, //
-                    { +75.6, 2.719016 }, //
-                    { +90.0, 2.719048 }  //
-            };
+            { -75.6, 1.842921 }, //
+            { -57.9, 2.013429 }, //
+            { -34.8, 2.450476 }, //
+            { -15.6, 3.583821 }, //
+            { 000.0, 8.056741 }, //
+            { +15.6, 6.020143 }, //
+            { +34.8, 3.337107 }, //
+            { +57.9, 2.822109 }, //
+            { +75.6, 2.719016 }, //
+            { +90.0, 2.719048 }  //
+    };
 
         //Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
@@ -410,6 +414,7 @@ ReplacementData* UAVNode::endOfOperation()
     double fromZ = this->getZ();
 
     //TODO Add current Execution Engine consumption
+    energySum += 0;
 
     while (true) {
         CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
@@ -419,7 +424,8 @@ ReplacementData* UAVNode::endOfOperation()
         }
 
         // Get consumption for next command
-        nextCEE->setFromCoordinates(fromX, fromY, fromZ);
+        nextCEE->setFromCoordinates(nextCEE->getX0(), nextCEE->getY0(), nextCEE->getZ0());
+        nextCEE->setToCoordinates(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
         nextCEE->initializeCEE();
 
         float energyForNextCEE = nextCEE->predictFullConsumption(0.75);
@@ -427,15 +433,14 @@ ReplacementData* UAVNode::endOfOperation()
         // Get consumption for going back to the nearest Charging node
         energyToCNAfter = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
 
-        //EV_DEBUG << "Consumption Aggregated Commands: " << commandsFeasible << endl;
         //EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
-        //EV_DEBUG << "Consumption Command=" << energyForNextCEE << "mAh, " << endl;
+        EV_DEBUG << commandsFeasible + 1 << " Consumption Command " << nextCEE->getCommandId() << ": " << energyForNextCEE << "mAh" << endl;
         //EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
-        EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCEE + energyToCNAfter << "mAh" << endl;
+        //EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCEE + energyToCNAfter << "mAh" << endl;
         //EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
         if (battery.getRemaining() < energySum + energyForNextCEE + energyToCNAfter) {
-            EV_DEBUG << "Maximum distance reached. " << commandsFeasible - 1 << " commands feasible." << endl;
+            EV_DEBUG << "Maximum distance exceeded. " << commandsFeasible << " commands feasible." << endl;
             break;
         }
         else {

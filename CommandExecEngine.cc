@@ -47,9 +47,9 @@ void WaypointCEE::initializeCEE()
     if (this->command == nullptr) {
         throw cRuntimeError("initializeCEE(): Command missing.");
     }
-    double dx = x1 - node->x;
-    double dy = y1 - node->y;
-    double dz = z1 - node->z;
+    double dx = x1 - x0;
+    double dy = y1 - y0;
+    double dz = z1 - z0;
 
     //update and store yaw, climbAngle and pitch angles
     yaw = atan2(dy, dx) / M_PI * 180;
@@ -149,7 +149,7 @@ bool TakeoffCEE::commandCompleted()
 void TakeoffCEE::initializeCEE()
 {
     pitch = 0;
-    climbAngle = (z1 > node->z) ? 90 : -90;
+    climbAngle = (z1 > z0) ? 90 : -90;
 
     //update speed based on flight angle
     speed = node->getSpeed(climbAngle);
