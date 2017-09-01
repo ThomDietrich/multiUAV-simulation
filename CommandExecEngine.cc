@@ -345,3 +345,68 @@ char* ChargeCEE::getCeeTypeString()
 {
     return (char*) "Charge";
 }
+
+
+/**
+ * Exchange Command Execution Engine
+ */
+ExchangeCEE::ExchangeCEE(UAVNode& boundNode, ExchangeCommand& command)
+{
+    this->node = &boundNode;
+    this->command = &command;
+    this->setType(CeeType::EXCHANGE);
+    setFromCoordinates(node->x, node->y, node->z);
+    setToCoordinates(node->x, node->y, node->z);
+}
+
+bool ExchangeCEE::commandCompleted()
+{
+    return false;
+}
+
+void ExchangeCEE::initializeCEE()
+{
+    //yaw = yaw;
+    pitch = 0;
+    climbAngle = 0;
+
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
+}
+
+void ExchangeCEE::setNodeParameters()
+{
+    //node->yaw = yaw;
+    node->pitch = pitch;
+    node->climbAngle = climbAngle;
+}
+
+void ExchangeCEE::updateState(double stepSize)
+{
+    node->battery.discharge(consumptionPerSecond * stepSize);
+}
+
+double ExchangeCEE::getDuration()
+{
+    throw cRuntimeError("ExchangeCEE has no determined ending time");
+    return 1;
+}
+
+double ExchangeCEE::getRemainingTime()
+{
+    throw cRuntimeError("ExchangeCEE has no determined ending time");
+    return 1;
+}
+
+double ExchangeCEE::getProbableConsumption(bool normalized, float percentile)
+{
+    //TODO duration unknown
+    if (normalized == false) EV_WARN << __func__ << "(): non-normalized not supported for ExchangeCEE" << endl;
+    if (percentile != NAN) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
+    return node->getHoverConsumption(1, 0.5);
+}
+
+char* ExchangeCEE::getCeeTypeString()
+{
+    return (char*) "Exchange";
+}

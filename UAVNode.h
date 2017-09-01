@@ -34,6 +34,7 @@ class UAVNode : public MobileNode {
     friend class HoldPositionCEE;
     friend class TakeoffCEE;
     friend class ChargeCEE;
+    friend class ExchangeCEE;
 
 public:
     UAVNode();

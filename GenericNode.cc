@@ -145,7 +145,16 @@ void GenericNode::refreshDisplay() const
 void GenericNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
-    if (msg->isName("startMission")) {
+    if (msg->isName("startProvision")) {
+        MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
+        selectNextCommand();
+        initializeState();
+        EV_INFO << "UAV initialized for provisioning and on its way." << endl;
+        delete msg;
+        msg = new cMessage("update");
+        stepSize = 0;
+    }
+    else if (msg->isName("startMission")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         commandsRepeat = mmmsg->getMissionRepeat();

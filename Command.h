@@ -113,4 +113,15 @@ public:
     ChargingNode *getChargingNode();
 };
 
+/**
+ * The vehicle will wait at the current location until further notice.
+ * The command is reserved for Node to Node data transfer. Both Nodes have to be in the Exchange mode.
+ * Exchange ends when Data was successfully transfered.
+ */
+class ExchangeCommand : public Command {
+//protected:
+public:
+    ExchangeCommand();
+};
+
 #endif /* COMMAND_H_ */
