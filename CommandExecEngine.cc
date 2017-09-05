@@ -336,7 +336,7 @@ double ChargeCEE::getRemainingTime()
 double ChargeCEE::getProbableConsumption(bool normalized, float percentile)
 {
     if (normalized == false) EV_WARN << __func__ << "(): non-normalized currently not supported for ChargeCEE" << endl;
-    if (percentile != NAN) EV_WARN << __func__ << "(): percentile not supported for ChargeCEE" << endl;
+    if (isnormal(percentile)) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
     // 3DR Solo: 5200 mAh in 1.5h = 3.5A constant -> 3.5Ah = 3500 mAh -> 0,97222 mAh / s
     return -0.97222;
 }
@@ -345,7 +345,6 @@ char* ChargeCEE::getCeeTypeString()
 {
     return (char*) "Charge";
 }
-
 
 /**
  * Exchange Command Execution Engine
@@ -402,7 +401,7 @@ double ExchangeCEE::getProbableConsumption(bool normalized, float percentile)
 {
     //TODO duration unknown
     if (normalized == false) EV_WARN << __func__ << "(): non-normalized not supported for ExchangeCEE" << endl;
-    if (percentile != NAN) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
+    if (isnormal(percentile)) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
     return node->getHoverConsumption(1, 0.5);
 }
 

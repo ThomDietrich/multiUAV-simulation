@@ -74,7 +74,7 @@ void MissionControl::handleMessage(cMessage *msg)
             EV_INFO << "Node switching over to nodeStatus MISSION" << endl;
             nodeShadow->setStatus(NodeStatus::MISSION);
         }
-        handleReplacementMessage(ccmsg->getReplacementData());
+        if (ccmsg->getReplacementDataAvailable()) handleReplacementMessage(ccmsg->getReplacementData());
     }
     else if (msg->isName("provisionReplacement")) {
         // Identify node requesting replacement
@@ -89,9 +89,15 @@ void MissionControl::handleMessage(cMessage *msg)
             throw cRuntimeError("provisionReplacement message not found amongst the managed nodes.");
         }
         GenericNode *replacingNode = nodeShadow->getReplacingNode();
+        ReplacementData *replData = nodeShadow->getReplacementData();
         EV_INFO << "provisionReplacement message received for node " << nodeShadow->getIndex() << endl;
 
+        // Send provision mission to node
+        CommandQueue provMission;
+        provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
+        provMission.push_back(new ExchangeCommand());
         MissionMsg *nodeStartMission = new MissionMsg("startProvision");
+        nodeStartMission->setMission(provMission);
         send(nodeStartMission, "gate$o", replacingNode->getIndex());
 
         managedNodes.at(replacingNode->getIndex())->setStatus(NodeStatus::PROVISIONING);
@@ -138,6 +144,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         replacingUavNode->loadCommands(commands);
         double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
         timeOfProvisioning = timeOfReplacement - timeForProvisioning;
+        replacingUavNode->clearCommands();
     }
 
     //throw cRuntimeError("test");

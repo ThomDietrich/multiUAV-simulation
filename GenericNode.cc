@@ -147,6 +147,7 @@ void GenericNode::handleMessage(cMessage *msg)
     double stepSize = 0;
     if (msg->isName("startProvision")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
+        if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized for provisioning and on its way." << endl;
@@ -175,13 +176,17 @@ void GenericNode::handleMessage(cMessage *msg)
         }
     }
     else if (msg->isName("nextCommand")) {
-        // Build and Send a Command Completed Message
-        ReplacementData *replacementData = endOfOperation();
+        // Build and Send a Command Completed Message to Mission Control
         CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
         ccmsg->setSourceNode(this->getIndex());
-        ccmsg->setReplacementData(*replacementData);
+        ReplacementData *replacementData = endOfOperation();
+        if (replacementData != nullptr) {
+            ccmsg->setReplacementData(*replacementData);
+        }
+        else {
+            ccmsg->setReplacementDataAvailable(false);
+        }
         send(ccmsg, "gate$o", 0);
-
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
             EV_WARN << "Command completed. Queue empty." << endl;

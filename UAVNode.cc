@@ -123,7 +123,9 @@ void UAVNode::selectNextCommand()
     cees.pop_front();
 
     // reinject command (if no charging or takeoff command)
-    if (commandsRepeat && not (commandExecEngine->getCeeType() == CeeType::CHARGE) && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF)) {
+    if (commandsRepeat && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF) //
+            && not (commandExecEngine->getCeeType() == CeeType::CHARGE) //
+            && not (commandExecEngine->getCeeType() == CeeType::EXCHANGE)) {
         cees.push_back(commandExecEngine);
     }
 }
@@ -155,9 +157,13 @@ void UAVNode::initializeState()
         case CeeType::CHARGE:
             text += " CH";
             break;
+        case CeeType::EXCHANGE:
+            text += " EX";
+            break;
     }
     labelNode->setText(text);
-    EV_INFO << "Consumption drawn for CEE: " << commandExecEngine->getConsumptionPerSecond() << "mAh/s * " << commandExecEngine->getDuration() << "s" << endl;
+    std::string duration = (commandExecEngine->hasDeterminedDuration()) ? std::to_string(commandExecEngine->getDuration()) + "s" : "...s";
+    EV_INFO << "Consumption drawn for CEE: " << commandExecEngine->getConsumptionPerSecond() << "mAh/s * " << duration << endl;
 }
 
 /*
@@ -171,10 +177,14 @@ void UAVNode::updateState()
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-    //update sublabel with battery info
+    //update sublabel with maneuver and battery info
     std::ostringstream strs;
-    strs << std::setprecision(1) << std::fixed << speed << " m/s | " << commandExecEngine->getConsumptionPerSecond() << " A | "
-            << battery.getRemainingPercentage() << " % | " << commandExecEngine->getRemainingTime() << " s left";
+    strs << std::setprecision(1) << std::fixed << speed << " m/s";
+    strs << " | " << commandExecEngine->getConsumptionPerSecond() << " A";
+    strs << " | " << battery.getRemainingPercentage() << " %";
+    strs << " | ";
+    (commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
+    strs << " s left";
     std::string str = strs.str();
     sublabelNode->setText(str);
 }
@@ -193,7 +203,13 @@ bool UAVNode::commandCompleted()
  */
 double UAVNode::nextNeededUpdate()
 {
-    return commandExecEngine->getRemainingTime();
+    if (commandExecEngine->hasDeterminedDuration()) {
+        return commandExecEngine->getRemainingTime();
+    }
+    else {
+        //TODO unknown? this is just a first workaround!
+        return 10;
+    }
 }
 
 /**
@@ -222,8 +238,11 @@ void UAVNode::loadCommands(CommandQueue commands)
         else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
             cee = new ChargeCEE(*this, *cmd);
         }
+        else if (ExchangeCommand *cmd = dynamic_cast<ExchangeCommand *>(command)) {
+            cee = new ExchangeCEE(*this, *cmd);
+        }
         else {
-            throw cRuntimeError("UAVNode::generateCCEsFromCommandQueue(): invalid cast or unexpected command type.");
+            throw cRuntimeError("UAVNode::loadCommands(): invalid cast or unexpected command type.");
         }
         cee->setCommandId(index);
         cees.push_back(cee);
@@ -305,7 +324,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
     double stddev;
     const u_int numAngles = 11;
     double samples[numAngles][3] = {
-    // angle [°], mean current [A], current deviation [A]
+// angle [°], mean current [A], current deviation [A]
             { -90.0, 16.86701, 0.7651131 }, //
             { -75.6, 17.97695, 0.7196844 }, //
             { -57.9, 17.34978, 0.6684724 }, //
@@ -318,8 +337,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
             { +75.6, 21.43493, 0.7625244 }, //
             { +90.0, 20.86530, 0.7350855 }  //
     };
-
-    //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) {
         mean = samples[0][1];
         stddev = samples[0][2];
@@ -362,7 +380,7 @@ double UAVNode::getSpeed(double angle)
 {
     const u_int numAngles = 11;
     double samples[numAngles][2] = {
-    // angle [°], mean speed [m/s]
+// angle [°], mean speed [m/s]
             { -90.0, 1.837303 }, //
             { -75.6, 1.842921 }, //
             { -57.9, 2.013429 }, //
@@ -375,8 +393,7 @@ double UAVNode::getSpeed(double angle)
             { +75.6, 2.719016 }, //
             { +90.0, 2.719048 }  //
     };
-
-        //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
     // simple linear interpolation
@@ -402,6 +419,7 @@ double UAVNode::getSpeed(double angle)
  * Result of the calculation is the feasible amount of commands and the place of last possible replacement.
  *
  * @return ReplacementData for the last point of replacement
+ * @return 'nullptr' if a command that can't be estimated (CHARGE or EXCHANGE) is enqueued before depletion
  */
 ReplacementData* UAVNode::endOfOperation()
 {
@@ -420,7 +438,13 @@ ReplacementData* UAVNode::endOfOperation()
         CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
 
         if (nextCEE->getCeeType() == CeeType::CHARGE) {
-            throw cRuntimeError("endOfOperation(): charge command encountered");
+            //throw cRuntimeError("endOfOperation(): charge command encountered");
+            EV_WARN << "endOfOperation(): charge command encountered" << endl;
+            return nullptr;
+        }
+        if (nextCEE->getCeeType() == CeeType::EXCHANGE) {
+            EV_WARN << "endOfOperation(): exchange command encountered" << endl;
+            return nullptr;
         }
 
         // Get consumption for next command

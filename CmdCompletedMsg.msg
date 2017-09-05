@@ -21,5 +21,6 @@ class noncobject ReplacementData;
 
 message CmdCompletedMsg {
 	int sourceNode;
+	bool replacementDataAvailable = true;
     ReplacementData replacementData;
 }

@@ -143,6 +143,16 @@ public:
     virtual void updateState(double stepSize) = 0;
 
     /**
+     * Not all commands have a predefined or deterministic ending time that can be calculated.
+     * This function has to be called before getDuration() or getRemainingTime().
+     * @return true if duration/deadline is known
+     */
+    virtual bool hasDeterminedDuration()
+    {
+        return true;
+    }
+
+    /**
      * Get the overall duration expected for the CEE.
      */
     virtual double getDuration() = 0;
@@ -306,6 +316,10 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+    bool hasDeterminedDuration() override
+    {
+        return false;
+    }
 };
 
 
