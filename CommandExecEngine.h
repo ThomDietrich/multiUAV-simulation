@@ -52,6 +52,9 @@ protected:
     /// Normalized to mAh/s
     double consumptionPerSecond = 0;
 
+    /// CEEs can be part of a mission or special inserted commands, e.g. for maintenance
+    bool partOfMission = true;
+
 public:
     //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
 
@@ -192,6 +195,11 @@ public:
         return type;
     }
 
+    bool isCeeType(CeeType ceeType)
+    {
+        return (this->type == ceeType);
+    }
+
     /**
      *
      */
@@ -204,6 +212,22 @@ public:
     double getConsumptionPerSecond()
     {
         return consumptionPerSecond;
+    }
+
+    /**
+     * CEEs can be part of a mission or special inserted commands, e.g. for maintenance
+     */
+    bool isPartOfMission() const
+    {
+        return partOfMission;
+    }
+
+    /**
+     * CEEs can be part of a mission or special inserted commands, e.g. for maintenance
+     */
+    void setPartOfMission(bool partOfMission = true)
+    {
+        this->partOfMission = partOfMission;
     }
 };
 

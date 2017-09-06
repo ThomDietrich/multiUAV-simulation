@@ -107,10 +107,12 @@ void UAVNode::selectNextCommand()
         // Generate WaypointCEE
         WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
         CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+        goToChargingNodeCEE->setPartOfMission(false);
 
         // Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
+        chargeCEE->setPartOfMission(false);
 
         // Add WaypointCEE and ChargeCEE to the CEEs queue
         cees.push_front(chargeCEE);
@@ -122,10 +124,8 @@ void UAVNode::selectNextCommand()
     commandExecEngine->initializeCEE();
     cees.pop_front();
 
-    // reinject command (if no charging or takeoff command)
-    if (commandsRepeat && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF) //
-            && not (commandExecEngine->getCeeType() == CeeType::CHARGE) //
-            && not (commandExecEngine->getCeeType() == CeeType::EXCHANGE)) {
+    // reinject command (if no non-mission command)
+    if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
 }
@@ -331,14 +331,13 @@ ReplacementData* UAVNode::endOfOperation()
     while (true) {
         CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
 
-        if (nextCEE->getCeeType() == CeeType::CHARGE) {
-            //throw cRuntimeError("endOfOperation(): charge command encountered");
-            EV_WARN << "endOfOperation(): charge command encountered" << endl;
+        if (not nextCEE->isPartOfMission()) {
+            EV_WARN << "endOfOperation(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
             return nullptr;
         }
-        if (nextCEE->getCeeType() == CeeType::EXCHANGE) {
-            EV_WARN << "endOfOperation(): exchange command encountered" << endl;
-            return nullptr;
+        //TODO remove the following if the above works
+        if (nextCEE->isCeeType(CeeType::CHARGE) || nextCEE->isCeeType(CeeType::EXCHANGE)) {
+            throw cRuntimeError("endOfOperation(): charge or exchange command encountered");
         }
 
         // Get consumption for next command
@@ -395,6 +394,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
     goToChargingNodeCEE->setFromCoordinates(fromX, fromY, fromZ);
+    goToChargingNodeCEE->setPartOfMission(false);
     goToChargingNodeCEE->initializeCEE();
     return goToChargingNodeCEE->predictFullConsumption(0.75);
 }
@@ -417,7 +417,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
     double stddev;
     const u_int numAngles = 11;
     double samples[numAngles][3] = {
-    // angle [°], mean current [A], current deviation [A]
+// angle [°], mean current [A], current deviation [A]
             { -90.0, 16.86701, 0.7651131 }, //
             { -75.6, 17.97695, 0.7196844 }, //
             { -57.9, 17.34978, 0.6684724 }, //
@@ -430,7 +430,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
             { +75.6, 21.43493, 0.7625244 }, //
             { +90.0, 20.86530, 0.7350855 }  //
     };
-    //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) {
         mean = samples[0][1];
         stddev = samples[0][2];

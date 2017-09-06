@@ -31,7 +31,7 @@ public:
     virtual ~ChargingNode();
     virtual void selectNextCommand() override;
     virtual void initializeState() override;
-    virtual void loadCommands(CommandQueue commands) override;
+    virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual void clearCommands() override;
     virtual void updateState() override;
     virtual bool commandCompleted() override;

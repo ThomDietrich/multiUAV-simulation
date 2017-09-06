@@ -39,7 +39,7 @@ class UAVNode : public MobileNode {
 public:
     UAVNode();
     virtual ~UAVNode();
-    virtual void loadCommands(CommandQueue commands) override;
+    virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual void clearCommands() override;
     virtual double estimateCommandsDuration();
     static double getHoverConsumption(float duration, float percentile = NAN);

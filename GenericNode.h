@@ -53,8 +53,10 @@ public:
     virtual double getPitch() const = 0;
 };
 
+/**
+ *
+ */
 class GenericNode : public cSimpleModule, public IGenericNode {
-
 protected:
     // configuration
     double timeStep;
@@ -158,7 +160,7 @@ public:
         return climbAngle;
     }
     virtual bool hasCommandsInQueue();
-    virtual void loadCommands(CommandQueue commands) = 0;
+    virtual void loadCommands(CommandQueue commands, bool isMission = true) = 0;
     virtual void clearCommands() = 0;
 
 protected:

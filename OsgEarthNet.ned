@@ -29,7 +29,7 @@ network OsgEarthNet
 
     types:
         channel Channel extends ned.DelayChannel {
-            delay = 1ms;
+            delay = 100ms;
         }
     submodules:
         osgEarthScene: OsgEarthScene {
