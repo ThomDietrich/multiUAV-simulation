@@ -215,7 +215,7 @@ double UAVNode::nextNeededUpdate()
 /**
  * Load a queue of commands, generate cees out of these and store them as the cees to be executed by the node.
  */
-void UAVNode::loadCommands(CommandQueue commands)
+void UAVNode::loadCommands(CommandQueue commands, bool isMission)
 {
     if (not cees.empty()) {
         EV_WARN << "Replacing non-empty CEE queue." << endl;
@@ -244,6 +244,7 @@ void UAVNode::loadCommands(CommandQueue commands)
         else {
             throw cRuntimeError("UAVNode::loadCommands(): invalid cast or unexpected command type.");
         }
+        if (not isMission) cee->setPartOfMission(false);
         cee->setCommandId(index);
         cees.push_back(cee);
     }
@@ -304,113 +305,6 @@ double UAVNode::getHoverConsumption(float duration, float percentile)
     else {
         return boost::math::quantile(boost::math::normal(mean, stddev), percentile) * 1000 * duration / 3600;
     }
-}
-
-/**
- * Calculate the electrical consumption for one flight maneuver (movement).
- * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
- * Consequently the power usage of the node is based on these factors.
- * This function will return the consumption based on real measurement values.
- * A specific percentile value can be calculated, if the parameter is left out a random value is drawn.
- *
- * @param angle The ascent/decline angle, range: -90..+90°
- * @param duration Duration of the maneuver, in [s]
- * @param percentile The percentile in the range 0..1
- * @return The current used by the UAV in [mAh]
- */
-double UAVNode::getMovementConsumption(float angle, float duration, float percentile)
-{
-    double mean;
-    double stddev;
-    const u_int numAngles = 11;
-    double samples[numAngles][3] = {
-// angle [°], mean current [A], current deviation [A]
-            { -90.0, 16.86701, 0.7651131 }, //
-            { -75.6, 17.97695, 0.7196844 }, //
-            { -57.9, 17.34978, 0.6684724 }, //
-            { -34.8, 17.34384, 0.8729401 }, //
-            { -15.6, 15.99054, 1.1767867 }, //
-            { 000.0, 16.36526, 1.0290515 }, //
-            { +15.6, 18.83829, 2.1043467 }, //
-            { +34.8, 20.34726, 1.4018145 }, //
-            { +57.9, 21.31561, 0.8680334 }, //
-            { +75.6, 21.43493, 0.7625244 }, //
-            { +90.0, 20.86530, 0.7350855 }  //
-    };
-//Catch exactly -90°
-    if (angle == samples[0][0]) {
-        mean = samples[0][1];
-        stddev = samples[0][2];
-    }
-    else if (angle < -90.0 || angle > +90.0) {
-        throw cRuntimeError("Invalid angle outside range [-90.0..+90.0].");
-    }
-    else {
-        // simple linear interpolation
-        for (u_int idx = 1; idx < numAngles; idx++) {
-            if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
-                double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
-                mean = samples[idx - 1][1] + mean_slope * (angle - samples[idx - 1][0]);
-
-                double stddev_slope = (samples[idx][2] - samples[idx - 1][2]) / (samples[idx][0] - samples[idx - 1][0]);
-                stddev = samples[idx - 1][2] + stddev_slope * (angle - samples[idx - 1][0]);
-            }
-        }
-    }
-    if (isnan(percentile)) {
-        cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
-        return omnetpp::normal(network->getRNG(0), mean, stddev) * 1000 * duration / 3600;
-    }
-    else if (percentile < 0.0 || percentile > 1.0) {
-        throw cRuntimeError("Invalid percentile outside range [0.0..1.0].");
-    }
-    else {
-        return boost::math::quantile(boost::math::normal(mean, stddev), percentile) * 1000 * duration / 3600;
-    }
-}
-
-/**
- * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
- * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
- *
- * @param the ascent/decline angle, range: -90..+90°
- * @return the speed of the UAV in [m/s]
- */
-double UAVNode::getSpeed(double angle)
-{
-    const u_int numAngles = 11;
-    double samples[numAngles][2] = {
-// angle [°], mean speed [m/s]
-            { -90.0, 1.837303 }, //
-            { -75.6, 1.842921 }, //
-            { -57.9, 2.013429 }, //
-            { -34.8, 2.450476 }, //
-            { -15.6, 3.583821 }, //
-            { 000.0, 8.056741 }, //
-            { +15.6, 6.020143 }, //
-            { +34.8, 3.337107 }, //
-            { +57.9, 2.822109 }, //
-            { +75.6, 2.719016 }, //
-            { +90.0, 2.719048 }  //
-    };
-//Catch exactly -90°
-    if (angle == samples[0][0]) return samples[0][1];
-
-    // simple linear interpolation
-    for (u_int idx = 1; idx < numAngles; idx++) {
-        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
-            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
-            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
-            return interpol;
-        }
-    }
-
-    std::stringstream ss;
-    ss << "UAVNode::getSpeedFromAngle() unexpected angle passed: " << angle;
-    const char* str = ss.str().c_str();
-
-    throw cRuntimeError(str);
-    return 0;
 }
 
 /**
@@ -503,6 +397,113 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
     goToChargingNodeCEE->setFromCoordinates(fromX, fromY, fromZ);
     goToChargingNodeCEE->initializeCEE();
     return goToChargingNodeCEE->predictFullConsumption(0.75);
+}
+
+/**
+ * Calculate the electrical consumption for one flight maneuver (movement).
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
+ * Consequently the power usage of the node is based on these factors.
+ * This function will return the consumption based on real measurement values.
+ * A specific percentile value can be calculated, if the parameter is left out a random value is drawn.
+ *
+ * @param angle The ascent/decline angle, range: -90..+90°
+ * @param duration Duration of the maneuver, in [s]
+ * @param percentile The percentile in the range 0..1
+ * @return The current used by the UAV in [mAh]
+ */
+double UAVNode::getMovementConsumption(float angle, float duration, float percentile)
+{
+    double mean;
+    double stddev;
+    const u_int numAngles = 11;
+    double samples[numAngles][3] = {
+    // angle [°], mean current [A], current deviation [A]
+            { -90.0, 16.86701, 0.7651131 }, //
+            { -75.6, 17.97695, 0.7196844 }, //
+            { -57.9, 17.34978, 0.6684724 }, //
+            { -34.8, 17.34384, 0.8729401 }, //
+            { -15.6, 15.99054, 1.1767867 }, //
+            { 000.0, 16.36526, 1.0290515 }, //
+            { +15.6, 18.83829, 2.1043467 }, //
+            { +34.8, 20.34726, 1.4018145 }, //
+            { +57.9, 21.31561, 0.8680334 }, //
+            { +75.6, 21.43493, 0.7625244 }, //
+            { +90.0, 20.86530, 0.7350855 }  //
+    };
+    //Catch exactly -90°
+    if (angle == samples[0][0]) {
+        mean = samples[0][1];
+        stddev = samples[0][2];
+    }
+    else if (angle < -90.0 || angle > +90.0) {
+        throw cRuntimeError("Invalid angle outside range [-90.0..+90.0].");
+    }
+    else {
+        // simple linear interpolation
+        for (u_int idx = 1; idx < numAngles; idx++) {
+            if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
+                double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
+                mean = samples[idx - 1][1] + mean_slope * (angle - samples[idx - 1][0]);
+
+                double stddev_slope = (samples[idx][2] - samples[idx - 1][2]) / (samples[idx][0] - samples[idx - 1][0]);
+                stddev = samples[idx - 1][2] + stddev_slope * (angle - samples[idx - 1][0]);
+            }
+        }
+    }
+    if (isnan(percentile)) {
+        cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+        return omnetpp::normal(network->getRNG(0), mean, stddev) * 1000 * duration / 3600;
+    }
+    else if (percentile < 0.0 || percentile > 1.0) {
+        throw cRuntimeError("Invalid percentile outside range [0.0..1.0].");
+    }
+    else {
+        return boost::math::quantile(boost::math::normal(mean, stddev), percentile) * 1000 * duration / 3600;
+    }
+}
+
+/**
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
+ * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
+ *
+ * @param the ascent/decline angle, range: -90..+90°
+ * @return the speed of the UAV in [m/s]
+ */
+double UAVNode::getSpeed(double angle)
+{
+    const u_int numAngles = 11;
+    double samples[numAngles][2] = {
+// angle [°], mean speed [m/s]
+            { -90.0, 1.837303 }, //
+            { -75.6, 1.842921 }, //
+            { -57.9, 2.013429 }, //
+            { -34.8, 2.450476 }, //
+            { -15.6, 3.583821 }, //
+            { 000.0, 8.056741 }, //
+            { +15.6, 6.020143 }, //
+            { +34.8, 3.337107 }, //
+            { +57.9, 2.822109 }, //
+            { +75.6, 2.719016 }, //
+            { +90.0, 2.719048 }  //
+    };
+//Catch exactly -90°
+    if (angle == samples[0][0]) return samples[0][1];
+
+    // simple linear interpolation
+    for (u_int idx = 1; idx < numAngles; idx++) {
+        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
+            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
+            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
+            return interpol;
+        }
+    }
+
+    std::stringstream ss;
+    ss << "UAVNode::getSpeedFromAngle() unexpected angle passed: " << angle;
+    const char* str = ss.str().c_str();
+
+    throw cRuntimeError(str);
+    return 0;
 }
 
 void UAVNode::move()
