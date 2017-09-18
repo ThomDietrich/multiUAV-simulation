@@ -221,4 +221,16 @@ bool GenericNode::hasCommandsInQueue()
     return (not cees.empty());
 }
 
+// ToDo: Implement Error handling (gate to *node not found)
+cGate* GenericNode::getOutputGateTo(GenericNode *node) {
+    for(int i = 0; i < this->gateCount(); i++) {
+        cGate *gate = this->gateByOrdinal(i);
+        cModule *gateOwner = gate->getPathEndGate()->getOwnerModule();
+        if(gate->getType() == cGate::Type::OUTPUT
+                && gateOwner == node) {
+            return gate;
+        }
+    }
+}
+
 #endif // WITH_OSG

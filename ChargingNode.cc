@@ -70,7 +70,14 @@ void ChargingNode::refreshDisplay() const
 
 void ChargingNode::handleMessage(cMessage* msg)
 {
-    GenericNode::handleMessage(msg);
+//    GenericNode::handleMessage(msg);
+    EV_INFO << msg->getFullName() << endl;
+    if (msg->isName("chargeMe")) {
+        EV_INFO << "UAV is ready to get charged" << endl;
+    } else if (msg->isName("onMyWay")) {
+        EV_INFO << "UAV is on the way to CS, reserve spot" << endl;
+
+    }
 }
 
 void ChargingNode::selectNextCommand()
@@ -93,6 +100,11 @@ bool ChargingNode::commandCompleted()
 double ChargingNode::nextNeededUpdate()
 {
     return 100.0;
+}
+
+void appendToWaitingQueue()
+{
+
 }
 
 #endif // WITH_OSG

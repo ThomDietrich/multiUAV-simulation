@@ -104,6 +104,10 @@ void UAVNode::selectNextCommand()
         // Find nearest ChargingNode
         ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
 
+        // Generate and send message to CN
+        cMessage *onMyWay = new cMessage("onMyWay");
+        this->send(onMyWay, this->getOutputGateTo(cn));
+
         // Generate WaypointCEE
         WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
         CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);

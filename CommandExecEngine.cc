@@ -296,7 +296,8 @@ void ChargeCEE::initializeCEE()
     pitch = 0;
     climbAngle = 0;
     //TODO connect to Charging station
-    //cMessage *request = new cMessage("startCharge");
+    cMessage *request = new cMessage("startCharge");
+    node->send(request, node->getOutputGateTo(this->command->getChargingNode()));
     //this->command->getChargingNode()->scheduleAt(simTime(), request);
     // draw probable value for consumption of this CEE
     consumptionPerSecond = getProbableConsumption(true, NAN);

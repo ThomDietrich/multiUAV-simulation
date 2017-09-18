@@ -51,5 +51,8 @@ network OsgEarthNet
     connections:
         for i=0..numUAVs-1 {
             missionControl.gate++ <--> Channel <--> uav[i].gate++;
+            // ToDo: Find solution for nested for-loop in connections
+            cs[0].gate++ <--> Channel <--> uav[i].gate++; 
+            cs[1].gate++ <--> Channel <--> uav[i].gate++; 
         }
 }
