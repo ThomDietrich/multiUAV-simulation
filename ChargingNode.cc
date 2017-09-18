@@ -72,7 +72,7 @@ void ChargingNode::handleMessage(cMessage* msg)
 {
 //    GenericNode::handleMessage(msg);
     EV_INFO << msg->getFullName() << endl;
-    if (msg->isName("chargeMe")) {
+    if (msg->isName("startCharge")) {
         EV_INFO << "UAV is ready to get charged" << endl;
     } else if (msg->isName("onMyWay")) {
         EV_INFO << "UAV is on the way to CS, reserve spot" << endl;
