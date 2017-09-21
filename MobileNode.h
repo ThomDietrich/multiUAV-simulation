@@ -36,6 +36,9 @@ class ChargingNode;
  */
 class MobileNode : public GenericNode {
 
+public:
+    Battery battery; //energy storage
+
 protected:
     //trail (recently visited points)
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> trailNode = nullptr;
@@ -45,7 +48,6 @@ protected:
     std::string trailColor;
 
     double speed; //speed (3D) in [m/s]
-    Battery battery; //energy storage
 
 public:
     MobileNode();

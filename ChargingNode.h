@@ -23,8 +23,10 @@ using namespace omnetpp;
 
 class ChargingNode : public GenericNode {
 protected:
-    int spotsLanding;
-    int spotsCharging;
+    unsigned int spotsWaiting;
+    unsigned int spotsCharging;
+    std::vector<MobileNode*> objectsWaiting;
+    std::vector<MobileNode*> objectsCharging;
     double chargingCurrent;
 public:
     ChargingNode();
@@ -41,6 +43,10 @@ protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
+    virtual void appendToObjectsWaiting(MobileNode* module);
+    virtual void fillSpots();
+    virtual void charge();
+    virtual float calculateChargeAmount(float remaining);
 };
 
 #endif /* CHARGINGNODE_H_ */

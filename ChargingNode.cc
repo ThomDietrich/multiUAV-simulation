@@ -15,6 +15,7 @@
 
 #ifdef WITH_OSG
 #include "ChargingNode.h"
+#include "MobileNode.h";
 
 Define_Module(ChargingNode);
 
@@ -31,7 +32,7 @@ void ChargingNode::initialize(int stage)
     GenericNode::initialize(stage);
     switch (stage) {
         case 0:
-        this->spotsLanding = 5;
+        this->spotsWaiting = 5;
         this->spotsCharging = 1;
         this->chargingCurrent = 2000;
         this->x = par("posX");
@@ -74,9 +75,16 @@ void ChargingNode::handleMessage(cMessage* msg)
     EV_INFO << msg->getFullName() << endl;
     if (msg->isName("startCharge")) {
         EV_INFO << "UAV is ready to get charged" << endl;
+        cModule* mod = msg->getSenderModule();
+        EV_DEBUG << "Class name: " << mod->getClassName() << endl;
+        MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
+        this->appendToObjectsWaiting(mn);
+        // ToDo: switch to selfmessages
+        this->updateState();
     } else if (msg->isName("onMyWay")) {
         EV_INFO << "UAV is on the way to CS, reserve spot" << endl;
-
+    } else if (msg->isName("update")) {
+        this->updateState();
     }
 }
 
@@ -90,6 +98,13 @@ void ChargingNode::initializeState()
 
 void ChargingNode::updateState()
 {
+    EV_DEBUG << "Update ChargingStation State!" << endl;
+    this->fillSpots();
+    if(this->objectsCharging.size() == 0) {
+        return;
+    }
+    this->charge();
+    this->scheduleAt(simTime()+10, new cMessage("update"));
 }
 
 bool ChargingNode::commandCompleted()
@@ -102,9 +117,48 @@ double ChargingNode::nextNeededUpdate()
     return 100.0;
 }
 
-void appendToWaitingQueue()
+void ChargingNode::appendToObjectsWaiting(MobileNode* mn)
 {
-
+    if(this->objectsWaiting.size() >= this->spotsWaiting) {
+        EV_INFO << "All spots for waiting ("<< spotsWaiting <<") are already taken." << endl;
+        return;
+    }
+    if(std::find(this->objectsWaiting.begin(), this->objectsWaiting.end(), mn) != this->objectsWaiting.end()) {
+        EV_INFO << "The module is already in the queue and therefore not appended again." << endl;
+        return;
+    }
+    this->objectsWaiting.push_back(mn);
+    EV_INFO << "The module got appended to the queue." << endl;
 }
+
+void ChargingNode::fillSpots()
+{
+    while(this->spotsCharging > this->objectsCharging.size()
+            && this->objectsWaiting.size() > 0) {
+        this->objectsCharging.push_back(this->objectsWaiting.front());
+        this->objectsWaiting.erase(this->objectsWaiting.begin());
+    }
+}
+
+void ChargingNode::charge()
+{
+    for(unsigned int i = 0; i < this->spotsCharging; i++) {
+        if(this->objectsCharging[i]->battery.isFull()) {
+            EV_INFO << "UAV in slot " << i <<" is fully charged." << endl;
+            send(new cMessage("nextCommand"), this->getOutputGateTo(this->objectsCharging[i]));
+            // ToDo remove the right element and not the first one.
+            this->objectsCharging.erase(this->objectsCharging.begin());
+            break;
+        }
+        EV_INFO << "UAV in slot " << i <<" is currently getting charged." << endl;
+        this->objectsCharging[i]->battery.charge(this->calculateChargeAmount(this->objectsCharging[i]->battery.getRemaining()));
+    }
+}
+
+float ChargingNode::calculateChargeAmount(float remaining)
+{
+    return 100;
+}
+
 
 #endif // WITH_OSG
