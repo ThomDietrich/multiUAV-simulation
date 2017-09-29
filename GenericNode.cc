@@ -98,7 +98,7 @@ void GenericNode::initialize(int stage)
             labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 20);
             labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(label2Color);
             labelStyle.getOrCreate<TextSymbol>()->size() = 12;
-            sublabelNode = new LabelNode("---", labelStyle);
+                sublabelNode = new LabelNode(par("stateSummary"), labelStyle);
             sublabelNode->setDynamic(true);
             locatorNode->addChild(sublabelNode);
         }

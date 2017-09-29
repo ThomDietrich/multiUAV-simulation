@@ -186,6 +186,7 @@ void UAVNode::updateState()
     (commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
     strs << " s left";
     std::string str = strs.str();
+    par("stateSummary").setStringValue(str);
     sublabelNode->setText(str);
 }
 

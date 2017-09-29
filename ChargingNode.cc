@@ -43,7 +43,8 @@ void ChargingNode::initialize(int stage)
 
         case 1:
         this->labelNode->setText("");
-        this->sublabelNode->setText("");
+            //this->sublabelNode->setText("");
+            par("stateSummary").setStringValue("");
         break;
     }
 }

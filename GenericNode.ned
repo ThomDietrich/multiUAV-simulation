@@ -25,6 +25,7 @@ simple GenericNode
         // decorations and annotations
         string labelColor = default("#ffff00ff");    // the color of the model label in hex RRGGBBAA format or "" to turn off labels
         string label2Color = default("#cccc00ff");   // the color of the second model label in hex RRGGBBAA format or "" to turn off labels
+        string stateSummary = default("----");       // a short textual summary of the current state of the node, shown in label2/sublabel
         double txRange @unit("m") = default(200m);   // the transmission range of the mobile node's radio
         bool showTxRange = default(false);           // whether to show the transmission range around the nodes
         string rangeColor = default("#ff000040");    // the color of the range indicator in hex RRGGBBAA format
