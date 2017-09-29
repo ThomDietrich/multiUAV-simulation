@@ -34,7 +34,7 @@ void MissionControl::initialize()
         NodeShadow *nodeShadow = new NodeShadow(check_and_cast<GenericNode *>(module));
 
         EV_DEBUG << __func__ << "(): Adding " << module->getFullName() << " to managedNodes" << endl;
-        std::pair<int, NodeShadow*> nodePair(nodeShadow->getIndex(), nodeShadow);
+        std::pair<int, NodeShadow*> nodePair(nodeShadow->getNodeIndex(), nodeShadow);
         managedNodes.insert(nodePair);
     }
     cMessage *start = new cMessage("startScheduling");
@@ -90,7 +90,7 @@ void MissionControl::handleMessage(cMessage *msg)
         }
         GenericNode *replacingNode = nodeShadow->getReplacingNode();
         ReplacementData *replData = nodeShadow->getReplacementData();
-        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getIndex() << endl;
+        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
 
         // Send provision mission to node
         CommandQueue provMission;
@@ -102,7 +102,7 @@ void MissionControl::handleMessage(cMessage *msg)
 
         managedNodes.at(replacingNode->getIndex())->setStatus(NodeStatus::PROVISIONING);
 
-        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex() << " (replacing node " << nodeShadow->getIndex()
+        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex() << " (replacing node " << nodeShadow->getNodeIndex()
                 << ")" << endl;
     }
     else {
@@ -116,21 +116,28 @@ void MissionControl::handleMessage(cMessage *msg)
 /**
  * Update the managedNodes map with the replacement request by a node.
  * After each update, reschedule the replacement process, i.e. the 'provisionReplacement' self-message.
- * Method will reserve a node as soon as the first replacement message arrives for one node executing a mission.
+ * Method will reserve a node as soon as the first replacement message arrives for one node executing a mission - this might change in future.
  *
  * @param replData Incoming ReplacementData
  */
 void MissionControl::handleReplacementMessage(ReplacementData replData)
 {
     NodeShadow* nodeShadow = managedNodes.at(replData.nodeToReplace->getIndex());
-    nodeShadow->setReplacementData(new ReplacementData(replData));
 
-    // If not available reserve an idle node as the replacing node
-    if (not nodeShadow->hasReplacingNode()) {
-        nodeShadow->setReplacingNode(selectIdleNode());
-        nodeShadow->setStatus(NodeStatus::RESERVED);
+    // TODO: Test if new selection would differ...
+    if (nodeShadow->hasReplacingNode()) {
+        GenericNode* replNodeOld = nodeShadow->getReplacingNode();
+        nodeShadow->setReplacementData(new ReplacementData(replData));
+        nodeShadow->setReplacingNode(replNodeOld);
     }
-    EV_INFO << __func__ << "(): Node " << nodeShadow->getReplacingNodeIndex() << " reserved for replacement." << endl;
+    else {
+        nodeShadow->setReplacementData(new ReplacementData(replData));
+        nodeShadow->setReplacingNode(selectIdleNode());
+        EV_INFO << __func__ << "(): No ReplacingNode for node " << nodeShadow->getNodeIndex() << ",";
+        EV_INFO << " node " << nodeShadow->getReplacingNodeIndex() << " reserved for replacement" << endl;
+        NodeShadow* replNodeShadow = managedNodes.at(nodeShadow->getReplacingNodeIndex());
+        replNodeShadow->setStatus(NodeStatus::RESERVED);
+    }
 
     simtime_t timeOfProvisioning;
     {
@@ -152,18 +159,21 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
 
     if (simTime() < timeOfProvisioning) {
         // Delete and reschedule if old msg available
+        bool reprovision = false;
         if (nodeShadow->hasReplacementMsg()) {
             cancelEvent(nodeShadow->getReplacementMsg());
             delete nodeShadow->getReplacementMsg();
+            reprovision = true;
         }
         nodeShadow->setReplacementMsg(replacementMsg);
         scheduleAt(timeOfProvisioning, replacementMsg);
-        EV_INFO << "Provisioning scheduled for " << timeOfProvisioning << ": node " << nodeShadow->getReplacingNodeIndex()
-                << " will replace node "
-                << nodeShadow->getIndex() << endl;
+        EV_INFO << __func__ << "(): " << (reprovision ? "Updating provision time." : "Provisioning node.");
+        EV_INFO << " Node " << nodeShadow->getNodeIndex() << " will be replaced by node " << nodeShadow->getReplacingNodeIndex() << ".";
+        EV_INFO << " Provisioning in " << (timeOfProvisioning - simTime()) << " seconds";
+        EV_INFO << endl;
     }
     else {
-        EV_WARN << "Prediction is in the past. This needs to be dealt with... somehow" << endl;
+        EV_WARN << "Prediction time is in the past. This needs to be dealt with... somehow" << endl;
     }
 }
 

@@ -45,7 +45,7 @@ private:
 public:
     NodeShadow(GenericNode* node);
     virtual ~NodeShadow();
-    int getIndex() const
+    int getNodeIndex() const
     {
         return index;
     }
