@@ -160,18 +160,13 @@ float ChargingNode::calculateChargeAmount(Battery battery, double seconds)
     if(battery.isFull()) {
         return 0;
     }
-    if(battery.getRemainingPercentage() < 90) {
-        // linear
-        float chargeAmountLinear = 1*seconds;
-        if(battery.getCapacity()*0.9 < battery.getRemaining() + chargeAmountLinear) {
-             // the amount charged will exceed the linear component
-        }
-    } else {
-        // non linear
-//        float
-        float chargeAmountNonLinear = 0.5*seconds;
+    double linearChargeTime = this->calculateMaximumChargeTimeLinear(battery);
+    // linear
+    float chargeAmountLinear = this->calculateChargeAmountLinear(linearChargeTime);
+    seconds = seconds - linearChargeTime;
 
-    }
+    // non linear
+    float chargeAmountNonLinear = 0.5*seconds;
 
     return 100;
 }
@@ -182,7 +177,7 @@ float ChargingNode::calculateChargeAmountLinear(double seconds) {
 }
 
 /*
- * Returns the time (in seconds) in which the charging process will be linear
+ * Returns the time (in seconds) for the linear charging process
  */
 double ChargingNode::calculateMaximumChargeTimeLinear(Battery battery) {
     if(battery.getCapacity()*0.9 < battery.getRemaining()) {
@@ -191,6 +186,7 @@ double ChargingNode::calculateMaximumChargeTimeLinear(Battery battery) {
     return (battery.getCapacity()*0.9 - battery.getRemaining()) / this->calculateChargeAmountLinear(1);
 }
 
+// ToDo Implement real values.
 
 float ChargingNode::calculateChargeAmountNonLinear(double seconds) {
     return seconds *0.5;
