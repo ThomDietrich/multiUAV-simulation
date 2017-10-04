@@ -295,10 +295,7 @@ void ChargeCEE::initializeCEE()
 {
     pitch = 0;
     climbAngle = 0;
-    //TODO connect to Charging station
-    cMessage *request = new cMessage("startCharge");
-    this->node->send(request, this->node->getOutputGateTo(this->command->getChargingNode()));
-    //this->command->getChargingNode()->scheduleAt(simTime(), request);
+
     // draw probable value for consumption of this CEE
     consumptionPerSecond = getProbableConsumption(true, NAN);
 }
@@ -307,6 +304,9 @@ void ChargeCEE::setNodeParameters()
 {
     node->pitch = pitch;
     node->climbAngle = climbAngle;
+
+    cMessage *request = new cMessage("startCharge");
+    this->node->send(request, this->node->getOutputGateTo(this->command->getChargingNode()));
 }
 
 void ChargeCEE::updateState(double stepSize)
