@@ -18,6 +18,7 @@
 
 #include <omnetpp.h>
 #include "GenericNode.h"
+#include "Battery.h"
 
 using namespace omnetpp;
 
@@ -25,6 +26,7 @@ class ChargingNode : public GenericNode {
 protected:
     unsigned int spotsWaiting;
     unsigned int spotsCharging;
+    // review weather vector is the best construct for "queues"
     std::vector<MobileNode*> objectsWaiting;
     std::vector<MobileNode*> objectsCharging;
     double chargingCurrent;
@@ -46,7 +48,12 @@ protected:
     virtual void appendToObjectsWaiting(MobileNode* module);
     virtual void fillSpots();
     virtual void charge();
-    virtual float calculateChargeAmount(float remaining);
+    virtual float calculateChargeAmount(Battery battery, double seconds);
+    virtual float calculateChargeAmountLinear(double seconds);
+    virtual double calculateMaximumChargeTimeLinear(Battery battery);
+    virtual float calculateChargeAmountNonLinear(double seconds);
+    virtual simtime_t timeWhenDone(Battery battery);
+    virtual simtime_t timeWhenDone(Battery battery, double targetCapacityPercentage);
 };
 
 #endif /* CHARGINGNODE_H_ */

@@ -151,14 +151,49 @@ void ChargingNode::charge()
             break;
         }
         EV_INFO << "UAV in slot " << i <<" is currently getting charged." << endl;
-        this->objectsCharging[i]->battery.charge(this->calculateChargeAmount(this->objectsCharging[i]->battery.getRemaining()));
+        this->objectsCharging[i]->battery.charge(this->calculateChargeAmount(this->objectsCharging[i]->battery, (simTime() - this->lastUpdate).dbl()));
     }
 }
 
-float ChargingNode::calculateChargeAmount(float remaining)
+float ChargingNode::calculateChargeAmount(Battery battery, double seconds)
 {
+    if(battery.isFull()) {
+        return 0;
+    }
+    if(battery.getRemainingPercentage() < 90) {
+        // linear
+        float chargeAmountLinear = 1*seconds;
+        if(battery.getCapacity()*0.9 < battery.getRemaining() + chargeAmountLinear) {
+             // the amount charged will exceed the linear component
+        }
+    } else {
+        // non linear
+//        float
+        float chargeAmountNonLinear = 0.5*seconds;
+
+    }
+
     return 100;
 }
 
+// ToDo Implement real values.
+float ChargingNode::calculateChargeAmountLinear(double seconds) {
+    return seconds * 1;
+}
+
+/*
+ * Returns the time (in seconds) in which the charging process will be linear
+ */
+double ChargingNode::calculateMaximumChargeTimeLinear(Battery battery) {
+    if(battery.getCapacity()*0.9 < battery.getRemaining()) {
+        return 0;
+    }
+    return (battery.getCapacity()*0.9 - battery.getRemaining()) / this->calculateChargeAmountLinear(1);
+}
+
+
+float ChargingNode::calculateChargeAmountNonLinear(double seconds) {
+    return seconds *0.5;
+}
 
 #endif // WITH_OSG
