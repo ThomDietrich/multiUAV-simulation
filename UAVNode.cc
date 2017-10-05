@@ -87,36 +87,42 @@ void UAVNode::selectNextCommand()
         //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
     }
     else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
-        EV_INFO << "Energy Management: OK. UAV has enough energy to continue (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage()
-                << "%)." << endl;
+        EV_INFO << "Energy Management: OK. UAV has enough energy to continue";
+        EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
     }
     else {
-        // Go To Charging Node now
+        // Start Replacement Process now
         if (energyRemaining < energyToCNNow) {
-            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient (" << energyRemaining << " < " << energyToCNNow << " mAh)."
-                    << endl;
+            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient";
+            EV_WARN << " (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
         }
         else {
-            EV_INFO << "Energy Management: Going to Charging Node (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)."
-                    << endl;
+            EV_INFO << "Energy Management: Going to Charging Node";
+            EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
         // Find nearest ChargingNode
         ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
 
+        // Generate ExchangeCEE
+        ExchangeCommand *exchangeCommand = new ExchangeCommand();
+        CommandExecEngine *exchangeCEE = new WaypointCEE(*this, *exchangeCommand);
+        exchangeCEE->setPartOfMission(false);
+
         // Generate WaypointCEE
-        WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+        WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNodeCommand);
         goToChargingNodeCEE->setPartOfMission(false);
 
         // Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
-        ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
+        CommandExecEngine *chargeCEE = new ChargeCEE(*this, *chargeCommand);
         chargeCEE->setPartOfMission(false);
 
-        // Add WaypointCEE and ChargeCEE to the CEEs queue
+        // Add ExchangeCEE, WaypointCEE and ChargeCEE to the CEEs queue
         cees.push_front(chargeCEE);
         cees.push_front(goToChargingNodeCEE);
+        cees.push_front(exchangeCEE);
     }
 
     commandExecEngine = cees.front();
@@ -159,6 +165,9 @@ void UAVNode::initializeState()
             break;
         case CeeType::EXCHANGE:
             text += " EX";
+            break;
+        default:
+            throw cRuntimeError("initializeState(): CEE type not handled for label.");
             break;
     }
     labelNode->setText(text);
