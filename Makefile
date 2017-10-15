@@ -33,6 +33,7 @@ OBJS = \
     $O/Battery.o \
     $O/ChannelController.o \
     $O/ChargingNode.o \
+    $O/ChargingNodeSpotElement.o \
     $O/Command.o \
     $O/CommandExecEngine.o \
     $O/fallback.o \
