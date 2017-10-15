@@ -18,17 +18,19 @@
 
 #include <omnetpp.h>
 #include "GenericNode.h"
+#include "ChargingNodeSpotElement.h"
 #include "Battery.h"
 
 using namespace omnetpp;
+
+class ChargingNodeSpotElement;
 
 class ChargingNode : public GenericNode {
 protected:
     unsigned int spotsWaiting;
     unsigned int spotsCharging;
-    // review weather vector is the best construct for "queues"
-    std::vector<MobileNode*> objectsWaiting;
-    std::vector<MobileNode*> objectsCharging;
+    std::deque<ChargingNodeSpotElement> objectsWaiting;
+    std::deque<ChargingNodeSpotElement> objectsCharging;
     double chargingCurrent;
 public:
     ChargingNode();
@@ -48,12 +50,15 @@ protected:
     virtual void appendToObjectsWaiting(MobileNode* module);
     virtual void fillSpots();
     virtual void charge();
-    virtual float calculateChargeAmount(Battery battery, double seconds);
+    virtual float calculateChargeAmount(Battery* battery, double seconds);
     virtual float calculateChargeAmountLinear(double seconds);
-    virtual double calculateMaximumChargeTimeLinear(Battery battery);
-    virtual float calculateChargeAmountNonLinear(double seconds);
-    virtual simtime_t timeWhenDone(Battery battery);
-    virtual simtime_t timeWhenDone(Battery battery, double targetCapacityPercentage);
+    virtual double calculateMaximumChargeTimeLinear(Battery* battery);
+    virtual float calculateChargeAmountNonLinear(double seconds, double remainingPercentage);
+    virtual double calculateMaximumChargeTimeNonLinear(Battery* battery);
+
+//    virtual simtime_t timeWhenDone(Battery battery);
+    virtual double getEstimatedWaitingSeconds();
+    virtual simtime_t getPointInTimeWhenDone(ChargingNodeSpotElement spotElement);
 };
 
 #endif /* CHARGINGNODE_H_ */
