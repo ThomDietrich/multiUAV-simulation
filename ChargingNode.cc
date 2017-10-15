@@ -43,6 +43,8 @@ void ChargingNode::initialize(int stage)
         this->z = 2;
         this->pitch = 0;
         this->yaw = 0;
+        this->usedPower = 0;
+        this->chargedUAVs = 0;
         break;
 
         case 1:
@@ -185,13 +187,16 @@ void ChargingNode::charge()
             send(new cMessage("nextCommand"), this->getOutputGateTo(this->objectsCharging[i].getNode()));
             // ToDo remove the right element and not the first one.
             this->objectsCharging.erase(this->objectsCharging.begin());
+            this->chargedUAVs++;
             break;
         }
         simtime_t currentTime = simTime();
-        this->objectsCharging[i].getNode()->getBattery()->charge(this->calculateChargeAmount(
+        double chargeAmount = this->calculateChargeAmount(
                 this->objectsCharging[i].getNode()->getBattery(),
                 (currentTime - std::max(this->lastUpdate, this->objectsCharging[i].getPointInTimeWhenChargingStarted())).dbl()
-                ));
+                );
+        this->objectsCharging[i].getNode()->getBattery()->charge(chargeAmount);
+        this->usedPower += chargeAmount;
         this->lastUpdate = currentTime;
     }
 }

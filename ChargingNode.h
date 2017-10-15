@@ -32,6 +32,8 @@ protected:
     std::deque<ChargingNodeSpotElement> objectsWaiting;
     std::deque<ChargingNodeSpotElement> objectsCharging;
     double chargingCurrent;
+    double usedPower;
+    int chargedUAVs;
 public:
     ChargingNode();
     virtual ~ChargingNode();
@@ -43,22 +45,47 @@ public:
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual ReplacementData* endOfOperation() override;
+    // Getters
+    double getChargingCurrent() const
+    {
+        return chargingCurrent;
+    }
+
+    unsigned int getSpotsCharging() const
+    {
+        return spotsCharging;
+    }
+
+    unsigned int getSpotsWaiting() const
+    {
+        return spotsWaiting;
+    }
+
+    double getUsedPower() const
+    {
+        return usedPower;
+    }
+
+    int getChargedUaVs() const
+    {
+        return chargedUAVs;
+    }
+
 protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
-    virtual void appendToObjectsWaiting(MobileNode* module);
-    virtual void fillSpots();
-    virtual void charge();
-    virtual float calculateChargeAmount(Battery* battery, double seconds);
-    virtual float calculateChargeAmountLinear(double seconds);
-    virtual double calculateMaximumChargeTimeLinear(Battery* battery);
-    virtual float calculateChargeAmountNonLinear(double seconds, double remainingPercentage);
-    virtual double calculateMaximumChargeTimeNonLinear(Battery* battery);
+    void appendToObjectsWaiting(MobileNode* module);
+    void fillSpots();
+    void charge();
+    float calculateChargeAmount(Battery* battery, double seconds);
+    float calculateChargeAmountLinear(double seconds);
+    double calculateMaximumChargeTimeLinear(Battery* battery);
+    float calculateChargeAmountNonLinear(double seconds, double remainingPercentage);
+    double calculateMaximumChargeTimeNonLinear(Battery* battery);
+    double getEstimatedWaitingSeconds();
+    simtime_t getPointInTimeWhenDone(ChargingNodeSpotElement spotElement);
 
-//    virtual simtime_t timeWhenDone(Battery battery);
-    virtual double getEstimatedWaitingSeconds();
-    virtual simtime_t getPointInTimeWhenDone(ChargingNodeSpotElement spotElement);
 };
 
 #endif /* CHARGINGNODE_H_ */
