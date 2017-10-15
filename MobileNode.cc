@@ -119,4 +119,9 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
     return nearest;
 }
 
+Battery* MobileNode::getBattery()
+{
+    return &battery;
+}
+
 #endif // WITH_OSG
