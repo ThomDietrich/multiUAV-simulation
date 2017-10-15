@@ -40,16 +40,40 @@ public:
 
     virtual ~ChargingNodeSpotElement();
 
-    /*
-     * Getter and Setter
-     */
-    MobileNode* getNode() const;
-    double getTargetCapacityPercentage() const;
-    double getEstimatedChargeDuration() const;
-    double getEstimatedWaitingDuration() const;
-    simtime_t getPointInTimeWhenDone() const;
-    simtime_t getPointInTimeWhenChargingStarted() const;
-    void setPointInTimeWhenChargingStarted(simtime_t pointInTimeWhenChargingStarted);
+    double getEstimatedChargeDuration() const
+    {
+        return estimatedChargeDuration;
+    }
+
+    double getEstimatedWaitingDuration() const
+    {
+        return estimatedWaitingDuration;
+    }
+
+    MobileNode* getNode()
+    {
+        return node;
+    }
+
+    const simtime_t& getPointInTimeWhenChargingStarted() const
+    {
+        return pointInTimeWhenChargingStarted;
+    }
+
+    void setPointInTimeWhenChargingStarted(const simtime_t& pointInTimeWhenChargingStarted)
+    {
+        this->pointInTimeWhenChargingStarted = pointInTimeWhenChargingStarted;
+    }
+
+    const simtime_t& getPointInTimeWhenDone() const
+    {
+        return pointInTimeWhenDone;
+    }
+
+    double getTargetCapacityPercentage() const
+    {
+        return targetCapacityPercentage;
+    }
 };
 
 #endif /* CHARGINGNODESPOTELEMENT_H_ */

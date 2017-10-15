@@ -29,43 +29,4 @@ ChargingNodeSpotElement::~ChargingNodeSpotElement()
     // TODO Auto-generated destructor stub
 }
 
-/*
- * Generated Getter and Setter
- * ToDo: remove setters? currently not in use.
- */
-
-MobileNode* ChargingNodeSpotElement::getNode() const
-{
-    return node;
-}
-
-double ChargingNodeSpotElement::getTargetCapacityPercentage() const
-{
-    return targetCapacityPercentage;
-}
-
-double ChargingNodeSpotElement::getEstimatedChargeDuration() const
-{
-    return estimatedChargeDuration;
-}
-
-double ChargingNodeSpotElement::getEstimatedWaitingDuration() const
-{
-    return estimatedWaitingDuration;
-}
-
-simtime_t ChargingNodeSpotElement::getPointInTimeWhenDone() const
-{
-    return pointInTimeWhenDone;
-}
-
-simtime_t ChargingNodeSpotElement::getPointInTimeWhenChargingStarted() const
-{
-    return pointInTimeWhenChargingStarted;
-}
-
-void ChargingNodeSpotElement::setPointInTimeWhenChargingStarted(simtime_t pointInTimeWhenChargingStarted)
-{
-    this->pointInTimeWhenChargingStarted = pointInTimeWhenChargingStarted;
-}
 
