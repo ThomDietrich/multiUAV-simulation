@@ -78,11 +78,12 @@ protected:
     void appendToObjectsWaiting(MobileNode* module);
     void fillSpots();
     void charge();
-    float calculateChargeAmount(Battery* battery, double seconds);
+    float calculateChargeAmount(double remaining, double capacity, double seconds);
     float calculateChargeAmountLinear(double seconds);
-    double calculateMaximumChargeTimeLinear(Battery* battery);
     float calculateChargeAmountNonLinear(double seconds, double remainingPercentage);
-    double calculateMaximumChargeTimeNonLinear(Battery* battery);
+    double calculateMaximumChargeTime(double remaining, double capacity);
+    double calculateMaximumChargeTimeLinear(double remaining, double capacity);
+    double calculateMaximumChargeTimeNonLinear(double remaining, double capacity);
     double getEstimatedWaitingSeconds();
     simtime_t getPointInTimeWhenDone(ChargingNodeSpotElement spotElement);
 

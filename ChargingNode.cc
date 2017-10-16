@@ -18,9 +18,6 @@
 
 Define_Module(ChargingNode);
 
-/*
- * ToDo: (maybe) refactor battery and node values to primitive (doubles) for easier communication with messages
- */
 
 ChargingNode::ChargingNode()
 {
@@ -153,14 +150,16 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mn)
         return;
     }
     // generate a new waiting element with estimated charge and waiting times
+    double chargeTimeLinear = this->calculateMaximumChargeTimeLinear(mn->getBattery()->getRemaining(), mn->getBattery()->getCapacity());
+    double chargeTimeNonLinear = this->calculateMaximumChargeTimeNonLinear(mn->getBattery()->getRemaining(), mn->getBattery()->getCapacity());
     ChargingNodeSpotElement element = ChargingNodeSpotElement(mn,
-            this->calculateMaximumChargeTimeLinear(mn->getBattery()) + this->calculateMaximumChargeTimeNonLinear(mn->getBattery()),
+            chargeTimeLinear + chargeTimeNonLinear,
             this->getEstimatedWaitingSeconds());
     EV_DEBUG << "waiting time: " << element.getEstimatedWaitingDuration() << endl;
     EV_DEBUG << "charging: " << element.getEstimatedChargeDuration() << endl;
     EV_DEBUG << "battery missing: " << element.getNode()->getBattery()->getMissing() << endl;
-    EV_DEBUG << "charging amount lin: " << this->calculateMaximumChargeTimeLinear(mn->getBattery()) << endl;
-    EV_DEBUG << "charging amount non-lin: " << this->calculateMaximumChargeTimeNonLinear(mn->getBattery()) << endl;
+    EV_DEBUG << "charging amount lin: " << chargeTimeLinear << endl;
+    EV_DEBUG << "charging amount non-lin: " << chargeTimeNonLinear << endl;
 
     this->objectsWaiting.push_back(element);
     EV_INFO << "The module got appended to a waiting spot." << endl;
@@ -192,7 +191,8 @@ void ChargingNode::charge()
         }
         simtime_t currentTime = simTime();
         double chargeAmount = this->calculateChargeAmount(
-                this->objectsCharging[i].getNode()->getBattery(),
+                this->objectsCharging[i].getNode()->getBattery()->getRemaining(),
+                this->objectsCharging[i].getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(this->lastUpdate, this->objectsCharging[i].getPointInTimeWhenChargingStarted())).dbl()
                 );
         this->objectsCharging[i].getNode()->getBattery()->charge(chargeAmount);
@@ -201,19 +201,19 @@ void ChargingNode::charge()
     }
 }
 
-float ChargingNode::calculateChargeAmount(Battery* battery, double seconds)
+float ChargingNode::calculateChargeAmount(double remaining, double capacity, double seconds)
 {
-    if(battery->isFull()) {
+    if(remaining == capacity) {
         return 0;
     }
     // linear
-    double linearChargeTime = std::min(seconds, this->calculateMaximumChargeTimeLinear(battery));
+    double linearChargeTime = std::min(seconds, this->calculateMaximumChargeTimeLinear(remaining, capacity));
     float chargeAmountLinear = this->calculateChargeAmountLinear(linearChargeTime);
     seconds = seconds - linearChargeTime;
 
     // non linear
-    double nonLinearChargeTime = std::min(seconds, this->calculateMaximumChargeTimeNonLinear(battery));
-    float chargeAmountNonLinear = this->calculateChargeAmountNonLinear(nonLinearChargeTime, battery->getRemaining() / battery->getCapacity());
+    double nonLinearChargeTime = std::min(seconds, this->calculateMaximumChargeTimeNonLinear(remaining, capacity));
+    float chargeAmountNonLinear = this->calculateChargeAmountNonLinear(nonLinearChargeTime, remaining / capacity);
 //    EV_DEBUG << "seconds non-l: " << seconds << endl;
 //    EV_DEBUG << "non-l charge time: " << nonLinearChargeTime << endl;
 //    EV_DEBUG << "non-l charge amount: " << chargeAmountNonLinear << endl;
@@ -236,26 +236,26 @@ float ChargingNode::calculateChargeAmountNonLinear(double seconds, double remain
  * Returns the time (in seconds) for the linear charging process
  * ToDo implement targetCapacity (not every node should be loaded to 100%)
  */
-double ChargingNode::calculateMaximumChargeTimeLinear(Battery* battery) {
-    if(battery->getCapacity()*0.9 < battery->getRemaining()) {
+double ChargingNode::calculateMaximumChargeTimeLinear(double remaining, double capacity) {
+    if(capacity*0.9 < remaining) {
         return 0;
     }
-    return (battery->getCapacity()*0.9 - battery->getRemaining()) / this->calculateChargeAmountLinear(1);
+    return (capacity*0.9 - remaining) / this->calculateChargeAmountLinear(1);
 }
 
 /*
  * Returns the time (in seconds) for the nonlinear charging process
  * ToDo Adapt return for Non Linear function
  */
-double ChargingNode::calculateMaximumChargeTimeNonLinear(Battery* battery) {
-    if(battery->isFull()) {
+double ChargingNode::calculateMaximumChargeTimeNonLinear(double remaining, double capacity) {
+    if(remaining == capacity) {
         return 0;
     }
-    float missing = battery->getMissing();
-    if(missing > battery->getCapacity()*0.1) {
-        missing = battery->getCapacity()*0.1;
+    double missing = capacity - remaining;
+    if(missing > capacity*0.1) {
+        missing = capacity*0.1;
     }
-    return (missing / this->calculateChargeAmountNonLinear(1, battery->getRemaining() / battery->getCapacity()));
+    return (missing / this->calculateChargeAmountNonLinear(1, remaining / capacity));
 }
 
 /*
