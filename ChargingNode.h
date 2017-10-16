@@ -45,6 +45,8 @@ public:
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual ReplacementData* endOfOperation() override;
+    double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
+    double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
     // Getters
     double getChargingCurrent() const
     {
@@ -82,8 +84,9 @@ protected:
     float calculateChargeAmountLinear(double seconds);
     float calculateChargeAmountNonLinear(double seconds, double remainingPercentage);
     double calculateMaximumChargeTime(double remaining, double capacity);
-    double calculateMaximumChargeTimeLinear(double remaining, double capacity);
-    double calculateMaximumChargeTimeNonLinear(double remaining, double capacity);
+    double calculateChargeTime(double remaining, double capacity);
+    double calculateChargeTimeLinear(double remaining, double capacity);
+    double calculateChargeTimeNonLinear(double remaining, double capacity);
     double getEstimatedWaitingSeconds();
     simtime_t getPointInTimeWhenDone(ChargingNodeSpotElement spotElement);
 
