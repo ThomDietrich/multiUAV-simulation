@@ -97,17 +97,17 @@ void UAVNode::selectNextCommand()
             EV_WARN << " (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
         }
         else {
-            EV_INFO << "Energy Management: Going to Charging Node";
+            EV_INFO << "Energy Management: Scheduling Replacement and Recharging Maintenance Process";
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
-        // Find nearest ChargingNode
-        ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
-
         // Generate ExchangeCEE
         ExchangeCommand *exchangeCommand = new ExchangeCommand();
-        CommandExecEngine *exchangeCEE = new WaypointCEE(*this, *exchangeCommand);
+        CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
         exchangeCEE->setPartOfMission(false);
+
+        // Find nearest ChargingNode
+        ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
 
         // Generate WaypointCEE
         WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
@@ -134,6 +134,7 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
+    EV_INFO << "New cees size: " << cees.size() << endl;
 }
 
 /**
@@ -194,9 +195,8 @@ void UAVNode::updateState()
     strs << " | ";
     (commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
     strs << " s left";
-    std::string str = strs.str();
-    par("stateSummary").setStringValue(str);
-    sublabelNode->setText(str);
+    sublabelNode->setText(strs.str());
+    par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
 }
 
 /**
@@ -329,17 +329,19 @@ ReplacementData* UAVNode::endOfOperation()
 {
     float energySum = 0;
     float energyToCNAfter = 0;
-    int commandsFeasible = 0;
+    int nextCommandsFeasible = 0;
     float durrationOfCommands = 0;
     double fromX = this->getX();
     double fromY = this->getY();
     double fromZ = this->getZ();
 
+    if (cees.empty()) throw cRuntimeError("endOfOperation(): No computation possible, CEEs queue empty.");
+
     //TODO Add current Execution Engine consumption
     energySum += 0;
 
     while (true) {
-        CommandExecEngine *nextCEE = cees.at(commandsFeasible % cees.size());
+        CommandExecEngine *nextCEE = cees.at(nextCommandsFeasible % cees.size());
 
         if (not nextCEE->isPartOfMission()) {
             EV_WARN << "endOfOperation(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
@@ -361,19 +363,16 @@ ReplacementData* UAVNode::endOfOperation()
         energyToCNAfter = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
 
         //EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
-        EV_DEBUG << commandsFeasible + 1 << " Consumption Command " << nextCEE->getCommandId() << ": " << energyForNextCEE << "mAh" << endl;
+        //EV_DEBUG << commandsFeasible + 1 << " Consumption Command " << nextCEE->getCommandId() << ": " << energyForNextCEE << "mAh" << endl;
         //EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
         //EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCEE + energyToCNAfter << "mAh" << endl;
         //EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
         if (battery.getRemaining() < energySum + energyForNextCEE + energyToCNAfter) {
-            EV_DEBUG << "Maximum distance exceeded. " << commandsFeasible << " commands feasible." << endl;
+            EV_INFO << "Maximum distance exceeded. " << nextCommandsFeasible << " commands feasible." << endl;
             break;
         }
-        else {
-            //EV_DEBUG << "Command " << commandsFeasible << " still feasible." << endl;
-        }
-        commandsFeasible++;
+        nextCommandsFeasible++;
         energySum += energyForNextCEE;
         durrationOfCommands += nextCEE->getDuration();
 
