@@ -156,6 +156,7 @@ void GenericNode::handleMessage(cMessage *msg)
         stepSize = 0;
     }
     else if (msg->isName("startMission")) {
+        activeInField = true;
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         commandsRepeat = mmmsg->getMissionRepeat();
@@ -178,9 +179,10 @@ void GenericNode::handleMessage(cMessage *msg)
     else if (msg->isName("nextCommand")) {
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
-            EV_WARN << "Command completed. Queue empty." << endl;
+            EV_WARN << "Command completed. Queue empty. This should not happen!" << endl;
             delete msg;
             return;
+        //TODO: The node has to do something. Insert Hovering Command?
         }
 
         // Build and Send a Command Completed Message to Mission Control

@@ -134,7 +134,7 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New cees size: " << cees.size() << endl;
+    EV_INFO << "New command is " << commandExecEngine->getCeeTypeString() << ", remainaing CEEs: " << cees.size() << endl;
 }
 
 /**
@@ -265,6 +265,7 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
  */
 void UAVNode::clearCommands()
 {
+    if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
     cees.clear();
 }
 
@@ -335,7 +336,10 @@ ReplacementData* UAVNode::endOfOperation()
     double fromY = this->getY();
     double fromZ = this->getZ();
 
-    if (cees.empty()) throw cRuntimeError("endOfOperation(): No computation possible, CEEs queue empty.");
+    if (cees.empty()) {
+        EV_WARN << "endOfOperation(): No CEEs scheduled for node. No end of operation predictable..." << endl;
+        return nullptr;
+    }
 
     //TODO Add current Execution Engine consumption
     energySum += 0;

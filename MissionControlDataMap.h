@@ -81,6 +81,11 @@ public:
         return isStatus(NodeStatus::IDLE);
     }
 
+    bool isStatusReserved() const
+    {
+        return isStatus(NodeStatus::RESERVED);
+    }
+
     bool isStatusMission() const
     {
         return isStatus(NodeStatus::MISSION);

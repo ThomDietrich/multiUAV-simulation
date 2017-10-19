@@ -68,15 +68,22 @@ protected:
     bool showTxRange;
     double txRange;
 
-    //queue, contains future command exec engines
+    /// Contains future Command Execution Engines
     CEEQueue cees;
-    //instance of CEE subclass, contains current command
+
+    /// Instance of CEE subclass, contains current command
     CommandExecEngine *commandExecEngine = nullptr;
-    //repeat commands, rotate queue
+
+    /// Repeat commands, rotate queue
     bool commandsRepeat = false;
 
-    // state
+    /// If true the node is actively executing commands.
+    /// If false the node is not performing any actions, doesn't move or consume energy.
+    bool activeInField = false;
+
+    /// state
     double x, y, z; // relative to playground origin (top left) in meters
+
 
     /**
      * yaw/horizontal orientation in degrees

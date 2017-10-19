@@ -64,13 +64,17 @@ void MissionControl::handleMessage(cMessage *msg)
     }
     else if (msg->isName("commandCompleted")) {
         CmdCompletedMsg *ccmsg = check_and_cast<CmdCompletedMsg *>(msg);
-        EV_INFO << "commandCompleted message received" << endl;
         NodeShadow* nodeShadow = managedNodeShadows.get(ccmsg->getSourceNodeIndex());
+        //EV_INFO << __func__ << "(): commandCompleted message received for " << nodeShadow->getNode()->getFullName() << endl;
+
+        //TODO: too simple. Should e.g. not happen for ReplacingNode
         if (nodeShadow->isStatusProvisioning()) {
-            EV_INFO << "Node switching over to nodeStatus MISSION" << endl;
+            EV_INFO << "Node " << nodeShadow->getNodeIndex() << " switching over to nodeStatus MISSION" << endl;
             nodeShadow->setStatus(NodeStatus::MISSION);
         }
-        if (ccmsg->getReplacementDataAvailable()) handleReplacementMessage(ccmsg->getReplacementData());
+        if (ccmsg->getReplacementDataAvailable()) {
+            handleReplacementMessage(ccmsg->getReplacementData());
+        }
     }
     else if (msg->isName("provisionReplacement")) {
         // Identify node requesting replacement
@@ -89,8 +93,8 @@ void MissionControl::handleMessage(cMessage *msg)
 
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
-        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex() << " (replacing node " << nodeShadow->getNodeIndex()
-                << ")" << endl;
+        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex();
+        EV_INFO << " (replacing node " << nodeShadow->getNodeIndex() << ")" << endl;
     }
     else {
         std::string message = "Unknown message name encountered: ";
@@ -112,10 +116,16 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     NodeShadow* nodeShadow = managedNodeShadows.get(replData.nodeToReplace);
 
     // TODO: Test if new selection would differ...
+
     if (nodeShadow->hasReplacingNode()) {
-        GenericNode* replNodeOld = nodeShadow->getReplacingNode();
+        GenericNode* replNode = nodeShadow->getReplacingNode();
+
+        if (managedNodeShadows.get(replNode)->isStatusProvisioning()) {
+            EV_WARN << __func__ << "(): Replacing Node is already on its way. No re-calculation needed. " << endl;
+            return;
+        }
         nodeShadow->setReplacementData(new ReplacementData(replData));
-        nodeShadow->setReplacingNode(replNodeOld);
+        nodeShadow->setReplacingNode(replNode);
     }
     else {
         // Get first free IDLE node
