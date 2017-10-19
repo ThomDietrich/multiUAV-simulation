@@ -46,3 +46,86 @@ void NodeShadow::setReplacingNode(GenericNode* replacingNode)
     if (not hasReplacementData()) throw cRuntimeError("No replacementData available, this method should not be called here");
     this->replacementData->replacingNode = replacingNode;
 }
+
+void NodeShadow::clearReplacementMsg()
+{
+    this->replacementMsg = nullptr;
+}
+
+/**
+ *
+ */
+ManagedNodeShadows::ManagedNodeShadows()
+{
+}
+
+ManagedNodeShadows::~ManagedNodeShadows()
+{
+}
+
+bool ManagedNodeShadows::has(int index)
+{
+    return not (managedNodes.find(index) == managedNodes.end());
+}
+
+void ManagedNodeShadows::add(NodeShadow* nodeShadow)
+{
+    int index = nodeShadow->getNodeIndex();
+    if (has(index)) throw cRuntimeError("addNode(): Node with index already exists in map.");
+    std::pair<int, NodeShadow*> nodePair(index, nodeShadow);
+    managedNodes.insert(nodePair);
+}
+
+void ManagedNodeShadows::remove(int index)
+{
+    if (has(index)) managedNodes.erase(index);
+}
+
+void ManagedNodeShadows::setStatus(int index, NodeStatus newStatus)
+{
+    get(index)->setStatus(newStatus);
+}
+
+void ManagedNodeShadows::setStatus(GenericNode* node, NodeStatus newStatus)
+{
+    get(node)->setStatus(newStatus);
+}
+
+NodeShadow* ManagedNodeShadows::get(int index)
+{
+    if (not has(index)) throw cRuntimeError("getNode(): Node with index doesn't exists in map.");
+    return managedNodes.at(index);
+}
+
+NodeShadow* ManagedNodeShadows::get(GenericNode* node)
+{
+    int index = node->getIndex();
+    return get(index);
+}
+
+/**
+ * Choose a free node from the managedNodes map.
+ * Selection happens by lowest module index and amongst the nodes of a certain status.
+ */
+NodeShadow* ManagedNodeShadows::getFirst(NodeStatus currentStatus)
+{
+    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        if (it->second->isStatus(currentStatus)) {
+            return it->second;
+        }
+    }
+    throw cRuntimeError("getNode(): No available Nodes found. This case is not handled yet.");
+    return nullptr;
+
+}
+
+NodeShadow* ManagedNodeShadows::getNodeRequestingReplacement(cMessage* msg)
+{
+    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        if (it->second->compareReplacementMsg(msg)) {
+            return it->second;
+        }
+    }
+    throw cRuntimeError("getNodeRequestingReplacement(): Message not found amongst the managed nodes.");
+    return nullptr;
+}

@@ -31,11 +31,9 @@ void MissionControl::initialize()
         if (not module->isName("uav")) {
             continue;
         }
-        NodeShadow *nodeShadow = new NodeShadow(check_and_cast<GenericNode *>(module));
-
         EV_DEBUG << __func__ << "(): Adding " << module->getFullName() << " to managedNodes" << endl;
-        std::pair<int, NodeShadow*> nodePair(nodeShadow->getNodeIndex(), nodeShadow);
-        managedNodes.insert(nodePair);
+        NodeShadow *nodeShadow = new NodeShadow(check_and_cast<GenericNode *>(module));
+        managedNodeShadows.add(nodeShadow);
     }
     cMessage *start = new cMessage("startScheduling");
     scheduleAt(par("startTime"), start);
@@ -44,32 +42,30 @@ void MissionControl::initialize()
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
-        GenericNode *idleNode;
-
         for (auto it = missionQueue.begin(); it != missionQueue.end(); it++) {
-            idleNode = selectIdleNode();
-            if (not idleNode) throw cRuntimeError("startScheduling: No nodes left to schedule for mission.");
-
             CommandQueue mission = *it;
             int missionId = it - missionQueue.begin();
+
+            //Select free idle node
+            NodeShadow *nodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
 
             // Generate and send out start mission message
             MissionMsg *nodeStartMission = new MissionMsg("startMission");
             nodeStartMission->setMissionId(missionId);
             nodeStartMission->setMission(mission);
             nodeStartMission->setMissionRepeat(true);
-            send(nodeStartMission, "gate$o", idleNode->getIndex());
+            send(nodeStartMission, "gate$o", nodeShadow->getNodeIndex());
 
-            // Mark node as with mission
-            managedNodes.at(idleNode->getIndex())->setStatus(NodeStatus::PROVISIONING);
+            // Mark node accordingly
+            nodeShadow->setStatus(NodeStatus::PROVISIONING);
 
-            EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << idleNode->getFullName() << ", node in state PROVISION." << endl;
+            EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << nodeShadow->getNode()->getFullName() << " (PROVISIONING)." << endl;
         }
     }
     else if (msg->isName("commandCompleted")) {
         CmdCompletedMsg *ccmsg = check_and_cast<CmdCompletedMsg *>(msg);
         EV_INFO << "commandCompleted message received" << endl;
-        NodeShadow* nodeShadow = managedNodes.at(ccmsg->getSourceNode());
+        NodeShadow* nodeShadow = managedNodeShadows.get(ccmsg->getSourceNodeIndex());
         if (nodeShadow->isStatusProvisioning()) {
             EV_INFO << "Node switching over to nodeStatus MISSION" << endl;
             nodeShadow->setStatus(NodeStatus::MISSION);
@@ -78,16 +74,7 @@ void MissionControl::handleMessage(cMessage *msg)
     }
     else if (msg->isName("provisionReplacement")) {
         // Identify node requesting replacement
-        NodeShadow* nodeShadow = nullptr;
-        for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
-            if (it->second->compareReplacementMsg(msg)) {
-                nodeShadow = it->second;
-                break;
-            }
-        }
-        if (nodeShadow == nullptr) {
-            throw cRuntimeError("provisionReplacement message not found amongst the managed nodes.");
-        }
+        NodeShadow* nodeShadow = managedNodeShadows.getNodeRequestingReplacement(msg);
         GenericNode *replacingNode = nodeShadow->getReplacingNode();
         ReplacementData *replData = nodeShadow->getReplacementData();
         EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
@@ -100,7 +87,7 @@ void MissionControl::handleMessage(cMessage *msg)
         nodeStartMission->setMission(provMission);
         send(nodeStartMission, "gate$o", replacingNode->getIndex());
 
-        managedNodes.at(replacingNode->getIndex())->setStatus(NodeStatus::PROVISIONING);
+        managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
         EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex() << " (replacing node " << nodeShadow->getNodeIndex()
                 << ")" << endl;
@@ -122,7 +109,7 @@ void MissionControl::handleMessage(cMessage *msg)
  */
 void MissionControl::handleReplacementMessage(ReplacementData replData)
 {
-    NodeShadow* nodeShadow = managedNodes.at(replData.nodeToReplace->getIndex());
+    NodeShadow* nodeShadow = managedNodeShadows.get(replData.nodeToReplace);
 
     // TODO: Test if new selection would differ...
     if (nodeShadow->hasReplacingNode()) {
@@ -131,12 +118,15 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacingNode(replNodeOld);
     }
     else {
+        // Get first free IDLE node
+        NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
+        // Assign as replacing node to this node
+        replacingNodeShadow->setStatus(NodeStatus::RESERVED);
         nodeShadow->setReplacementData(new ReplacementData(replData));
-        nodeShadow->setReplacingNode(selectIdleNode());
+        nodeShadow->setReplacingNode(replacingNodeShadow->getNode());
+
         EV_INFO << __func__ << "(): No ReplacingNode for node " << nodeShadow->getNodeIndex() << ",";
         EV_INFO << " node " << nodeShadow->getReplacingNodeIndex() << " reserved for replacement" << endl;
-        NodeShadow* replNodeShadow = managedNodes.at(nodeShadow->getReplacingNodeIndex());
-        replNodeShadow->setStatus(NodeStatus::RESERVED);
     }
 
     simtime_t timeOfProvisioning;
@@ -154,7 +144,6 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         replacingUavNode->clearCommands();
     }
 
-    //throw cRuntimeError("test");
     cMessage *replacementMsg = new cMessage("provisionReplacement");
 
     if (simTime() < timeOfProvisioning) {
@@ -245,28 +234,6 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
         }
     }
     return commands;
-}
-
-[[deprecated]]
-UAVNode* MissionControl::selectUAVNode()
-{
-    EV_WARN << __func__ << "(): Deprecated. Maybe reuse later" << endl;
-    return nullptr;
-}
-
-/**
- * Choose a free node from the managedNodes map.
- * Selection happens by lowest module index and amongst the IDLE nodes.
- */
-GenericNode* MissionControl::selectIdleNode()
-{
-    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
-        if (it->second->isStatusIdle()) {
-            return it->second->getNode();
-        }
-    }
-    throw cRuntimeError("MissionControl::selectIdleNode(): No available Nodes found. This case is not handled yet.");
-    return nullptr;
 }
 
 #endif // WITH_OSG

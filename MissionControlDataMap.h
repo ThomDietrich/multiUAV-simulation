@@ -49,6 +49,7 @@ public:
     {
         return index;
     }
+
     GenericNode* getNode() const
     {
         return node;
@@ -130,17 +131,36 @@ public:
         return this->replacementData->timeOfReplacement;
     }
 
+    void clearReplacementMsg();
     void setStatus(NodeStatus status);
     void setReplacementData(ReplacementData* replacementData);
     void setReplacementMsg(cMessage* replacementMsg);
-    void clearReplacementMsg();
     void setReplacingNode(GenericNode* replacingNode);
 };
 
+
 /**
- * A map of all nodes managed by the MissionControl.
- * key: the nodeIndex of a GenericNode
+ * A comprising map of all NodeShadow objects needed by the MissionControl for node management.
  */
-typedef std::map<int, NodeShadow*> NodeDataMap;
+class ManagedNodeShadows {
+private:
+    std::map<int, NodeShadow*> managedNodes;
+public:
+    ManagedNodeShadows();
+    virtual ~ManagedNodeShadows();
+    bool has(int index);
+    void add(NodeShadow* nodeShadow);
+    void remove(int index);
+    void setStatus(int index, NodeStatus newStatus);
+    void setStatus(GenericNode* node, NodeStatus newStatus);
+    NodeShadow* get(int index);
+    NodeShadow* get(GenericNode* node);
+    NodeShadow* getFirst(NodeStatus currentStatus);
+    NodeShadow* getNodeRequestingReplacement(cMessage *msg); //TODO: Replace!
+    int size() const
+    {
+        return managedNodes.size();
+    }
+};
 
 #endif /* MISSIONCONTROLDATAMAP_H_ */

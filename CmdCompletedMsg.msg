@@ -20,7 +20,7 @@ cplusplus {{
 class noncobject ReplacementData;
 
 message CmdCompletedMsg {
-	int sourceNode;
+	int sourceNodeIndex;
 	bool replacementDataAvailable = true;
     ReplacementData replacementData;
 }

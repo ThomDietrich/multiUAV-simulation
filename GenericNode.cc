@@ -185,7 +185,7 @@ void GenericNode::handleMessage(cMessage *msg)
 
         // Build and Send a Command Completed Message to Mission Control
         CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        ccmsg->setSourceNode(this->getIndex());
+        ccmsg->setSourceNodeIndex(this->getIndex());
         ReplacementData *replacementData = endOfOperation();
         if (replacementData != nullptr) {
             ccmsg->setReplacementData(*replacementData);

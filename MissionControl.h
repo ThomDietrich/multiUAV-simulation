@@ -36,14 +36,12 @@ using namespace omnetpp;
  */
 class MissionControl : public cSimpleModule {
 private:
-    NodeDataMap managedNodes;
+    ManagedNodeShadows managedNodeShadows;
     std::deque<CommandQueue> missionQueue;
 protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
     virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
-    virtual UAVNode* selectUAVNode();
-    virtual GenericNode* selectIdleNode();
     virtual void handleReplacementMessage(ReplacementData replData);
 };
 
