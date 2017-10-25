@@ -229,6 +229,21 @@ public:
     {
         this->partOfMission = partOfMission;
     }
+
+    /**
+     * Actions to perform when the CEE execution starts
+     */
+    virtual void performEntryActions()
+    {
+    }
+
+    /**
+     * Actions to perform after the CEE was executed and before it is replaced by another one
+     */
+    virtual void performExitActions()
+    {
+    }
+
 };
 
 /**
@@ -344,6 +359,8 @@ public:
     {
         return false;
     }
+    void performEntryActions() override;
+    void performExitActions() override;
 };
 
 

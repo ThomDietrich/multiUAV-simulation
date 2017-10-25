@@ -62,6 +62,9 @@ protected:
 
     //not needed
     virtual void move();
+
+private:
+    void selfScheduleExchange();
 };
 
 #endif

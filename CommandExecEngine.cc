@@ -409,3 +409,11 @@ char* ExchangeCEE::getCeeTypeString()
 {
     return (char*) "Exchange";
 }
+
+void ExchangeCEE::performEntryActions()
+{
+}
+
+void ExchangeCEE::performExitActions()
+{
+}

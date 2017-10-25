@@ -76,9 +76,6 @@ void UAVNode::selectNextCommand()
     float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
     float energyRemaining = this->battery.getRemaining();
 
-    //EV_INFO << "Remaining Energy in Battery=" << remaining << "mAh " << endl;
-
-    // Elect and activate the next command/CEE
     if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
         EV_INFO << "Energy Management: Recharging now." << endl;
     }
@@ -101,40 +98,50 @@ void UAVNode::selectNextCommand()
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
-        // Generate ExchangeCEE
-        ExchangeCommand *exchangeCommand = new ExchangeCommand();
-        CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
-        exchangeCEE->setPartOfMission(false);
-
-        // Find nearest ChargingNode
-        ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
-
-        // Generate WaypointCEE
-        WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNodeCommand);
-        goToChargingNodeCEE->setPartOfMission(false);
-
-        // Generate ChargeCEE
-        ChargeCommand *chargeCommand = new ChargeCommand(cn);
-        CommandExecEngine *chargeCEE = new ChargeCEE(*this, *chargeCommand);
-        chargeCEE->setPartOfMission(false);
-
-        // Add ExchangeCEE, WaypointCEE and ChargeCEE to the CEEs queue
-        cees.push_front(chargeCEE);
-        cees.push_front(goToChargingNodeCEE);
-        cees.push_front(exchangeCEE);
+        selfScheduleExchange();
     }
 
+    if (commandExecEngine != nullptr) commandExecEngine->performExitActions();
+    // Activate next CEE
     commandExecEngine = cees.front();
     commandExecEngine->setFromCoordinates(getX(), getY(), getZ());
     commandExecEngine->initializeCEE();
     cees.pop_front();
 
-    // reinject command (if no non-mission command)
+    // Reinject command (if no non-mission command)
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
     EV_INFO << "New command is " << commandExecEngine->getCeeTypeString() << ", remainaing CEEs: " << cees.size() << endl;
+}
+
+/**
+ * Add a set of commands for the replace&recharging process to the CEE list of the node
+ */
+void UAVNode::selfScheduleExchange()
+{
+    // Generate ExchangeCEE
+    ExchangeCommand *exchangeCommand = new ExchangeCommand();
+    CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
+    exchangeCEE->setPartOfMission(false);
+
+    // Find nearest ChargingNode
+    ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
+
+    // Generate WaypointCEE
+    WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNodeCommand);
+    goToChargingNodeCEE->setPartOfMission(false);
+
+    // Generate ChargeCEE
+    ChargeCommand *chargeCommand = new ChargeCommand(cn);
+    CommandExecEngine *chargeCEE = new ChargeCEE(*this, *chargeCommand);
+    chargeCEE->setPartOfMission(false);
+
+    // Add ExchangeCEE, WaypointCEE and ChargeCEE to the CEEs queue
+    cees.push_front(chargeCEE);
+    cees.push_front(goToChargingNodeCEE);
+    cees.push_front(exchangeCEE);
 }
 
 /**
@@ -144,10 +151,10 @@ void UAVNode::selectNextCommand()
  */
 void UAVNode::initializeState()
 {
-    if (commandExecEngine == nullptr) {
-        throw cRuntimeError("initializeState(): Command Engine missing.");
-    }
+    if (commandExecEngine == nullptr) throw cRuntimeError("initializeState(): Command Engine missing.");
+
     commandExecEngine->initializeCEE();
+    commandExecEngine->performEntryActions();
     commandExecEngine->setNodeParameters();
 
     std::string text(getFullName());
@@ -183,6 +190,8 @@ void UAVNode::initializeState()
  */
 void UAVNode::updateState()
 {
+    if (commandExecEngine == nullptr) throw cRuntimeError("updateState(): Command Engine missing.");
+
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
@@ -205,6 +214,7 @@ void UAVNode::updateState()
  */
 bool UAVNode::commandCompleted()
 {
+    if (commandExecEngine == nullptr) throw cRuntimeError("commandCompleted(): Command Engine missing.");
     return commandExecEngine->commandCompleted();
 }
 
@@ -213,6 +223,7 @@ bool UAVNode::commandCompleted()
  */
 double UAVNode::nextNeededUpdate()
 {
+    if (commandExecEngine == nullptr) throw cRuntimeError("nextNeededUpdate(): Command Engine missing.");
     if (commandExecEngine->hasDeterminedDuration()) {
         return commandExecEngine->getRemainingTime();
     }
