@@ -168,7 +168,8 @@ public:
     }
     virtual bool hasCommandsInQueue();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) = 0;
-    virtual void clearCommands() = 0;
+    virtual void clearCommands();
+    virtual CommandQueue extractCommands();
 
 protected:
     virtual void initialize(int stage) override;

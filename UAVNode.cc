@@ -272,15 +272,6 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
 }
 
 /**
- * Delete the current commands/CEEs from nodes memory
- */
-void UAVNode::clearCommands()
-{
-    if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
-    cees.clear();
-}
-
-/**
  * Calculate the overall flight time of a CommandQueue.
  * This method will ignore the Repeat property.
  *

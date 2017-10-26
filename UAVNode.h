@@ -40,7 +40,6 @@ public:
     UAVNode();
     virtual ~UAVNode();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
-    virtual void clearCommands() override;
     virtual double estimateCommandsDuration();
     static double getHoverConsumption(float duration, float percentile = NAN);
     static double getMovementConsumption(float angle, float duration, float percentile = NAN);

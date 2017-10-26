@@ -224,4 +224,31 @@ bool GenericNode::hasCommandsInQueue()
     return (not cees.empty());
 }
 
+/**
+ * Delete the current commands/CEEs from nodes memory
+ */
+void GenericNode::clearCommands()
+{
+    if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
+    cees.clear();
+}
+
+/**
+ * Extracts commands based for the current CEEs loaded.
+ * Removes non-Mission commands and keeps the current order in place.
+ *
+ * @return An execution neutral list of commands
+ */
+CommandQueue GenericNode::extractCommands()
+{
+    CommandQueue commands;
+    if (cees.empty()) return commands;
+
+    for (auto it = cees.begin(); it != cees.end(); it++) {
+        CommandExecEngine *cee = *it;
+        EV_INFO << "Test " << cee->getCommandId() << endl;
+    }
+    return commands;
+}
+
 #endif // WITH_OSG
