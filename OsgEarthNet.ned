@@ -52,4 +52,8 @@ network OsgEarthNet
         for i=0..numUAVs-1 {
             missionControl.gate++ <--> Channel <--> uav[i].gate++;
         }
+        for j=0..numUAVs-1, for k=0..numUAVs-1 {
+            uav[j].gate++ <--> Channel <--> uav[k].gate++
+            	if j!=k;
+        }
 }
