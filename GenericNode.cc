@@ -254,4 +254,26 @@ CommandQueue GenericNode::extractCommands()
     return commands;
 }
 
+/**
+ * Find and return the cGate pointing to another node.
+ * @todo Allow other modules
+ *
+ * @param node
+ * @return cGate*, 'nullptr' if no gate found
+ */
+cGate* GenericNode::getOutputGateTo(GenericNode *node)
+{
+    for (int i = 0; i < this->gateCount(); i++) {
+        cGate *gate = this->gateByOrdinal(i);
+        if (gate->getType() == cGate::Type::OUTPUT) {
+            cModule *gateOwner = gate->getPathEndGate()->getOwnerModule();
+            if (gateOwner == node) {
+                return gate;
+            }
+            //EV_INFO << "Node is connected to " << gateOwner->getFullName() << " through gate at index " << i << ": " << gate->getFullName() << endl;
+        }
+    }
+    return nullptr;
+}
+
 #endif // WITH_OSG
