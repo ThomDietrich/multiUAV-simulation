@@ -234,7 +234,7 @@ void GenericNode::clearCommands()
 }
 
 /**
- * Extracts commands based for the current CEEs loaded.
+ * Extracts commands of the current CEEs loaded.
  * Removes non-Mission commands and keeps the current order in place.
  *
  * @return An execution neutral list of commands
@@ -246,8 +246,11 @@ CommandQueue GenericNode::extractCommands()
 
     for (auto it = cees.begin(); it != cees.end(); it++) {
         CommandExecEngine *cee = *it;
-        EV_INFO << "Test " << cee->getCommandId() << endl;
+        if (cee->isPartOfMission()) {
+            commands.push_back(cee->extractCommand());
+        }
     }
+    EV_INFO << __func__ << "(): " << commands.size() << " Commands extracted from memory" << endl;
     return commands;
 }
 

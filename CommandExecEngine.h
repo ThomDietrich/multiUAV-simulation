@@ -39,7 +39,7 @@ protected:
     CeeType type;
     void setType(CeeType type);
 
-    int commandId;
+    int commandId = -1;
 
     /// coordinates from where the command will be executed
     double x0, y0, z0;
@@ -70,6 +70,11 @@ public:
     void setCommandId(int commandId)
     {
         this->commandId = commandId;
+    }
+
+    Command* extractCommand()
+    {
+        return command;
     }
 
     /**
