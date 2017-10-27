@@ -86,7 +86,7 @@ void MissionControl::handleMessage(cMessage *msg)
         // Send provision mission to node
         CommandQueue provMission;
         provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
-        provMission.push_back(new ExchangeCommand());
+        provMission.push_back(new ExchangeCommand(nodeShadow->getNode(), false));
         MissionMsg *nodeStartMission = new MissionMsg("startProvision");
         nodeStartMission->setMission(provMission);
         send(nodeStartMission, "gate$o", replacingNode->getIndex());

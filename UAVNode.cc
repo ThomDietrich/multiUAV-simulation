@@ -121,7 +121,7 @@ void UAVNode::selectNextCommand()
 void UAVNode::selfScheduleExchange()
 {
     // Generate ExchangeCEE
-    ExchangeCommand *exchangeCommand = new ExchangeCommand();
+    ExchangeCommand *exchangeCommand = new ExchangeCommand(nullptr, true);
     CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
     exchangeCEE->setPartOfMission(false);
 

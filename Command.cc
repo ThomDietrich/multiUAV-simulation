@@ -116,6 +116,24 @@ ChargingNode* ChargeCommand::getChargingNode()
 /**
  *
  */
-ExchangeCommand::ExchangeCommand()
+ExchangeCommand::ExchangeCommand(GenericNode* otherNode, bool transmitData)
 {
+    this->setOtherNode(otherNode);
+    this->thisNodeHasDataToExchange = transmitData;
+}
+
+void ExchangeCommand::setOtherNode(GenericNode* otherNode)
+{
+    this->otherNode = otherNode;
+    this->otherNodeKnown = (otherNode == nullptr) ? false : true;
+}
+
+GenericNode* ExchangeCommand::getOtherNode()
+{
+    return this->otherNode;
+}
+
+bool ExchangeCommand::isOtherNodeKnown()
+{
+    return this->otherNodeKnown;
 }
