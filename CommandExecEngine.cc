@@ -412,6 +412,9 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
+    EV_INFO << __func__ << "(): ExchangeCEE entry action" << endl;
+    EV_INFO << __func__ << "(): Starting communication with node " << ((command->isOtherNodeKnown()) ? "yes" : "no") << endl;
+
 }
 
 void ExchangeCEE::performExitActions()

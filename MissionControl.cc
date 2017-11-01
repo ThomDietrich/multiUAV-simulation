@@ -83,13 +83,18 @@ void MissionControl::handleMessage(cMessage *msg)
         ReplacementData *replData = nodeShadow->getReplacementData();
         EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
 
-        // Send provision mission to node
+        // Send provision mission to replacing node
         CommandQueue provMission;
         provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
         provMission.push_back(new ExchangeCommand(nodeShadow->getNode(), false));
         MissionMsg *nodeStartMission = new MissionMsg("startProvision");
         nodeStartMission->setMission(provMission);
         send(nodeStartMission, "gate$o", replacingNode->getIndex());
+
+        // Set "otherNode" for exchangeCEE of replaced node
+        // TODO: This is part of hack111...
+        UAVNode *replacedNode = dynamic_cast<UAVNode *>(nodeShadow->getNode());
+        replacedNode->replacingNode = replacingNode;
 
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 

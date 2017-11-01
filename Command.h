@@ -123,7 +123,6 @@ class GenericNode;
 class ExchangeCommand : public Command {
 protected:
     GenericNode *otherNode;
-    bool otherNodeKnown = true;
     bool thisNodeHasDataToExchange = false;
 public:
     ExchangeCommand(GenericNode *otherNode, bool transmitData = false);

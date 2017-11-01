@@ -45,6 +45,9 @@ public:
     static double getMovementConsumption(float angle, float duration, float percentile = NAN);
     static double getSpeed(double angle);
 
+    //TODO part of hack111 to make the replacing Node known to the Exchange Command
+    GenericNode* replacingNode = nullptr;
+
 protected:
     virtual void initialize(int stage) override;
     virtual int numInitStages() const override
