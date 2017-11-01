@@ -366,6 +366,8 @@ public:
     }
     void performEntryActions() override;
     void performExitActions() override;
+    GenericNode *getOtherNode();
+    bool dataTransferPerformed = false;
 };
 
 

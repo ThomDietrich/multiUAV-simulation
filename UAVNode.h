@@ -45,11 +45,12 @@ public:
     static double getMovementConsumption(float angle, float duration, float percentile = NAN);
     static double getSpeed(double angle);
 
-    //TODO part of hack111 to make the replacing Node known to the Exchange Command
+    //TODO part of hack111 to make the replacing node known to the Exchange command
     GenericNode* replacingNode = nullptr;
 
 protected:
     virtual void initialize(int stage) override;
+    virtual void handleMessage(cMessage *msg) override;
     virtual int numInitStages() const override
     {
         return 2;
@@ -64,6 +65,8 @@ protected:
 
     //not needed
     virtual void move();
+
+    void transferMissionDataTo(UAVNode* node);
 
 private:
     void selfScheduleExchange();

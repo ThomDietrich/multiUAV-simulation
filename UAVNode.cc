@@ -56,6 +56,59 @@ void UAVNode::initialize(int stage)
     }
 }
 
+void UAVNode::handleMessage(cMessage *msg)
+{
+    if (msg->isName("exchangeInitialize")) {
+        EV_INFO << "exchangeInitialize message received" << endl;
+        delete msg;
+
+        if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
+            EV_INFO << "Node not in ExchangeCEE (yet). Ignoring message." << endl;
+            return;
+        }
+
+        ExchangeCEE *exchangeCEE = dynamic_cast<ExchangeCEE *>(commandExecEngine);
+
+        if (not exchangeCEE->dataTransferPerformed) {
+            UAVNode *node = dynamic_cast<UAVNode *>(exchangeCEE->getOtherNode());
+            transferMissionDataTo(node);
+            exchangeCEE->dataTransferPerformed = true;
+        }
+    }
+    else if (msg->isName("exchangeData")) {
+        EV_INFO << "exchangeData message received" << endl;
+        delete msg;
+
+        if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
+            EV_INFO << "Node not in ExchangeCEE (any longer). Ignoring message." << endl;
+            return;
+        }
+
+        //TODO: Handle exchange Data
+
+        ExchangeCEE *exchangeCEE = dynamic_cast<ExchangeCEE *>(commandExecEngine);
+
+        if (not exchangeCEE->dataTransferPerformed) {
+            UAVNode *node = dynamic_cast<UAVNode *>(exchangeCEE->getOtherNode());
+            transferMissionDataTo(node);
+            exchangeCEE->dataTransferPerformed = true;
+        }
+
+        cMessage *nextCmdMsg = new cMessage("nextCommand");
+        scheduleAt(simTime(), nextCmdMsg);
+    }
+    else {
+        GenericNode::handleMessage(msg);
+    }
+}
+
+void UAVNode::transferMissionDataTo(UAVNode* node)
+{
+    cMessage *exDataMsg = new cMessage("exchangeData");
+    cGate* gateToNode = getOutputGateTo(node);
+    send(exDataMsg, gateToNode);
+}
+
 /**
  * Fetches the next command from the commands queue and creates a corresponding CEE.
  *

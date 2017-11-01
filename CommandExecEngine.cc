@@ -412,11 +412,19 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
-    EV_INFO << __func__ << "(): ExchangeCEE entry action" << endl;
-    EV_INFO << __func__ << "(): Starting communication with node " << ((command->isOtherNodeKnown()) ? "yes" : "no") << endl;
+    EV_INFO << __func__ << "(): Ready for exchange, notifying other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
 
+    // Send an exchangeInitialize message to the other node taking part in the exchange
+    cMessage *exInitMsg = new cMessage("exchangeInitialize");
+    cGate* gateToNode = node->getOutputGateTo(command->getOtherNode());
+    node->send(exInitMsg, gateToNode);
 }
 
 void ExchangeCEE::performExitActions()
 {
+}
+
+GenericNode* ExchangeCEE::getOtherNode()
+{
+    return command->getOtherNode();
 }
