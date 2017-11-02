@@ -67,9 +67,6 @@ protected:
     virtual void move();
 
     void transferMissionDataTo(UAVNode* node);
-
-private:
-    void selfScheduleExchange();
 };
 
 #endif

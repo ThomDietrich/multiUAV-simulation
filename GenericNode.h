@@ -77,6 +77,9 @@ protected:
     /// Repeat commands, rotate queue
     bool commandsRepeat = false;
 
+    /// Unique identifier for a mission
+    int missionId = -1;
+
     /// If true the node is actively executing commands.
     /// If false the node is not performing any actions, doesn't move or consume energy.
     bool activeInField = false;
@@ -169,7 +172,7 @@ public:
     virtual bool hasCommandsInQueue();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) = 0;
     virtual void clearCommands();
-    virtual CommandQueue extractCommands();
+    virtual CommandQueue* extractCommands();
 
     virtual cGate* getOutputGateTo(GenericNode *node);
 

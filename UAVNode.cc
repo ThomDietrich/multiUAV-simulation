@@ -84,8 +84,6 @@ void UAVNode::handleMessage(cMessage *msg)
             return;
         }
 
-        //TODO: Handle exchange Data
-
         ExchangeCEE *exchangeCEE = dynamic_cast<ExchangeCEE *>(commandExecEngine);
 
         if (not exchangeCEE->dataTransferPerformed) {
@@ -93,6 +91,8 @@ void UAVNode::handleMessage(cMessage *msg)
             transferMissionDataTo(node);
             exchangeCEE->dataTransferPerformed = true;
         }
+
+        //TODO: Handle exchange Data
 
         cMessage *nextCmdMsg = new cMessage("nextCommand");
         scheduleAt(simTime(), nextCmdMsg);
@@ -104,7 +104,11 @@ void UAVNode::handleMessage(cMessage *msg)
 
 void UAVNode::transferMissionDataTo(UAVNode* node)
 {
-    cMessage *exDataMsg = new cMessage("exchangeData");
+    CommandQueue *missionCommands = extractCommands();
+    MissionMsg *exDataMsg = new MissionMsg("exchangeData");
+    exDataMsg->setMission(*missionCommands);
+    exDataMsg->setMissionRepeat(commandsRepeat);
+    exDataMsg->setMissionId(missionId);
     cGate* gateToNode = getOutputGateTo(node);
     send(exDataMsg, gateToNode);
 }
@@ -151,7 +155,13 @@ void UAVNode::selectNextCommand()
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
-        selfScheduleExchange();
+        if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
+
+        // Generate and inject ExchangeCEE
+        ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true);
+        CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
+        exchangeCEE->setPartOfMission(false);
+        cees.push_front(exchangeCEE);
     }
 
     if (commandExecEngine != nullptr) commandExecEngine->performExitActions();
@@ -165,38 +175,7 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New command is " << commandExecEngine->getCeeTypeString() << ", remainaing CEEs: " << cees.size() << endl;
-}
-
-/**
- * Add a set of commands for the replace&recharging process to the CEE list of the node
- */
-void UAVNode::selfScheduleExchange()
-{
-    if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
-
-    // Generate ExchangeCEE
-    ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true);
-    CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
-    exchangeCEE->setPartOfMission(false);
-
-    // Find nearest ChargingNode
-    ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
-
-    // Generate WaypointCEE
-    WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNodeCommand);
-    goToChargingNodeCEE->setPartOfMission(false);
-
-    // Generate ChargeCEE
-    ChargeCommand *chargeCommand = new ChargeCommand(cn);
-    CommandExecEngine *chargeCEE = new ChargeCEE(*this, *chargeCommand);
-    chargeCEE->setPartOfMission(false);
-
-    // Add ExchangeCEE, WaypointCEE and ChargeCEE to the CEEs queue
-    cees.push_front(chargeCEE);
-    cees.push_front(goToChargingNodeCEE);
-    cees.push_front(exchangeCEE);
+    EV_INFO << "New command is " << commandExecEngine->getCeeTypeString() << ", remaining CEEs: " << cees.size() << endl;
 }
 
 /**

@@ -160,6 +160,7 @@ void GenericNode::handleMessage(cMessage *msg)
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         commandsRepeat = mmmsg->getMissionRepeat();
+        missionId = mmmsg->getMissionId();
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;
@@ -239,18 +240,18 @@ void GenericNode::clearCommands()
  *
  * @return An execution neutral list of commands
  */
-CommandQueue GenericNode::extractCommands()
+CommandQueue* GenericNode::extractCommands()
 {
-    CommandQueue commands;
+    CommandQueue* commands = new CommandQueue();
     if (cees.empty()) return commands;
 
     for (auto it = cees.begin(); it != cees.end(); it++) {
         CommandExecEngine *cee = *it;
         if (cee->isPartOfMission()) {
-            commands.push_back(cee->extractCommand());
+            commands->push_back(cee->extractCommand());
         }
     }
-    EV_INFO << __func__ << "(): " << commands.size() << " Commands extracted from memory" << endl;
+    EV_INFO << __func__ << "(): " << commands->size() << " Commands extracted from memory" << endl;
     return commands;
 }
 

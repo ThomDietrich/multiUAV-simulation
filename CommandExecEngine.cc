@@ -422,6 +422,22 @@ void ExchangeCEE::performEntryActions()
 
 void ExchangeCEE::performExitActions()
 {
+    // Find nearest ChargingNode
+    ChargingNode *cn = UAVNode::findNearestCN(node->getX(), node->getY(), node->getZ());
+
+    // Generate WaypointCEE
+    WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*node, *goToChargingNodeCommand);
+    goToChargingNodeCEE->setPartOfMission(false);
+
+    // Generate ChargeCEE
+    ChargeCommand *chargeCommand = new ChargeCommand(cn);
+    CommandExecEngine *chargeCEE = new ChargeCEE(*node, *chargeCommand);
+    chargeCEE->setPartOfMission(false);
+
+    // Add WaypointCEE and ChargeCEE to the CEEs queue
+    node->cees.push_front(chargeCEE);
+    node->cees.push_front(goToChargingNodeCEE);
 }
 
 GenericNode* ExchangeCEE::getOtherNode()
