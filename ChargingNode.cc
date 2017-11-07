@@ -90,6 +90,34 @@ void ChargingNode::handleMessage(cMessage* msg)
         this->updateState();
         // ToDo dont update when there is "nothing to do" -> all spots empty
         this->scheduleAt(simTime()+nextNeededUpdate(), new cMessage("update"));
+
+    } else if (msg->isName("requestForecastRemainingToTarget")) {
+        // EV_DEBUG << "Test Remaining: " << msg->getParListPtr()->get("remaining")->str() << endl;
+        // EV_DEBUG << "Test Capacity: " << msg->getParListPtr()->get("capacity")->str() << endl;
+        // EV_DEBUG << "Test targetPercentage: " << msg->getParListPtr()->get("targetPercentage")->str() << endl;
+        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
+        double capacity = stod(msg->getParListPtr()->get("capacity")->str());
+        double targetPercentage = stod(msg->getParListPtr()->get("targetPercentage")->str());
+        double forecastDuration = this->getForecastRemainingToTarget(remaining, capacity, targetPercentage);
+        simtime_t forecastPointInTime = simTime() + forecastDuration;
+
+        cMessage *response = new ResponseForecastMsg(forecastPointInTime, targetPercentage);
+        GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
+        this->send(response, this->getOutputGateTo(sender));
+
+        // EV_DEBUG << "Forecast: " << forecast << endl;
+        EV_DEBUG << "Forecast point In Time: " << forecastPointInTime << endl;
+
+    } else if (msg->isName("requestForecastRemainingToPointInTime")) {
+        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
+        double capacity = stod(msg->getParListPtr()->get("capacity")->str());
+        simtime_t pointInTime = (simtime_t)stod(msg->getParListPtr()->get("pointInTime")->str());
+        double forecastPercentage = this->getForecastRemainingToPointInTime(remaining, capacity, pointInTime);
+
+        cMessage *response = new ResponseForecastMsg(pointInTime, forecastPercentage);
+        GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
+        this->send(response, this->getOutputGateTo(sender));
+
     } else {
         EV_INFO << "Received Message with unknown name: " << msg->getName() << endl;
     }
@@ -225,9 +253,9 @@ float ChargingNode::calculateChargeAmount(double remaining, double capacity, dou
     // non linear
     double nonLinearChargeTime = std::min(seconds, this->calculateChargeTimeNonLinear(remaining, capacity));
     float chargeAmountNonLinear = this->calculateChargeAmountNonLinear(nonLinearChargeTime, remaining / capacity);
-//    EV_DEBUG << "seconds non-l: " << seconds << endl;
-//    EV_DEBUG << "non-l charge time: " << nonLinearChargeTime << endl;
-//    EV_DEBUG << "non-l charge amount: " << chargeAmountNonLinear << endl;
+    //    EV_DEBUG << "seconds non-l: " << seconds << endl;
+    //    EV_DEBUG << "non-l charge time: " << nonLinearChargeTime << endl;
+    //    EV_DEBUG << "non-l charge amount: " << chargeAmountNonLinear << endl;
 
     return chargeAmountLinear + chargeAmountNonLinear;
 }

@@ -20,6 +20,7 @@
 #include "GenericNode.h"
 #include "ChargingNodeSpotElement.h"
 #include "Battery.h"
+#include "msgs/ResponseForecastMsg.h"
 
 using namespace omnetpp;
 
