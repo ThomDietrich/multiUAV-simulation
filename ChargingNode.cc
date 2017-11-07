@@ -32,22 +32,22 @@ void ChargingNode::initialize(int stage)
     GenericNode::initialize(stage);
     switch (stage) {
         case 0:
-        this->spotsWaiting = 5;
-        this->spotsCharging = 2;
-        this->chargingCurrent = 2000;
-        this->x = par("posX");
-        this->y = par("posY");
-        this->z = 2;
-        this->pitch = 0;
-        this->yaw = 0;
-        this->usedPower = 0;
-        this->chargedUAVs = 0;
-        break;
+            this->spotsWaiting = 5;
+            this->spotsCharging = 2;
+            this->chargingCurrent = 2000;
+            this->x = par("posX");
+            this->y = par("posY");
+            this->z = 2;
+            this->pitch = 0;
+            this->yaw = 0;
+            this->usedPower = 0;
+            this->chargedUAVs = 0;
+            break;
 
         case 1:
-        this->labelNode->setText("");
-        this->sublabelNode->setText("");
-        break;
+            this->labelNode->setText("");
+            this->sublabelNode->setText("");
+            break;
     }
 }
 
@@ -73,11 +73,9 @@ void ChargingNode::refreshDisplay() const
 
 void ChargingNode::handleMessage(cMessage* msg)
 {
-//    GenericNode::handleMessage(msg);
+    // GenericNode::handleMessage(msg);
     if (msg->isName("startCharge")) {
         EV_INFO << "UAV is ready to get charged" << endl;
-        cModule* mod = msg->getSenderModule();
-        EV_DEBUG << "Class name: " << mod->getClassName() << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         this->appendToObjectsWaiting(mn);
 
@@ -85,12 +83,15 @@ void ChargingNode::handleMessage(cMessage* msg)
         this->scheduleAt(simTime(), new cMessage("update"));
 
     } else if (msg->isName("onMyWay")) {
+        //ToDo add arrival time and "reserve" a spot.
         EV_INFO << "UAV is on the way to CS, reserve spot" << endl;
 
     } else if (msg->isName("update")) {
         this->updateState();
         // ToDo dont update when there is "nothing to do" -> all spots empty
         this->scheduleAt(simTime()+nextNeededUpdate(), new cMessage("update"));
+    } else {
+        EV_INFO << "Received Message with unknown name: " << msg->getName() << endl;
     }
 }
 
@@ -204,7 +205,7 @@ void ChargingNode::charge()
                 this->objectsCharging[i].getNode()->getBattery()->getRemaining(),
                 this->objectsCharging[i].getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(this->lastUpdate, this->objectsCharging[i].getPointInTimeWhenChargingStarted())).dbl()
-                );
+        );
         this->objectsCharging[i].getNode()->getBattery()->charge(chargeAmount);
         this->usedPower += chargeAmount;
         this->lastUpdate = currentTime;
