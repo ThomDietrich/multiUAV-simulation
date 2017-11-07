@@ -438,6 +438,8 @@ void ExchangeCEE::performExitActions()
     // Add WaypointCEE and ChargeCEE to the CEEs queue
     node->cees.push_front(chargeCEE);
     node->cees.push_front(goToChargingNodeCEE);
+
+    EV_INFO << __func__ << "(): GoToChargingNode and Charge CEE added to node." << endl;
 }
 
 GenericNode* ExchangeCEE::getOtherNode()

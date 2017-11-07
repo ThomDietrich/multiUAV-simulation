@@ -59,11 +59,10 @@ void UAVNode::initialize(int stage)
 void UAVNode::handleMessage(cMessage *msg)
 {
     if (msg->isName("exchangeInitialize")) {
-        EV_INFO << "exchangeInitialize message received" << endl;
-        delete msg;
+        EV_INFO << __func__ << "(): exchangeInitialize message received" << endl;
 
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
-            EV_INFO << "Node not in ExchangeCEE (yet). Ignoring message." << endl;
+            EV_INFO << __func__ << "(): Node not in ExchangeCEE (yet). Ignoring message." << endl;
             return;
         }
 
@@ -74,26 +73,36 @@ void UAVNode::handleMessage(cMessage *msg)
             transferMissionDataTo(node);
             exchangeCEE->dataTransferPerformed = true;
         }
+        delete msg;
     }
     else if (msg->isName("exchangeData")) {
-        EV_INFO << "exchangeData message received" << endl;
-        delete msg;
+        EV_INFO << __func__ << "(): exchangeData message received" << endl;
 
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
-            EV_INFO << "Node not in ExchangeCEE (any longer). Ignoring message." << endl;
+            EV_INFO << __func__ << "(): Node not in ExchangeCEE (any longer). Ignoring message." << endl;
             return;
         }
 
         ExchangeCEE *exchangeCEE = dynamic_cast<ExchangeCEE *>(commandExecEngine);
 
+        // Send out mission data
         if (not exchangeCEE->dataTransferPerformed) {
             UAVNode *node = dynamic_cast<UAVNode *>(exchangeCEE->getOtherNode());
             transferMissionDataTo(node);
             exchangeCEE->dataTransferPerformed = true;
         }
 
-        //TODO: Handle exchange Data
+        // Handle received mission data
+        MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
+        clearCommands();
+        missionId = receivedMissionMsg->getMissionId();
+        commandsRepeat = receivedMissionMsg->getMissionRepeat();
+        CommandQueue missionCommands = receivedMissionMsg->getMission();
+        loadCommands(missionCommands);
 
+        delete msg;
+
+        // End ExchangeCEE and execute next command
         cMessage *nextCmdMsg = new cMessage("nextCommand");
         scheduleAt(simTime(), nextCmdMsg);
     }
@@ -104,13 +113,14 @@ void UAVNode::handleMessage(cMessage *msg)
 
 void UAVNode::transferMissionDataTo(UAVNode* node)
 {
-    CommandQueue *missionCommands = extractCommands();
+    CommandQueue missionCommands = *extractCommands();
     MissionMsg *exDataMsg = new MissionMsg("exchangeData");
-    exDataMsg->setMission(*missionCommands);
+    exDataMsg->setMission(missionCommands);
     exDataMsg->setMissionRepeat(commandsRepeat);
     exDataMsg->setMissionId(missionId);
     cGate* gateToNode = getOutputGateTo(node);
     send(exDataMsg, gateToNode);
+    EV_INFO << __func__ << "(): " << missionCommands.size() << " commands sent to other node." << endl;
 }
 
 /**
@@ -164,7 +174,6 @@ void UAVNode::selectNextCommand()
         cees.push_front(exchangeCEE);
     }
 
-    if (commandExecEngine != nullptr) commandExecEngine->performExitActions();
     // Activate next CEE
     commandExecEngine = cees.front();
     commandExecEngine->setFromCoordinates(getX(), getY(), getZ());
@@ -303,6 +312,7 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
         cee->setCommandId(index);
         cees.push_back(cee);
     }
+    EV_INFO << __func__ << "(): " << commands.size() << " commands stored in node memory." << endl;
 }
 
 /**

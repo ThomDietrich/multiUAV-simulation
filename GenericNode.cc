@@ -178,6 +178,9 @@ void GenericNode::handleMessage(cMessage *msg)
         }
     }
     else if (msg->isName("nextCommand")) {
+
+        if (commandExecEngine != nullptr) commandExecEngine->performExitActions();
+
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
             EV_WARN << "Command completed. Queue empty. This should not happen!" << endl;
@@ -230,7 +233,7 @@ bool GenericNode::hasCommandsInQueue()
  */
 void GenericNode::clearCommands()
 {
-    if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
+    //if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
     cees.clear();
 }
 
@@ -243,8 +246,6 @@ void GenericNode::clearCommands()
 CommandQueue* GenericNode::extractCommands()
 {
     CommandQueue* commands = new CommandQueue();
-    if (cees.empty()) return commands;
-
     for (auto it = cees.begin(); it != cees.end(); it++) {
         CommandExecEngine *cee = *it;
         if (cee->isPartOfMission()) {

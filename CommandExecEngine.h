@@ -34,8 +34,6 @@ enum class CeeType {
  */
 class CommandExecEngine {
 protected:
-    //SubclassNode *node;
-    Command *command;
     CeeType type;
     void setType(CeeType type);
 
@@ -72,10 +70,7 @@ public:
         this->commandId = commandId;
     }
 
-    Command* extractCommand()
-    {
-        return command;
-    }
+    virtual Command* extractCommand() = 0;
 
     /**
      * Adopt the coordinates the command will be executed from, needed for consumption prediction.
@@ -278,6 +273,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    WaypointCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -300,6 +300,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    TakeoffCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -322,6 +327,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    HoldPositionCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -341,6 +351,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    ChargeCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -360,14 +375,21 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    void performEntryActions() override;
+    void performExitActions() override;
+    GenericNode *getOtherNode();
+
+    bool dataTransferPerformed = false;
+
+    ExchangeCommand* extractCommand()
+    {
+        return command;
+    }
     bool hasDeterminedDuration() override
     {
         return false;
     }
-    void performEntryActions() override;
-    void performExitActions() override;
-    GenericNode *getOtherNode();
-    bool dataTransferPerformed = false;
 };
 
 
