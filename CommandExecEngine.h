@@ -54,7 +54,7 @@ protected:
     bool partOfMission = true;
 
 public:
-    //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
+    //CommandExecEngine(SubclassNode* boundNode, SpecializedCommand* command) { };
 
     virtual ~CommandExecEngine()
     {
@@ -264,7 +264,7 @@ protected:
     UAVNode *node;
     WaypointCommand *command;
 public:
-    WaypointCEE(UAVNode &boundNode, WaypointCommand &command);
+    WaypointCEE(UAVNode *boundNode, WaypointCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -291,7 +291,7 @@ protected:
     UAVNode *node;
     TakeoffCommand *command;
 public:
-    TakeoffCEE(UAVNode &boundNode, TakeoffCommand &command);
+    TakeoffCEE(UAVNode *boundNode, TakeoffCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -318,7 +318,7 @@ protected:
     HoldPositionCommand *command;
     simtime_t holdPositionTill;
 public:
-    HoldPositionCEE(UAVNode &boundNode, HoldPositionCommand &command);
+    HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -342,7 +342,7 @@ protected:
     UAVNode *node;
     ChargeCommand *command;
 public:
-    ChargeCEE(UAVNode &boundNode, ChargeCommand &command);
+    ChargeCEE(UAVNode *boundNode, ChargeCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -366,7 +366,7 @@ protected:
     UAVNode *node;
     ExchangeCommand *command;
 public:
-    ExchangeCEE(UAVNode &boundNode, ExchangeCommand &command);
+    ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;

@@ -169,7 +169,7 @@ void UAVNode::selectNextCommand()
 
         // Generate and inject ExchangeCEE
         ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true);
-        CommandExecEngine *exchangeCEE = new ExchangeCEE(*this, *exchangeCommand);
+        CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
         exchangeCEE->setPartOfMission(false);
         cees.push_front(exchangeCEE);
     }
@@ -291,19 +291,19 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
         CommandExecEngine *cee = nullptr;
 
         if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
-            cee = new WaypointCEE(*this, *cmd);
+            cee = new WaypointCEE(this, cmd);
         }
         else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
-            cee = new TakeoffCEE(*this, *cmd);
+            cee = new TakeoffCEE(this, cmd);
         }
         else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
-            cee = new HoldPositionCEE(*this, *cmd);
+            cee = new HoldPositionCEE(this, cmd);
         }
         else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
-            cee = new ChargeCEE(*this, *cmd);
+            cee = new ChargeCEE(this, cmd);
         }
         else if (ExchangeCommand *cmd = dynamic_cast<ExchangeCommand *>(command)) {
-            cee = new ExchangeCEE(*this, *cmd);
+            cee = new ExchangeCEE(this, cmd);
         }
         else {
             throw cRuntimeError("UAVNode::loadCommands(): invalid cast or unexpected command type.");
@@ -451,7 +451,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
     // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
+    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(this, goToChargingNode);
     goToChargingNodeCEE->setFromCoordinates(fromX, fromY, fromZ);
     goToChargingNodeCEE->setPartOfMission(false);
     goToChargingNodeCEE->initializeCEE();
