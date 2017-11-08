@@ -232,9 +232,9 @@ void UAVNode::updateState()
     strs << std::setprecision(1) << std::fixed << speed << " m/s";
     strs << " | " << commandExecEngine->getConsumptionPerSecond() << " A";
     strs << " | " << battery.getRemainingPercentage() << " %";
-    strs << " | ";
-    (commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
-    strs << " s left";
+    //strs << " | ";
+    //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
+    //strs << " s left";
     sublabelNode->setText(strs.str());
     par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
 }
