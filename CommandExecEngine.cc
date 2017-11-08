@@ -26,13 +26,13 @@ void CommandExecEngine::setType(CeeType type)
 /**
  * Waypoint Command Execution Engine
  */
-WaypointCEE::WaypointCEE(UAVNode &boundNode, WaypointCommand &command)
+WaypointCEE::WaypointCEE(UAVNode *boundNode, WaypointCommand *command)
 {
-    this->node = &boundNode;
-    this->command = &command;
+    this->node = boundNode;
+    this->command = command;
     this->setType(CeeType::WAYPOINT);
     setFromCoordinates(node->x, node->y, node->z);
-    setToCoordinates(command.getX(), command.getY(), command.getZ());
+    setToCoordinates(command->getX(), command->getY(), command->getZ());
 }
 
 bool WaypointCEE::commandCompleted()
@@ -131,13 +131,13 @@ char* WaypointCEE::getCeeTypeString()
 /**
  * Takeoff Command Execution Engine
  */
-TakeoffCEE::TakeoffCEE(UAVNode& boundNode, TakeoffCommand& command)
+TakeoffCEE::TakeoffCEE(UAVNode *boundNode, TakeoffCommand *command)
 {
-    this->node = &boundNode;
-    this->command = &command;
+    this->node = boundNode;
+    this->command = command;
     this->setType(CeeType::TAKEOFF);
     setFromCoordinates(node->x, node->y, node->z);
-    setToCoordinates(node->x, node->y, command.getZ());
+    setToCoordinates(node->x, node->y, command->getZ());
 }
 
 bool TakeoffCEE::commandCompleted()
@@ -206,14 +206,14 @@ char* TakeoffCEE::getCeeTypeString()
 /**
  * HoldPosition Command Execution Engine
  */
-HoldPositionCEE::HoldPositionCEE(UAVNode& boundNode, HoldPositionCommand& command)
+HoldPositionCEE::HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *command)
 {
-    this->node = &boundNode;
-    this->command = &command;
+    this->node = boundNode;
+    this->command = command;
     this->setType(CeeType::HOLDPOSITION);
     setFromCoordinates(node->x, node->y, node->z);
     setToCoordinates(node->x, node->y, node->z);
-    this->holdPositionTill = simTime() + this->command->getHoldSeconds();
+    this->holdPositionTill = simTime() + command->getHoldSeconds();
 }
 
 bool HoldPositionCEE::commandCompleted()
@@ -277,10 +277,10 @@ char* HoldPositionCEE::getCeeTypeString()
  * @param boundNode
  * @param command
  */
-ChargeCEE::ChargeCEE(UAVNode& boundNode, ChargeCommand& command)
+ChargeCEE::ChargeCEE(UAVNode *boundNode, ChargeCommand *command)
 {
-    this->node = &boundNode;
-    this->command = &command;
+    this->node = boundNode;
+    this->command = command;
     this->setType(CeeType::CHARGE);
     this->setFromCoordinates(node->x, node->y, node->z);
     this->setToCoordinates(node->x, node->y, node->z);
@@ -349,10 +349,10 @@ char* ChargeCEE::getCeeTypeString()
 /**
  * Exchange Command Execution Engine
  */
-ExchangeCEE::ExchangeCEE(UAVNode& boundNode, ExchangeCommand& command)
+ExchangeCEE::ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command)
 {
-    this->node = &boundNode;
-    this->command = &command;
+    this->node = boundNode;
+    this->command = command;
     this->setType(CeeType::EXCHANGE);
     setFromCoordinates(node->x, node->y, node->z);
     setToCoordinates(node->x, node->y, node->z);
@@ -360,7 +360,7 @@ ExchangeCEE::ExchangeCEE(UAVNode& boundNode, ExchangeCommand& command)
 
 bool ExchangeCEE::commandCompleted()
 {
-    return false;
+    return exchangeCompleted;
 }
 
 void ExchangeCEE::initializeCEE()
@@ -412,8 +412,38 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
+    EV_INFO << __func__ << "(): Ready for exchange, sending data to other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
+
+    // Send an exchangeData message to the other node taking part in the exchange
+    UAVNode *otherNode = check_and_cast<UAVNode *>(command->getOtherNode());
+    node->transferMissionDataTo(otherNode);
 }
 
 void ExchangeCEE::performExitActions()
 {
+    if (command->isRechargeRequested()) {
+        // Find nearest ChargingNode
+        ChargingNode *cn = UAVNode::findNearestCN(node->getX(), node->getY(), node->getZ());
+
+        // Generate WaypointCEE
+        WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
+        goToChargingNodeCEE->setPartOfMission(false);
+
+        // Generate ChargeCEE
+        ChargeCommand *chargeCommand = new ChargeCommand(cn);
+        CommandExecEngine *chargeCEE = new ChargeCEE(node, chargeCommand);
+        chargeCEE->setPartOfMission(false);
+
+        // Add WaypointCEE and ChargeCEE to the CEEs queue
+        node->cees.push_front(chargeCEE);
+        node->cees.push_front(goToChargingNodeCEE);
+
+        EV_INFO << __func__ << "(): GoToChargingNode and Charge CEE added to node." << endl;
+    }
+}
+
+GenericNode* ExchangeCEE::getOtherNode()
+{
+    return command->getOtherNode();
 }

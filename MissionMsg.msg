@@ -20,12 +20,7 @@ typedef std::deque<Command*> CommandQueue;
 
 class noncobject CommandQueue;
 
-//
-// TODO generated message class
-//
 message MissionMsg {
-    int source = 0;
-    int destination = 0;
     CommandQueue mission;
     int missionId;
     bool missionRepeat = false;

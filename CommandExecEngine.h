@@ -34,8 +34,6 @@ enum class CeeType {
  */
 class CommandExecEngine {
 protected:
-    //SubclassNode *node;
-    Command *command;
     CeeType type;
     void setType(CeeType type);
 
@@ -56,7 +54,7 @@ protected:
     bool partOfMission = true;
 
 public:
-    //CommandExecEngine(SubclassNode &boundNode, SpecializedCommand &command) { };
+    //CommandExecEngine(SubclassNode* boundNode, SpecializedCommand* command) { };
 
     virtual ~CommandExecEngine()
     {
@@ -72,10 +70,7 @@ public:
         this->commandId = commandId;
     }
 
-    Command* extractCommand()
-    {
-        return command;
-    }
+    virtual Command* extractCommand() = 0;
 
     /**
      * Adopt the coordinates the command will be executed from, needed for consumption prediction.
@@ -269,7 +264,7 @@ protected:
     UAVNode *node;
     WaypointCommand *command;
 public:
-    WaypointCEE(UAVNode &boundNode, WaypointCommand &command);
+    WaypointCEE(UAVNode *boundNode, WaypointCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -278,6 +273,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    WaypointCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -291,7 +291,7 @@ protected:
     UAVNode *node;
     TakeoffCommand *command;
 public:
-    TakeoffCEE(UAVNode &boundNode, TakeoffCommand &command);
+    TakeoffCEE(UAVNode *boundNode, TakeoffCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -300,6 +300,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    TakeoffCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -313,7 +318,7 @@ protected:
     HoldPositionCommand *command;
     simtime_t holdPositionTill;
 public:
-    HoldPositionCEE(UAVNode &boundNode, HoldPositionCommand &command);
+    HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -322,6 +327,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    HoldPositionCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -332,7 +342,7 @@ protected:
     UAVNode *node;
     ChargeCommand *command;
 public:
-    ChargeCEE(UAVNode &boundNode, ChargeCommand &command);
+    ChargeCEE(UAVNode *boundNode, ChargeCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -341,6 +351,11 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    ChargeCommand* extractCommand()
+    {
+        return command;
+    }
 };
 
 /**
@@ -350,8 +365,9 @@ class ExchangeCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     ExchangeCommand *command;
+    bool exchangeCompleted = false;
 public:
-    ExchangeCEE(UAVNode &boundNode, ExchangeCommand &command);
+    ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -360,12 +376,25 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+
+    void performEntryActions() override;
+    void performExitActions() override;
+    GenericNode *getOtherNode();
+
+    bool dataTransferPerformed = false;
+
+    ExchangeCommand* extractCommand()
+    {
+        return command;
+    }
     bool hasDeterminedDuration() override
     {
         return false;
     }
-    void performEntryActions() override;
-    void performExitActions() override;
+    void setExchangeCompleted()
+    {
+        exchangeCompleted = true;
+    }
 };
 
 

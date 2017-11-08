@@ -123,13 +123,14 @@ class GenericNode;
 class ExchangeCommand : public Command {
 protected:
     GenericNode *otherNode;
-    bool otherNodeKnown = true;
-    bool thisNodeHasDataToExchange = false;
+    bool thisNodeHasDataToExchange;
+    bool scheduleRechargeAfter;
 public:
-    ExchangeCommand(GenericNode *otherNode, bool transmitData = false);
+    ExchangeCommand(GenericNode *otherNode, bool scheduleRechargeAfter, bool transmitData);
     void setOtherNode(GenericNode* otherNode);
     GenericNode *getOtherNode();
     bool isOtherNodeKnown();
+    bool isRechargeRequested();
 };
 
 #endif /* COMMAND_H_ */

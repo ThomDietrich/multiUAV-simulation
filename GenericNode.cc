@@ -160,6 +160,7 @@ void GenericNode::handleMessage(cMessage *msg)
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         commandsRepeat = mmmsg->getMissionRepeat();
+        missionId = mmmsg->getMissionId();
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;
@@ -177,6 +178,9 @@ void GenericNode::handleMessage(cMessage *msg)
         }
     }
     else if (msg->isName("nextCommand")) {
+
+        if (commandExecEngine != nullptr) commandExecEngine->performExitActions();
+
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
             EV_WARN << "Command completed. Queue empty. This should not happen!" << endl;
@@ -229,7 +233,7 @@ bool GenericNode::hasCommandsInQueue()
  */
 void GenericNode::clearCommands()
 {
-    if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
+    //if (activeInField and not cees.empty()) EV_INFO << __func__ << "(): Pre-existing CEEs removed from node." << endl;
     cees.clear();
 }
 
@@ -239,18 +243,15 @@ void GenericNode::clearCommands()
  *
  * @return An execution neutral list of commands
  */
-CommandQueue GenericNode::extractCommands()
+CommandQueue* GenericNode::extractCommands()
 {
-    CommandQueue commands;
-    if (cees.empty()) return commands;
-
+    CommandQueue* commands = new CommandQueue();
     for (auto it = cees.begin(); it != cees.end(); it++) {
         CommandExecEngine *cee = *it;
         if (cee->isPartOfMission()) {
-            commands.push_back(cee->extractCommand());
+            commands->push_back(cee->extractCommand());
         }
     }
-    EV_INFO << __func__ << "(): " << commands.size() << " Commands extracted from memory" << endl;
     return commands;
 }
 
