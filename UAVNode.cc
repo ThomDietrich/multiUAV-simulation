@@ -58,53 +58,41 @@ void UAVNode::initialize(int stage)
 
 void UAVNode::handleMessage(cMessage *msg)
 {
-    if (msg->isName("exchangeInitialize")) {
-        EV_INFO << __func__ << "(): exchangeInitialize message received" << endl;
-
-        if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
-            EV_INFO << __func__ << "(): Node not in ExchangeCEE (yet). Ignoring message." << endl;
-            return;
-        }
-
-        ExchangeCEE *exchangeCEE = dynamic_cast<ExchangeCEE *>(commandExecEngine);
-
-        if (not exchangeCEE->dataTransferPerformed) {
-            UAVNode *node = dynamic_cast<UAVNode *>(exchangeCEE->getOtherNode());
-            transferMissionDataTo(node);
-            exchangeCEE->dataTransferPerformed = true;
-        }
-        delete msg;
-    }
-    else if (msg->isName("exchangeData")) {
+    if (msg->isName("exchangeData")) {
         EV_INFO << __func__ << "(): exchangeData message received" << endl;
 
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
-            EV_INFO << __func__ << "(): Node not in ExchangeCEE (any longer). Ignoring message." << endl;
+            EV_WARN << __func__ << "(): Node not in ExchangeCEE. Ignoring exchangeData message." << endl;
+            delete msg;
             return;
         }
 
-        ExchangeCEE *exchangeCEE = dynamic_cast<ExchangeCEE *>(commandExecEngine);
+        ExchangeCEE *exchangeCEE = check_and_cast<ExchangeCEE *>(commandExecEngine);
 
         // Send out mission data
         if (not exchangeCEE->dataTransferPerformed) {
-            UAVNode *node = dynamic_cast<UAVNode *>(exchangeCEE->getOtherNode());
+            UAVNode *node = check_and_cast<UAVNode *>(exchangeCEE->getOtherNode());
             transferMissionDataTo(node);
             exchangeCEE->dataTransferPerformed = true;
         }
 
         // Handle received mission data
-        MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
-        clearCommands();
-        missionId = receivedMissionMsg->getMissionId();
-        commandsRepeat = receivedMissionMsg->getMissionRepeat();
-        CommandQueue missionCommands = receivedMissionMsg->getMission();
-        loadCommands(missionCommands);
+        if (exchangeCEE->commandCompleted()) {
+            EV_WARN << __func__ << "(): Mission exchange already completed." << endl;
+        }
+        else {
+            MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
+            clearCommands();
+            missionId = receivedMissionMsg->getMissionId();
+            commandsRepeat = receivedMissionMsg->getMissionRepeat();
+            CommandQueue missionCommands = receivedMissionMsg->getMission();
+            loadCommands(missionCommands);
+
+            // End ExchangeCEE, will trigger next command selection
+            exchangeCEE->setExchangeCompleted();
+        }
 
         delete msg;
-
-        // End ExchangeCEE and execute next command
-        cMessage *nextCmdMsg = new cMessage("nextCommand");
-        scheduleAt(simTime(), nextCmdMsg);
     }
     else {
         GenericNode::handleMessage(msg);
@@ -120,7 +108,7 @@ void UAVNode::transferMissionDataTo(UAVNode* node)
     exDataMsg->setMissionId(missionId);
     cGate* gateToNode = getOutputGateTo(node);
     send(exDataMsg, gateToNode);
-    EV_INFO << __func__ << "(): " << missionCommands.size() << " commands sent to other node." << endl;
+    EV_INFO << __func__ << "(): " << missionCommands.size() << " commands extracted and sent to other node." << endl;
 }
 
 /**
@@ -168,7 +156,7 @@ void UAVNode::selectNextCommand()
         if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
 
         // Generate and inject ExchangeCEE
-        ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true);
+        ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
         CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
         exchangeCEE->setPartOfMission(false);
         cees.push_front(exchangeCEE);
@@ -394,7 +382,7 @@ ReplacementData* UAVNode::endOfOperation()
         CommandExecEngine *nextCEE = cees.at(nextCommandsFeasible % cees.size());
 
         if (not nextCEE->isPartOfMission()) {
-            EV_WARN << "endOfOperation(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
+            EV_WARN << __func__ << "(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
             return nullptr;
         }
         //TODO remove the following if the above works
@@ -419,7 +407,7 @@ ReplacementData* UAVNode::endOfOperation()
         //EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
 
         if (battery.getRemaining() < energySum + energyForNextCEE + energyToCNAfter) {
-            EV_INFO << "Maximum distance exceeded. " << nextCommandsFeasible << " commands feasible." << endl;
+            EV_INFO << __func__ << "(): " << nextCommandsFeasible << " commands feasible." << endl;
             break;
         }
         nextCommandsFeasible++;
@@ -476,7 +464,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
     double stddev;
     const u_int numAngles = 11;
     double samples[numAngles][3] = {
-// angle [°], mean current [A], current deviation [A]
+    // angle [°], mean current [A], current deviation [A]
             { -90.0, 16.86701, 0.7651131 }, //
             { -75.6, 17.97695, 0.7196844 }, //
             { -57.9, 17.34978, 0.6684724 }, //
@@ -489,7 +477,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
             { +75.6, 21.43493, 0.7625244 }, //
             { +90.0, 20.86530, 0.7350855 }  //
     };
-//Catch exactly -90°
+    //Catch exactly -90°
     if (angle == samples[0][0]) {
         mean = samples[0][1];
         stddev = samples[0][2];
@@ -532,7 +520,7 @@ double UAVNode::getSpeed(double angle)
 {
     const u_int numAngles = 11;
     double samples[numAngles][2] = {
-// angle [°], mean speed [m/s]
+    // angle [°], mean speed [m/s]
             { -90.0, 1.837303 }, //
             { -75.6, 1.842921 }, //
             { -57.9, 2.013429 }, //
@@ -545,7 +533,7 @@ double UAVNode::getSpeed(double angle)
             { +75.6, 2.719016 }, //
             { +90.0, 2.719048 }  //
     };
-//Catch exactly -90°
+    //Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
     // simple linear interpolation

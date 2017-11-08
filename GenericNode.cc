@@ -252,7 +252,6 @@ CommandQueue* GenericNode::extractCommands()
             commands->push_back(cee->extractCommand());
         }
     }
-    EV_INFO << __func__ << "(): " << commands->size() << " Commands extracted from memory" << endl;
     return commands;
 }
 

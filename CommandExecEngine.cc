@@ -360,7 +360,7 @@ ExchangeCEE::ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command)
 
 bool ExchangeCEE::commandCompleted()
 {
-    return false;
+    return exchangeCompleted;
 }
 
 void ExchangeCEE::initializeCEE()
@@ -412,34 +412,35 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
-    EV_INFO << __func__ << "(): Ready for exchange, notifying other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
+    EV_INFO << __func__ << "(): Ready for exchange, sending data to other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
 
-    // Send an exchangeInitialize message to the other node taking part in the exchange
-    cMessage *exInitMsg = new cMessage("exchangeInitialize");
-    cGate* gateToNode = node->getOutputGateTo(command->getOtherNode());
-    node->send(exInitMsg, gateToNode);
+    // Send an exchangeData message to the other node taking part in the exchange
+    UAVNode *otherNode = check_and_cast<UAVNode *>(command->getOtherNode());
+    node->transferMissionDataTo(otherNode);
 }
 
 void ExchangeCEE::performExitActions()
 {
-    // Find nearest ChargingNode
-    ChargingNode *cn = UAVNode::findNearestCN(node->getX(), node->getY(), node->getZ());
+    if (command->isRechargeRequested()) {
+        // Find nearest ChargingNode
+        ChargingNode *cn = UAVNode::findNearestCN(node->getX(), node->getY(), node->getZ());
 
-    // Generate WaypointCEE
-    WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-    CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
-    goToChargingNodeCEE->setPartOfMission(false);
+        // Generate WaypointCEE
+        WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
+        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
+        goToChargingNodeCEE->setPartOfMission(false);
 
-    // Generate ChargeCEE
-    ChargeCommand *chargeCommand = new ChargeCommand(cn);
-    CommandExecEngine *chargeCEE = new ChargeCEE(node, chargeCommand);
-    chargeCEE->setPartOfMission(false);
+        // Generate ChargeCEE
+        ChargeCommand *chargeCommand = new ChargeCommand(cn);
+        CommandExecEngine *chargeCEE = new ChargeCEE(node, chargeCommand);
+        chargeCEE->setPartOfMission(false);
 
-    // Add WaypointCEE and ChargeCEE to the CEEs queue
-    node->cees.push_front(chargeCEE);
-    node->cees.push_front(goToChargingNodeCEE);
+        // Add WaypointCEE and ChargeCEE to the CEEs queue
+        node->cees.push_front(chargeCEE);
+        node->cees.push_front(goToChargingNodeCEE);
 
-    EV_INFO << __func__ << "(): GoToChargingNode and Charge CEE added to node." << endl;
+        EV_INFO << __func__ << "(): GoToChargingNode and Charge CEE added to node." << endl;
+    }
 }
 
 GenericNode* ExchangeCEE::getOtherNode()

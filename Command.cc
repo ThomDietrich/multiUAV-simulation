@@ -116,9 +116,10 @@ ChargingNode* ChargeCommand::getChargingNode()
 /**
  *
  */
-ExchangeCommand::ExchangeCommand(GenericNode* otherNode, bool transmitData)
+ExchangeCommand::ExchangeCommand(GenericNode* otherNode, bool scheduleRechargeAfter, bool transmitData)
 {
     this->otherNode = otherNode;
+    this->scheduleRechargeAfter = scheduleRechargeAfter;
     this->thisNodeHasDataToExchange = transmitData;
 }
 
@@ -135,4 +136,9 @@ GenericNode* ExchangeCommand::getOtherNode()
 bool ExchangeCommand::isOtherNodeKnown()
 {
     return (otherNode == nullptr) ? false : true;
+}
+
+bool ExchangeCommand::isRechargeRequested()
+{
+    return scheduleRechargeAfter;
 }

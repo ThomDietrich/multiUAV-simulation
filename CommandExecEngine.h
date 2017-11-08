@@ -365,6 +365,7 @@ class ExchangeCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     ExchangeCommand *command;
+    bool exchangeCompleted = false;
 public:
     ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command);
     bool commandCompleted() override;
@@ -389,6 +390,10 @@ public:
     bool hasDeterminedDuration() override
     {
         return false;
+    }
+    void setExchangeCompleted()
+    {
+        exchangeCompleted = true;
     }
 };
 
