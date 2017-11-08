@@ -155,11 +155,14 @@ void UAVNode::selectNextCommand()
 
         if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
 
-        // Generate and inject ExchangeCEE
-        ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
-        CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
-        exchangeCEE->setPartOfMission(false);
-        cees.push_front(exchangeCEE);
+        // Generate and inject ExchangeCEE, only if not already done
+        if (scheduledCEE->isPartOfMission()) {
+            ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
+            CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
+            exchangeCEE->setPartOfMission(false);
+            cees.push_front(exchangeCEE);
+            EV_INFO << __func__ << "(): ExchangeCEE added to node." << endl;
+        }
     }
 
     // Activate next CEE
