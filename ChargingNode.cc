@@ -32,7 +32,9 @@ void ChargingNode::initialize(int stage)
     GenericNode::initialize(stage);
     switch (stage) {
         case 0:
-            this->spotsWaiting = 5;
+            // spotsWaiting = 0 -> unlimited spots.
+            // if limit is insufficient an info will be printed and the simulation possibly breaks down
+            this->spotsWaiting = 0;
             this->spotsCharging = 2;
             this->chargingCurrent = 2000;
             this->x = par("posX");
@@ -184,7 +186,8 @@ double ChargingNode::getForecastRemainingToPointInTime(double remaining, double 
 
 void ChargingNode::appendToObjectsWaiting(MobileNode* mn)
 {
-    if(this->objectsWaiting.size() >= this->spotsWaiting) {
+    if(this->objectsWaiting.size() >= this->spotsWaiting
+            && this->spotsWaiting != 0) {
         EV_INFO << "All spots for waiting ("<< spotsWaiting <<") are already taken." << endl;
         return;
     }
