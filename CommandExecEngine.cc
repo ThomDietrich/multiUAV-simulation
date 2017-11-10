@@ -411,3 +411,57 @@ char* ExchangeCEE::getCeeTypeString()
 {
     return (char*) "Exchange";
 }
+
+/**
+ *  Todo: Review weather the WaitCEE should be simplyfied
+ *  Currently there is no drawn comsumption during waiting
+ */
+WaitCEE::WaitCEE(MobileNode& boundNode, WaitCommand& command)
+{
+    this->node = &boundNode;
+    this->command = &command;
+    this->setType(CeeType::CHARGE);
+}
+
+bool WaitCEE::commandCompleted()
+{
+    return false;
+}
+
+void WaitCEE::initializeCEE()
+{
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
+}
+
+void WaitCEE::setNodeParameters()
+{
+
+}
+
+void WaitCEE::updateState(double stepSize)
+{
+    node->getBattery()->discharge(consumptionPerSecond * stepSize);
+}
+
+double WaitCEE::getDuration()
+{
+    throw cRuntimeError("WaitCEE has no determined ending time");
+    return 1;
+}
+
+double WaitCEE::getRemainingTime()
+{
+    throw cRuntimeError("WaitCEE has no determined ending time");
+    return 1;
+}
+
+double WaitCEE::getProbableConsumption(bool normalized, float percentile)
+{
+    return 0;
+}
+
+char* WaitCEE::getCeeTypeString()
+{
+    return (char*) "Wait";
+}

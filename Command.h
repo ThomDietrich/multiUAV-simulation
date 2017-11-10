@@ -124,4 +124,12 @@ public:
     ExchangeCommand();
 };
 
+/**
+ * The vehicle will wait at the current location until further notice.
+ */
+class WaitCommand : public Command {
+public:
+    WaitCommand();
+};
+
 #endif /* COMMAND_H_ */

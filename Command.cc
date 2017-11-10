@@ -119,3 +119,12 @@ ChargingNode* ChargeCommand::getChargingNode()
 ExchangeCommand::ExchangeCommand()
 {
 }
+
+/**
+ *
+ * @param seconds
+ */
+WaitCommand::WaitCommand()
+{
+    this->setMessageName("wait");
+}

@@ -25,7 +25,7 @@ using namespace omnetpp;
 class MobileNode;
 
 enum class CeeType {
-    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE, EXCHANGE
+    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE, EXCHANGE, WAIT
 };
 
 /**
@@ -308,6 +308,29 @@ protected:
     ExchangeCommand *command;
 public:
     ExchangeCEE(UAVNode &boundNode, ExchangeCommand &command);
+    bool commandCompleted() override;
+    void initializeCEE() override;
+    void setNodeParameters() override;
+    void updateState(double stepSize) override;
+    double getDuration() override;
+    double getRemainingTime() override;
+    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    char* getCeeTypeString() override;
+    bool hasDeterminedDuration() override
+    {
+        return false;
+    }
+};
+
+/**
+ * Wait Command Execution Engine
+ */
+class WaitCEE : public CommandExecEngine {
+protected:
+    MobileNode *node;
+    WaitCommand *command;
+public:
+    WaitCEE(MobileNode &boundNode, WaitCommand &command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
