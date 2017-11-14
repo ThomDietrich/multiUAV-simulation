@@ -21,6 +21,8 @@
 #include "ChargingNodeSpotElement.h"
 #include "Battery.h"
 #include "msgs/ResponseForecastMsg.h"
+#include "Command.h"
+#include "CommandExecEngine.h"
 
 using namespace omnetpp;
 
@@ -32,6 +34,7 @@ protected:
     unsigned int spotsCharging;
     std::deque<ChargingNodeSpotElement> objectsWaiting;
     std::deque<ChargingNodeSpotElement> objectsCharging;
+    std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
     double usedPower;
     int chargedUAVs;

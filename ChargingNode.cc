@@ -225,9 +225,16 @@ void ChargingNode::charge()
 
         if(this->objectsCharging[i].getNode()->getBattery()->isFull()) {
             EV_INFO << "UAV in slot " << i <<" is fully charged." << endl;
+            // Send wait message to node
+            send(new cMessage("wait"), this->getOutputGateTo(this->objectsCharging[i].getNode()));
+            // Send a message to the node which signalizes that the charge process is finished
             send(new cMessage("nextCommand"), this->getOutputGateTo(this->objectsCharging[i].getNode()));
+            // Push fully charged nodes to the corresponding list
+            this->objectsFinished.push_back(this->objectsCharging[i].getNode());
             // ToDo remove the right element and not the first one.
             this->objectsCharging.erase(this->objectsCharging.begin());
+
+            // increment the statistics value
             this->chargedUAVs++;
             break;
         }
@@ -321,6 +328,9 @@ double ChargingNode::getEstimatedWaitingSeconds() {
     return *std::min_element(waitingTimes, waitingTimes+this->objectsCharging.size());
 }
 
+/*
+ * Returns the point in time when the given objects is fully charged
+ */
 simtime_t ChargingNode::getPointInTimeWhenDone(ChargingNodeSpotElement spotElement) {
     return simTime() + spotElement.getEstimatedChargeDuration() + spotElement.getEstimatedWaitingDuration();
 }
