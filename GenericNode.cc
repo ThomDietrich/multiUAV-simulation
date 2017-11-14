@@ -201,9 +201,11 @@ void GenericNode::handleMessage(cMessage *msg)
         msg->setName("update");
     }
     else {
-        std::string message = "Unknown message name encountered: ";
+        // Message is unknown for Generic Node, child classes may handle those messages
+        std::string message = "Unknown message name in Generic Node encountered: ";
         message += msg->getFullName();
-        throw cRuntimeError(message.c_str());
+        EV_INFO << message << endl;
+        return;
     }
 
     // schedule next update
