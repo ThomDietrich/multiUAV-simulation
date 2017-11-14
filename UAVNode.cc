@@ -129,7 +129,8 @@ void UAVNode::selectNextCommand()
     // reinject command (if no charging or takeoff command)
     if (commandsRepeat && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF) //
             && not (commandExecEngine->getCeeType() == CeeType::CHARGE) //
-            && not (commandExecEngine->getCeeType() == CeeType::EXCHANGE)) {
+            && not (commandExecEngine->getCeeType() == CeeType::EXCHANGE)
+            && not (commandExecEngine->getCeeType() == CeeType::WAIT)) {
         cees.push_back(commandExecEngine);
     }
 }
@@ -163,6 +164,9 @@ void UAVNode::initializeState()
             break;
         case CeeType::EXCHANGE:
             text += " EX";
+            break;
+        case CeeType::WAIT:
+            text += " WA";
             break;
     }
     labelNode->setText(text);
