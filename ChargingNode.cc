@@ -75,28 +75,20 @@ void ChargingNode::refreshDisplay() const
 
 void ChargingNode::handleMessage(cMessage* msg)
 {
-    // GenericNode::handleMessage(msg);
+    GenericNode::handleMessage(msg);
+
     if (msg->isName("startCharge")) {
         EV_INFO << "UAV is ready to get charged" << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         this->appendToObjectsWaiting(mn);
 
-        // ToDo: add update messages once per station instead of once per uav
         this->scheduleAt(simTime(), new cMessage("update"));
 
     } else if (msg->isName("onMyWay")) {
         //ToDo add arrival time and "reserve" a spot.
         EV_INFO << "UAV is on the way to CS, reserve spot" << endl;
 
-    } else if (msg->isName("update")) {
-        this->updateState();
-        // ToDo dont update when there is "nothing to do" -> all spots empty
-        this->scheduleAt(simTime()+nextNeededUpdate(), new cMessage("update"));
-
     } else if (msg->isName("requestForecastRemainingToTarget")) {
-        // EV_DEBUG << "Test Remaining: " << msg->getParListPtr()->get("remaining")->str() << endl;
-        // EV_DEBUG << "Test Capacity: " << msg->getParListPtr()->get("capacity")->str() << endl;
-        // EV_DEBUG << "Test targetPercentage: " << msg->getParListPtr()->get("targetPercentage")->str() << endl;
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
         double capacity = stod(msg->getParListPtr()->get("capacity")->str());
         double targetPercentage = stod(msg->getParListPtr()->get("targetPercentage")->str());
@@ -106,9 +98,6 @@ void ChargingNode::handleMessage(cMessage* msg)
         cMessage *response = new ResponseForecastMsg(forecastPointInTime, targetPercentage);
         GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
         this->send(response, this->getOutputGateTo(sender));
-
-        // EV_DEBUG << "Forecast: " << forecast << endl;
-        EV_DEBUG << "Forecast point In Time: " << forecastPointInTime << endl;
 
     } else if (msg->isName("requestForecastRemainingToPointInTime")) {
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
@@ -121,7 +110,8 @@ void ChargingNode::handleMessage(cMessage* msg)
         this->send(response, this->getOutputGateTo(sender));
 
     } else {
-        EV_INFO << "Received Message with unknown name: " << msg->getName() << endl;
+        // Message is unknown for Charging Node, child classes may handle those messages
+        return;
     }
 }
 
@@ -135,7 +125,6 @@ void ChargingNode::initializeState()
 
 void ChargingNode::updateState()
 {
-    EV_DEBUG << "Update ChargingStation State!" << endl;
     this->fillSpots();
     if(this->objectsCharging.size() == 0) {
         return;
@@ -148,6 +137,12 @@ bool ChargingNode::commandCompleted()
     return false;
 }
 
+/**
+ * Calculates the seconds till the next event (a node being done with charging).
+ * When there is no next event a placeholder value (10 seconds) is returned.
+ *
+ * @return double, seconds till next event
+ */
 double ChargingNode::nextNeededUpdate()
 {
     simtime_t currentTime = simTime();
@@ -156,34 +151,37 @@ double ChargingNode::nextNeededUpdate()
         if(this->objectsCharging[i].getPointInTimeWhenDone().dbl()-currentTime.dbl() < nextEvent
                 || nextEvent == -1) {
             nextEvent = this->objectsCharging[i].getPointInTimeWhenDone().dbl()-currentTime.dbl();
-            EV_DEBUG << "pointInTimeWhenDone: " << this->objectsCharging[i].getPointInTimeWhenDone().dbl() << endl;
-            EV_DEBUG << "currentTime: " << currentTime.dbl() << endl;
-            EV_DEBUG << "nextEvent: " << nextEvent << endl;
         }
     }
 
-    // ToDo refactor
     if(nextEvent == -1) {
         // ToDo Review minimum time without a upcoming event
         return std::max(timeStep, 10.0);
-    }
-    if(this->timeStep == 0) {
-        return nextEvent;
     } else {
-        return std::min(timeStep, nextEvent);
+        return nextEvent;
     }
 }
 
+/**
+ * @return double, seconds till X -> Y charged
+ */
 double ChargingNode::getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage) {
     // ToDo inlcude targetPercentage
     return this->calculateChargeTime(remaining, capacity);
 }
 
+/**
+ * @return double, charge percentage for a given point in time
+ */
 double ChargingNode::getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime) {
     double chargeAmount = this->calculateChargeAmount(remaining, capacity, (pointInTime - simTime() - this->getEstimatedWaitingSeconds()).dbl());
     return capacity / (remaining + chargeAmount);
 }
 
+/**
+ * Appends a MobileNode to the waiting queue.
+ * Estimated wait and charge duration get calculated and appended.
+ */
 void ChargingNode::appendToObjectsWaiting(MobileNode* mn)
 {
     if(this->objectsWaiting.size() >= this->spotsWaiting
@@ -199,14 +197,17 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mn)
             this->getEstimatedWaitingSeconds());
     EV_DEBUG << "waiting time: " << element.getEstimatedWaitingDuration() << endl;
     EV_DEBUG << "charging: " << element.getEstimatedChargeDuration() << endl;
-    EV_DEBUG << "battery missing: " << element.getNode()->getBattery()->getMissing() << endl;
-    EV_DEBUG << "charging amount lin: " << chargeTimeLinear << endl;
-    EV_DEBUG << "charging amount non-lin: " << chargeTimeNonLinear << endl;
+//    EV_DEBUG << "battery missing: " << element.getNode()->getBattery()->getMissing() << endl;
+//    EV_DEBUG << "charging amount lin: " << chargeTimeLinear << endl;
+//    EV_DEBUG << "charging amount non-lin: " << chargeTimeNonLinear << endl;
 
     this->objectsWaiting.push_back(element);
     EV_INFO << "The module got appended to a waiting spot." << endl;
 }
 
+/**
+ * Moves MobileNodes from the waiting queue to the charging spots if possible.
+ */
 void ChargingNode::fillSpots()
 {
     while(this->spotsCharging > this->objectsCharging.size()
@@ -218,6 +219,10 @@ void ChargingNode::fillSpots()
     }
 }
 
+/**
+ * Charges the nodes placed on the charging spots depending on the last update.
+ * Afterwards updates the last update timestamp and adds the used power to the statistics.
+ */
 void ChargingNode::charge()
 {
     for(unsigned int i = 0; i < this->objectsCharging.size(); i++) {
@@ -250,43 +255,58 @@ void ChargingNode::charge()
     }
 }
 
+/**
+ * Calculates the charge amount for a given amount of time depending on the remaining current and the capacity.
+ * Combines the linear and the non-linear values.
+ * ToDo: Adapt to real values.
+ * @return float, charge amount for X seconds
+ */
 float ChargingNode::calculateChargeAmount(double remaining, double capacity, double seconds)
 {
     if(remaining == capacity) {
         return 0;
     }
     // linear
+    // either use the given seconds or the maximum possible linear charge time
     double linearChargeTime = std::min(seconds, this->calculateChargeTimeLinear(remaining, capacity));
     float chargeAmountLinear = this->calculateChargeAmountLinear(linearChargeTime);
     seconds = seconds - linearChargeTime;
 
     // non linear
+    // either use the remaining seconds (given - linear) or the maximum possible non-linear charge time
     double nonLinearChargeTime = std::min(seconds, this->calculateChargeTimeNonLinear(remaining, capacity));
     float chargeAmountNonLinear = this->calculateChargeAmountNonLinear(nonLinearChargeTime, remaining / capacity);
-    //    EV_DEBUG << "seconds non-l: " << seconds << endl;
-    //    EV_DEBUG << "non-l charge time: " << nonLinearChargeTime << endl;
-    //    EV_DEBUG << "non-l charge amount: " << chargeAmountNonLinear << endl;
 
     return chargeAmountLinear + chargeAmountNonLinear;
 }
 
-// ToDo Implement real values.
+/**
+ * ToDo Implement real (linear) values.
+ * @return float, charge amount for given seconds
+ */
 float ChargingNode::calculateChargeAmountLinear(double seconds) {
-    return seconds * 1;
+    return seconds * 10;
 }
 
-// ToDo Implement real (nonlinear) values.
+/**
+ * ToDo Implement real (nonlinear) values.
+ * @return float, charge amount for given seconds
+ */
 float ChargingNode::calculateChargeAmountNonLinear(double seconds, double remainingPercentage) {
-    return seconds * 0.5;
+    return seconds * 5;
 }
 
+/**
+ * ToDo Add targetCapacity
+ * @return double, seconds till fully charged
+ */
 double ChargingNode::calculateChargeTime(double remaining, double capacity) {
     return this->calculateChargeTimeLinear(remaining, capacity) + this->calculateChargeTimeNonLinear(remaining, capacity);
 }
 
 /*
- * Returns the time (in seconds) for the linear charging process
- * ToDo implement targetCapacity (not every node should be loaded to 100%)
+ * ToDo Adapt to real values
+ * @return double, seconds till linear charging process is finished (currently 90%)
  */
 double ChargingNode::calculateChargeTimeLinear(double remaining, double capacity) {
     if(capacity*0.9 < remaining) {
@@ -296,8 +316,8 @@ double ChargingNode::calculateChargeTimeLinear(double remaining, double capacity
 }
 
 /*
- * Returns the time (in seconds) for the nonlinear charging process
- * ToDo Adapt return for Non Linear function
+ * ToDo Adapt to real values
+ * @return double, seconds till non linear charging process is finished (90% to 100%)
  */
 double ChargingNode::calculateChargeTimeNonLinear(double remaining, double capacity) {
     if(remaining == capacity) {
@@ -311,7 +331,7 @@ double ChargingNode::calculateChargeTimeNonLinear(double remaining, double capac
 }
 
 /*
- * Returns the time (in seconds) a new added node would have to wait before the charge phase is started
+ * @return double, seconds to wait before a newly added node would enter a charging spot
  */
 double ChargingNode::getEstimatedWaitingSeconds() {
     // initialize an Array witht he size of chargingSpots with 0's
@@ -326,13 +346,6 @@ double ChargingNode::getEstimatedWaitingSeconds() {
         *std::min_element(waitingTimes, waitingTimes+this->objectsCharging.size()) += this->objectsWaiting[w].getEstimatedChargeDuration();
     }
     return *std::min_element(waitingTimes, waitingTimes+this->objectsCharging.size());
-}
-
-/*
- * Returns the point in time when the given objects is fully charged
- */
-simtime_t ChargingNode::getPointInTimeWhenDone(ChargingNodeSpotElement spotElement) {
-    return simTime() + spotElement.getEstimatedChargeDuration() + spotElement.getEstimatedWaitingDuration();
 }
 
 #endif // WITH_OSG
