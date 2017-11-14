@@ -295,9 +295,6 @@ void ChargeCEE::initializeCEE()
 {
     pitch = 0;
     climbAngle = 0;
-
-    // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
 }
 
 void ChargeCEE::setNodeParameters()
@@ -311,36 +308,25 @@ void ChargeCEE::setNodeParameters()
 
 void ChargeCEE::updateState(double stepSize)
 {
-//    float chargeAmount = fabs(consumptionPerSecond * stepSize);
-//    node->battery.charge(chargeAmount);
-
-    // Charging state log report
-    int statusReport = 20; // reported these much values between 0..100%
-    float statusReportChargeSteps = (node->battery.getCapacity() / statusReport);
-    //EV_DEBUG << "chargeAmount " << chargeAmount << " statusReportChargeSteps " << statusReportChargeSteps << " node->battery.getRemaining() "
-    //        << node->battery.getRemaining() << " fmod " << fmod(node->battery.getRemaining(), statusReportChargeSteps) << endl;
-//    if (fmod(node->battery.getRemaining(), statusReportChargeSteps) < chargeAmount) {
-//        EV_INFO << "Energy Management: Recharging... " << node->battery.getRemainingPercentage() << "%" << endl;
-//    }
+    // ToDo Review: should this stay empty?
 }
 
 double ChargeCEE::getDuration()
 {
-    return node->battery.getCapacity() / fabs(consumptionPerSecond);
+    // ToDo: can this integrate the forecast from charging station?
+    throw cRuntimeError("ChargeCEE has no determined ending time");
+    return 1;
 }
 
 double ChargeCEE::getRemainingTime()
 {
-    return node->battery.getMissing() / fabs(consumptionPerSecond);
+    throw cRuntimeError("ChargeCEE has no determined ending time");
+    return 1;
 }
 
 double ChargeCEE::getProbableConsumption(bool normalized, float percentile)
 {
-    if (normalized == false) EV_WARN << __func__ << "(): non-normalized currently not supported for ChargeCEE" << endl;
-    if (isnormal(percentile)) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
-    // 3DR Solo: 5200 mAh in 1.5h = 3.5A constant -> 3.5Ah = 3500 mAh -> 0,97222 mAh / s
     return 0;
-    return -0.97222;
 }
 
 char* ChargeCEE::getCeeTypeString()

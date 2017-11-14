@@ -297,6 +297,10 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
+    bool hasDeterminedDuration() override
+    {
+        return false;
+    }
 };
 
 /**
