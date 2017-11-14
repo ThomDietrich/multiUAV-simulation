@@ -92,8 +92,6 @@ protected:
     double calculateChargeTimeLinear(double remaining, double capacity);
     double calculateChargeTimeNonLinear(double remaining, double capacity);
     double getEstimatedWaitingSeconds();
-    simtime_t getPointInTimeWhenDone(ChargingNodeSpotElement spotElement);
-
 };
 
 #endif /* CHARGINGNODE_H_ */
