@@ -13,24 +13,25 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef MSGS_RESPONSEFORECASTMSG_H_
-#define MSGS_RESPONSEFORECASTMSG_H_
+#ifndef MSGS_RESPONSEMOBILENODEMSG_H_
+#define MSGS_RESPONSEMOBILENODEMSG_H_
 
 #include <omnetpp.h>
+#include "../MobileNode.h"
 
 using namespace omnetpp;
 
 /*
- * The class ResponseForecastMsg provides a wrapper for cMessage class,
+ * The class ResponseMobileNodeMsg provides a wrapper for cMessage class,
  * intended to make generation of particular messages as easy as possible.
  */
-class ResponseForecastMsg : public cMessage {
+class ResponseMobileNodeMsg : public cMessage{
 public:
-    ResponseForecastMsg(simtime_t pointInTime, double targetPercentage = 100.0);
-    virtual ~ResponseForecastMsg();
+    ResponseMobileNodeMsg(MobileNode* mobileNode);
+    virtual ~ResponseMobileNodeMsg();
 
 protected:
-    void addParameters(simtime_t pointInTime, double targetPercentage);
+    void addParameters(MobileNode* mobileNode);
 };
 
-#endif /* MSGS_RESPONSEFORECASTMSG_H_ */
+#endif /* MSGS_RESPONSEMOBILENODEMSG_H_ */

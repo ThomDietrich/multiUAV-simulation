@@ -21,8 +21,10 @@
 #include "ChargingNodeSpotElement.h"
 #include "Battery.h"
 #include "msgs/ResponseForecastMsg.h"
+#include "msgs/ResponseMobileNodeMsg.h"
 #include "Command.h"
 #include "CommandExecEngine.h"
+#include "MobileNode.h"
 
 using namespace omnetpp;
 
@@ -51,6 +53,7 @@ public:
     virtual ReplacementData* endOfOperation() override;
     double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
     double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
+    MobileNode* getSufficientlyChargedNode(double current);
     // Getters
     double getChargingCurrent() const
     {

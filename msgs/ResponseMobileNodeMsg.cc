@@ -13,27 +13,23 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include "ResponseForecastMsg.h"
+#include "ResponseMobileNodeMsg.h"
 
-ResponseForecastMsg::ResponseForecastMsg(simtime_t pointInTime, double targetPercentage)
+ResponseMobileNodeMsg::ResponseMobileNodeMsg(MobileNode* mobileNode)
 {
-    this->setName("responseForecast");
-    this->addParameters(pointInTime, targetPercentage);
+    this->setName("responseMobileNode");
+    this->addParameters(mobileNode);
 }
 
-ResponseForecastMsg::~ResponseForecastMsg()
+ResponseMobileNodeMsg::~ResponseMobileNodeMsg()
 {
     // TODO Auto-generated destructor stub
 }
 
-void ResponseForecastMsg::addParameters(simtime_t pointInTime, double targetPercentage)
+void ResponseMobileNodeMsg::addParameters(MobileNode* mobileNode)
 {
-    cMsgPar *pointInTimePar = new cMsgPar("pointInTime");
-    pointInTimePar->setDoubleValue(pointInTime.dbl());
-    cMsgPar *targetPercentagePar = new cMsgPar("targetPercentage");
-    targetPercentagePar->setDoubleValue(targetPercentage);
+    cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
+    mobileNodePar->setPointerValue(mobileNode);
 
-    this->addPar(pointInTimePar);
-    this->addPar(targetPercentagePar);
+    this->addPar(mobileNodePar);
 }
-

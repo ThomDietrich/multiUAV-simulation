@@ -109,6 +109,14 @@ void ChargingNode::handleMessage(cMessage* msg)
         GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
         this->send(response, this->getOutputGateTo(sender));
 
+    } else if(msg->isName("requestMobileNode")) {
+        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
+        MobileNode* sufficientNode = this->getSufficientlyChargedNode(remaining);
+
+        cMessage *response = new ResponseMobileNodeMsg(sufficientNode);
+        GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
+        this->send(response, this->getOutputGateTo(sender));
+
     } else {
         // Message is unknown for Charging Node, child classes may handle those messages
         return;
@@ -176,6 +184,44 @@ double ChargingNode::getForecastRemainingToTarget(double remaining, double capac
 double ChargingNode::getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime) {
     double chargeAmount = this->calculateChargeAmount(remaining, capacity, (pointInTime - simTime() - this->getEstimatedWaitingSeconds()).dbl());
     return capacity / (remaining + chargeAmount);
+}
+
+/**
+ * ToDo: Refactor according to DRY
+ * Won't work as good as possible when nodes have different energy consumption.
+ * @return MobileNode*|nullptr, node with lowest sufficent remaining current, if there is no suitable nullptr
+ */
+MobileNode* ChargingNode::getSufficientlyChargedNode(double current)
+{
+    MobileNode* sufficientlyChargedNode = nullptr;
+    for(unsigned int i = 0; i < this->objectsFinished.size(); i++) {
+        if(sufficientlyChargedNode == nullptr) {
+            sufficientlyChargedNode = this->objectsFinished[i];
+        }
+        if(sufficientlyChargedNode->getBattery()->getRemaining() > current
+                && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
+            sufficientlyChargedNode = this->objectsFinished[i];
+        }
+    }
+    for(unsigned int i = 0; i < this->objectsWaiting.size(); i++) {
+        if(sufficientlyChargedNode == nullptr) {
+            sufficientlyChargedNode = this->objectsWaiting[i].getNode();
+        }
+        if(sufficientlyChargedNode->getBattery()->getRemaining() > current
+                && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
+            sufficientlyChargedNode = this->objectsWaiting[i].getNode();
+        }
+    }
+    for(unsigned int i = 0; i < this->objectsCharging.size(); i++) {
+        if(sufficientlyChargedNode == nullptr) {
+            sufficientlyChargedNode = this->objectsCharging[i].getNode();
+        }
+        if(sufficientlyChargedNode->getBattery()->getRemaining() > current
+                && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
+            sufficientlyChargedNode = this->objectsCharging[i].getNode();
+        }
+    }
+    return sufficientlyChargedNode;
 }
 
 /**
