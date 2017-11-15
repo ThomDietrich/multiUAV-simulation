@@ -187,6 +187,7 @@ protected:
     virtual void updateState() = 0;
     virtual bool commandCompleted() = 0;
     virtual void selectNextCommand() = 0;
+    virtual void collectStatistics() = 0;
 
     /**
      * Execute once after new command was selected.

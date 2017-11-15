@@ -53,6 +53,8 @@ protected:
     /// CEEs can be part of a mission or special inserted commands, e.g. for maintenance
     bool partOfMission = true;
 
+    simtime_t timeExecutionStart = 0;
+
 public:
     //CommandExecEngine(SubclassNode* boundNode, SpecializedCommand* command) { };
 
@@ -156,13 +158,22 @@ public:
     }
 
     /**
-     * Get the overall duration expected for the CEE.
+     * Get the overall duration for the CEE in seconds.
      */
-    virtual double getDuration() = 0;
+    virtual double getOverallDuration() = 0;
+
+    /**
+     * Get the duration so far, for an CEE in execution
+     */
+    double getDuration()
+    {
+        if (timeExecutionStart == 0) throw cRuntimeError("getDuration(): CEE not yet started");
+        return (simTime() - timeExecutionStart).dbl();
+    }
 
     /**
      * Get the remaining time the CEE is still active.
-     * Is the same as getDuration() before execution of the CEE.
+     * Is the same as getOverallDuration() before execution of the CEE.
      */
     virtual double getRemainingTime() = 0;
 
@@ -172,6 +183,7 @@ public:
      * The result is drawn from a stochastic distribution.
      *
      * @param normalized Decide if the full consumption should be returned (false) or a normalized energy amount per second (true)
+     * @param percentile The percentile to apply to the inverse normal distribution function, in the range 0..1
      * @return statistical consumption, in [mAh] (normalized == false) or [mAh/s] (normalized == true)
      */
     virtual double getProbableConsumption(bool normalized = true, float percentile = NAN) = 0;
@@ -269,7 +281,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getDuration() override;
+    double getOverallDuration() override;
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
@@ -296,7 +308,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getDuration() override;
+    double getOverallDuration() override;
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
@@ -323,7 +335,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getDuration() override;
+    double getOverallDuration() override;
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
@@ -347,7 +359,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getDuration() override;
+    double getOverallDuration() override;
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
@@ -372,7 +384,7 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getDuration() override;
+    double getOverallDuration() override;
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;

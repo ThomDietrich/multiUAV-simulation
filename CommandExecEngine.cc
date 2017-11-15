@@ -70,6 +70,7 @@ void WaypointCEE::setNodeParameters()
     node->pitch = pitch;
     node->climbAngle = climbAngle;
     node->speed = speed;
+    timeExecutionStart = simTime();
 }
 
 void WaypointCEE::updateState(double stepSize)
@@ -89,7 +90,7 @@ void WaypointCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double WaypointCEE::getDuration()
+double WaypointCEE::getOverallDuration()
 {
     double dx = x1 - x0;
     double dy = y1 - y0;
@@ -163,6 +164,7 @@ void TakeoffCEE::setNodeParameters()
     node->pitch = pitch;
     node->climbAngle = climbAngle;
     node->speed = speed;
+    timeExecutionStart = simTime();
 }
 
 void TakeoffCEE::updateState(double stepSize)
@@ -176,7 +178,7 @@ void TakeoffCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double TakeoffCEE::getDuration()
+double TakeoffCEE::getOverallDuration()
 {
     return fabs(z1 - z0) / speed;
 }
@@ -237,6 +239,7 @@ void HoldPositionCEE::setNodeParameters()
     //node->yaw = yaw;
     node->pitch = pitch;
     node->climbAngle = climbAngle;
+    timeExecutionStart = simTime();
 }
 
 void HoldPositionCEE::updateState(double stepSize)
@@ -244,7 +247,7 @@ void HoldPositionCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double HoldPositionCEE::getDuration()
+double HoldPositionCEE::getOverallDuration()
 {
     return (this->command->getHoldSeconds());
 }
@@ -306,6 +309,7 @@ void ChargeCEE::setNodeParameters()
 {
     node->pitch = pitch;
     node->climbAngle = climbAngle;
+    timeExecutionStart = simTime();
 }
 
 void ChargeCEE::updateState(double stepSize)
@@ -323,7 +327,7 @@ void ChargeCEE::updateState(double stepSize)
     }
 }
 
-double ChargeCEE::getDuration()
+double ChargeCEE::getOverallDuration()
 {
     return node->battery.getCapacity() / fabs(consumptionPerSecond);
 }
@@ -378,6 +382,7 @@ void ExchangeCEE::setNodeParameters()
     //node->yaw = yaw;
     node->pitch = pitch;
     node->climbAngle = climbAngle;
+    timeExecutionStart = simTime();
 }
 
 void ExchangeCEE::updateState(double stepSize)
@@ -385,7 +390,7 @@ void ExchangeCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double ExchangeCEE::getDuration()
+double ExchangeCEE::getOverallDuration()
 {
     throw cRuntimeError("ExchangeCEE has no determined ending time");
     return 1;

@@ -47,6 +47,13 @@ protected:
     double speed; //speed (3D) in [m/s]
     Battery battery; //energy storage
 
+    double utilizationSecMission = 0;
+    double utilizationSecMaintenance = 0;
+    double utilizationSecIdle = 0;
+
+    double utilizationEnergyMission = 0;
+    double utilizationEnergyMaintenance = 0;
+
 public:
     MobileNode();
     virtual ~MobileNode();

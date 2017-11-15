@@ -178,6 +178,23 @@ void UAVNode::selectNextCommand()
     EV_INFO << "New command is " << commandExecEngine->getCeeTypeString() << ", remaining CEEs: " << cees.size() << endl;
 }
 
+void UAVNode::collectStatistics()
+{
+    if (commandExecEngine == nullptr) throw cRuntimeError("collectStatistics(): Command Engine missing.");
+
+    double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
+    double thisCeeEnergy = commandExecEngine->getConsumptionPerSecond() * thisCeeDuration;
+
+    if (commandExecEngine->isPartOfMission()) {
+        utilizationSecMission += thisCeeDuration;
+        utilizationEnergyMission += thisCeeEnergy;
+    }
+    else {
+        utilizationSecMaintenance += thisCeeDuration;
+        utilizationEnergyMaintenance += thisCeeEnergy;
+    }
+}
+
 /**
  * Initialize physical and logical state of the node based on the current CEE.
  * This method is normally called once at the beginning of the CEE execution life cycle.
@@ -213,7 +230,7 @@ void UAVNode::initializeState()
             break;
     }
     labelNode->setText(text);
-    std::string duration = (commandExecEngine->hasDeterminedDuration()) ? std::to_string(commandExecEngine->getDuration()) + "s" : "...s";
+    std::string duration = (commandExecEngine->hasDeterminedDuration()) ? std::to_string(commandExecEngine->getOverallDuration()) + "s" : "...s";
     EV_INFO << "Consumption drawn for CEE: " << commandExecEngine->getConsumptionPerSecond() << "mAh/s * " << duration << endl;
 }
 
@@ -322,7 +339,7 @@ double UAVNode::estimateCommandsDuration()
         CommandExecEngine *nextCEE = *it;
         nextCEE->setFromCoordinates(fromX, fromY, fromZ);
         nextCEE->initializeCEE();
-        duration += nextCEE->getDuration();
+        duration += nextCEE->getOverallDuration();
         fromX = nextCEE->getX1();
         fromY = nextCEE->getY1();
         fromZ = nextCEE->getZ1();
@@ -415,7 +432,7 @@ ReplacementData* UAVNode::endOfOperation()
         }
         nextCommandsFeasible++;
         energySum += energyForNextCEE;
-        durrationOfCommands += nextCEE->getDuration();
+        durrationOfCommands += nextCEE->getOverallDuration();
 
         fromX = nextCEE->getX1();
         fromY = nextCEE->getY1();

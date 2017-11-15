@@ -62,6 +62,11 @@ void MobileNode::initialize(int stage)
             //Initialize Energy storage
             int capacity = int(par("batteryCapacity"));
             battery = Battery(capacity, capacity / 2 + rand() % capacity / 2);
+            WATCH(utilizationSecMission);
+            WATCH(utilizationSecMaintenance);
+            WATCH(utilizationSecIdle);
+            WATCH(utilizationEnergyMission);
+            WATCH(utilizationEnergyMaintenance);
             break;
     }
 }

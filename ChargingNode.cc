@@ -78,6 +78,10 @@ void ChargingNode::selectNextCommand()
 {
 }
 
+void ChargingNode::collectStatistics()
+{
+}
+
 void ChargingNode::initializeState()
 {
 }

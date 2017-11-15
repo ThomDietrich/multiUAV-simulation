@@ -60,6 +60,7 @@ protected:
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
+    virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
 
