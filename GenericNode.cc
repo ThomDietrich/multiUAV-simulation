@@ -144,6 +144,7 @@ void GenericNode::refreshDisplay() const
 
 void GenericNode::handleMessage(cMessage *msg)
 {
+    cMessage* response = NULL;
     double stepSize = 0;
     if (msg->isName("startProvision")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
@@ -151,8 +152,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized for provisioning and on its way." << endl;
-        delete msg;
-        msg = new cMessage("update");
+        response = new cMessage("update");
         stepSize = 0;
     }
     else if (msg->isName("startMission")) {
@@ -162,8 +162,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;
-        delete msg;
-        msg = new cMessage("update");
+        response = new cMessage("update");
         stepSize = 0;
     }
     else if (msg->isName("update")) {
@@ -171,8 +170,10 @@ void GenericNode::handleMessage(cMessage *msg)
         stepSize = nextNeededUpdate();
         stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
         if (commandCompleted()) {
-            msg->setName("nextCommand");
+            response = new cMessage("nextCommand");
             stepSize = 0;
+        } else {
+            response = new cMessage("update");
         }
     }
     else if (msg->isName("nextCommand")) {
@@ -190,7 +191,6 @@ void GenericNode::handleMessage(cMessage *msg)
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
             EV_WARN << "Command completed. Queue empty." << endl;
-            delete msg;
             return;
         }
 
@@ -198,7 +198,7 @@ void GenericNode::handleMessage(cMessage *msg)
         EV_INFO << "Command completed. Selecting next command." << endl;
         selectNextCommand();
         initializeState();
-        msg->setName("update");
+        response = new cMessage("update");
     }
     else {
         // Message is unknown for Generic Node, child classes may handle those messages
@@ -210,7 +210,9 @@ void GenericNode::handleMessage(cMessage *msg)
 
     // schedule next update
     lastUpdate = simTime();
-    scheduleAt(lastUpdate + stepSize, msg);
+    if(response != NULL) {
+        scheduleAt(lastUpdate + stepSize, response);
+    }
 }
 
 /**
