@@ -22,15 +22,16 @@ using namespace omnetpp;
 
 /*
  * The class ResponseForecastMsg provides a wrapper for cMessage class,
- * intended to make generation of particular messages as easy as possible.
+ * Intended to respond to forecast requests.
+ * It will always contain a point in time and the reached percentage for that point in time.
  */
 class ResponseForecastMsg : public cMessage {
 public:
-    ResponseForecastMsg(simtime_t pointInTime, double targetPercentage = 100.0);
+    ResponseForecastMsg(simtime_t pointInTime, double reachedPercentage = 100.0);
     virtual ~ResponseForecastMsg();
 
 protected:
-    void addParameters(simtime_t pointInTime, double targetPercentage);
+    void addParameters(simtime_t pointInTime, double reachedPercentage);
 };
 
 #endif /* MSGS_RESPONSEFORECASTMSG_H_ */

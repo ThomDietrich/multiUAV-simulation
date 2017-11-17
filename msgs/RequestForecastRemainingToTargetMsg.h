@@ -21,8 +21,8 @@
 using namespace omnetpp;
 
 /*
- * The class RequestForecastRemainingToTargetMsg provides a wrapper for cMessage class,
- * intended to make generation of particular messages as easy as possible.
+ * RequestForecastRemainingToTargetMsg provides a wrapper for cMessage class.
+ * Intended to get a forecast for the charging process from the remaining current to a targetPercentage.
  */
 class RequestForecastRemainingToTargetMsg : public cMessage {
 public:

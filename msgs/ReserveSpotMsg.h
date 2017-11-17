@@ -22,7 +22,7 @@
 using namespace omnetpp;
 
 /*
- * ReserveSpotMsg provides a wrapper for cMessage class,
+ * ReserveSpotMsg provides a wrapper for cMessage class.
  * Intended to reserve a waiting (or charging spot) at a Charging Station.
  * Due to this information the Charging Station will be able to give more accurate forecast information.
  */

@@ -15,10 +15,10 @@
 
 #include "ResponseForecastMsg.h"
 
-ResponseForecastMsg::ResponseForecastMsg(simtime_t pointInTime, double targetPercentage)
+ResponseForecastMsg::ResponseForecastMsg(simtime_t pointInTime, double reachedPercentage)
 {
     this->setName("responseForecast");
-    this->addParameters(pointInTime, targetPercentage);
+    this->addParameters(pointInTime, reachedPercentage);
 }
 
 ResponseForecastMsg::~ResponseForecastMsg()
@@ -26,14 +26,14 @@ ResponseForecastMsg::~ResponseForecastMsg()
     // TODO Auto-generated destructor stub
 }
 
-void ResponseForecastMsg::addParameters(simtime_t pointInTime, double targetPercentage)
+void ResponseForecastMsg::addParameters(simtime_t pointInTime, double reachedPercentage)
 {
     cMsgPar *pointInTimePar = new cMsgPar("pointInTime");
     pointInTimePar->setDoubleValue(pointInTime.dbl());
-    cMsgPar *targetPercentagePar = new cMsgPar("targetPercentage");
-    targetPercentagePar->setDoubleValue(targetPercentage);
+    cMsgPar *reachedPercentagePar = new cMsgPar("reachedPercentage");
+    reachedPercentagePar->setDoubleValue(reachedPercentage);
 
     this->addPar(pointInTimePar);
-    this->addPar(targetPercentagePar);
+    this->addPar(reachedPercentagePar);
 }
 

@@ -22,10 +22,10 @@
 using namespace omnetpp;
 
 /*
- * The class ResponseMobileNodeMsg provides a wrapper for cMessage class,
- * intended to make generation of particular messages as easy as possible.
+ * The class ResponseMobileNodeMsg provides a wrapper for cMessage class.
+ * Intended to respond with a suitable mobileNode with enough (as much as requested) remaining current
  */
-class ResponseMobileNodeMsg : public cMessage{
+class ResponseMobileNodeMsg : public cMessage {
 public:
     ResponseMobileNodeMsg(MobileNode* mobileNode);
     virtual ~ResponseMobileNodeMsg();

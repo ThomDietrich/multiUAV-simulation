@@ -21,8 +21,8 @@
 using namespace omnetpp;
 
 /*
- * The class RequestMobileNodeMsg provides a wrapper for cMessage class,
- * intended to make generation of particular messages as easy as possible.
+ * RequestMobileNodeMsg provides a wrapper for cMessage class.
+ * Intended to request a mobile node which fits the given current requirement.
  */
 class RequestMobileNodeMsg : public cMessage {
 public:
