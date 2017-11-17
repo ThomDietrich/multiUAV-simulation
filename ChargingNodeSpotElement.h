@@ -32,6 +32,9 @@ protected:
     double estimatedWaitingDuration;
     simtime_t pointInTimeWhenDone;
     simtime_t pointInTimeWhenChargingStarted;
+    simtime_t estimatedArrival;
+    simtime_t reservationTime;
+
 public:
     /*
      * Constructor with target capacity
@@ -73,6 +76,26 @@ public:
     double getTargetCapacityPercentage() const
     {
         return targetCapacityPercentage;
+    }
+
+    void setEstimatedArrival(const simtime_t& estimatedArrival)
+    {
+        this->estimatedArrival = estimatedArrival;
+    }
+
+    const simtime_t& getEstimatedArrival() const
+    {
+        return estimatedArrival;
+    }
+
+    void setReservationTime(const simtime_t& reservationTime)
+    {
+        this->reservationTime = reservationTime;
+    }
+
+    const simtime_t& getReservationTime() const
+    {
+        return reservationTime;
     }
 };
 

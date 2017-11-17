@@ -22,6 +22,8 @@ ChargingNodeSpotElement::ChargingNodeSpotElement(MobileNode* node, double estima
     this->estimatedWaitingDuration = estimatedWaitingDuration;
     this->targetCapacityPercentage = targetCapacityPercentage;
     this->pointInTimeWhenDone = simTime() + estimatedChargeDuration + estimatedWaitingDuration;
+    this->estimatedArrival = simTime();
+    this->reservationTime = simTime();
 }
 
 ChargingNodeSpotElement::~ChargingNodeSpotElement()
