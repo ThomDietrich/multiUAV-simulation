@@ -161,7 +161,7 @@ public:
     virtual void loadCommands(CommandQueue commands) = 0;
     virtual void clearCommands() = 0;
 
-    virtual cGate* getOutputGateTo(GenericNode *node);
+    virtual cGate* getOutputGateTo(cModule *node);
 
 protected:
     virtual void initialize(int stage) override;

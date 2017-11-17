@@ -225,16 +225,23 @@ bool GenericNode::hasCommandsInQueue()
     return (not cees.empty());
 }
 
-// ToDo: Implement Error handling (gate to *node not found)
-cGate* GenericNode::getOutputGateTo(GenericNode *node) {
+/**
+ *  Get the cGate which leads from this node to the given module.
+ *  Example useage is sending messages to a UAV or GenericNode.
+ *  this->send(msg, this->getOutputGateTo(node));
+ *
+ * @return cGate to the given module || nullptr if module not connected to this node
+ */
+cGate* GenericNode::getOutputGateTo(cModule *module) {
     for(int i = 0; i < this->gateCount(); i++) {
         cGate *gate = this->gateByOrdinal(i);
         cModule *gateOwner = gate->getPathEndGate()->getOwnerModule();
         if(gate->getType() == cGate::Type::OUTPUT
-                && gateOwner == node) {
+                && gateOwner == module) {
             return gate;
         }
     }
+    return nullptr;
 }
 
 #endif // WITH_OSG
