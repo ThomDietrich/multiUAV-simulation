@@ -34,8 +34,8 @@ class ChargingNode : public GenericNode {
 protected:
     unsigned int spotsWaiting;
     unsigned int spotsCharging;
-    std::deque<ChargingNodeSpotElement> objectsWaiting;
-    std::deque<ChargingNodeSpotElement> objectsCharging;
+    std::deque<ChargingNodeSpotElement*> objectsWaiting;
+    std::deque<ChargingNodeSpotElement*> objectsCharging;
     std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
     double usedPower;
@@ -51,6 +51,7 @@ public:
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual ReplacementData* endOfOperation() override;
+    // Could be moved to private methods, there functionality is externally available via messages
     double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
     double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
     MobileNode* getSufficientlyChargedNode(double current);
@@ -84,8 +85,11 @@ protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
-    void appendToObjectsWaiting(MobileNode* module);
-    void fillSpots();
+    void appendToObjectsWaiting(MobileNode* mobileNode, simtime_t reservationTime = 0, simtime_t estimatedArrival = 0, double consumption = 0);
+    bool isInWaitingQueue(MobileNode* mobileNode);
+    std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator();
+    bool isPhysicallyPresent(MobileNode* mobileNode);
+    void scheduleChargingSpots();
     void charge();
     float calculateChargeAmount(double remaining, double capacity, double seconds);
     float calculateChargeAmountLinear(double seconds);

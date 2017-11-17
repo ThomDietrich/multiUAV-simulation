@@ -78,15 +78,20 @@ void ChargingNode::handleMessage(cMessage* msg)
     GenericNode::handleMessage(msg);
 
     if (msg->isName("startCharge")) {
-        EV_INFO << "UAV is ready to get charged" << endl;
+        EV_INFO << "MobileNode is ready to get charged" << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         this->appendToObjectsWaiting(mn);
 
         this->scheduleAt(simTime(), new cMessage("update"));
 
-    } else if (msg->isName("onMyWay")) {
-        //ToDo add arrival time and "reserve" a spot.
-        EV_INFO << "UAV is on the way to CS, reserve spot" << endl;
+    } else if (msg->isName("reserveSpot")) {
+        double estimatedArrival = stod(msg->getParListPtr()->get("estimatedArrival")->str());
+        double estimatedConsumption = stod(msg->getParListPtr()->get("estimatedConsumption")->str());
+        MobileNode *mn = check_and_cast<MobileNode*>(msg->getParListPtr()->get("mobileNode"));
+
+        EV_INFO << "Mobile Node is on the way to CS, reserve spot, estimated Arrival: " << estimatedArrival << endl;
+
+        this->appendToObjectsWaiting(mn, simTime(), estimatedArrival, estimatedConsumption);
 
     } else if (msg->isName("requestForecastRemainingToTarget")) {
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
@@ -133,7 +138,7 @@ void ChargingNode::initializeState()
 
 void ChargingNode::updateState()
 {
-    this->fillSpots();
+    this->scheduleChargingSpots();
     if(this->objectsCharging.size() == 0) {
         return;
     }
@@ -146,25 +151,39 @@ bool ChargingNode::commandCompleted()
 }
 
 /**
- * Calculates the seconds till the next event (a node being done with charging).
- * When there is no next event a placeholder value (10 seconds) is returned.
+ * Calculates the seconds till the next event (a node being done with charging or the arrival time of an reservation is met).
+ * When there is no next event and the timeStep is set to 0 a placeholder value (10 seconds) is returned.
  *
- * @return double, seconds till next event
+ * @return double, seconds till next event || timeStep if not 0 || 10 seconds as fallback
  */
 double ChargingNode::nextNeededUpdate()
 {
     simtime_t currentTime = simTime();
     double nextEvent = -1;
+    // get time when the next object is successfully charged
     for(unsigned int i = 0; i < this->objectsCharging.size(); i++) {
-        if(this->objectsCharging[i].getPointInTimeWhenDone().dbl()-currentTime.dbl() < nextEvent
+        if(this->objectsCharging[i]->getPointInTimeWhenDone().dbl()-currentTime.dbl() < nextEvent
                 || nextEvent == -1) {
-            nextEvent = this->objectsCharging[i].getPointInTimeWhenDone().dbl()-currentTime.dbl();
+            nextEvent = this->objectsCharging[i]->getPointInTimeWhenDone().dbl()-currentTime.dbl();
+        }
+    }
+
+    // get next (furure) arrival time for reservations
+    for(unsigned int i = 0; i < this->objectsWaiting.size(); i++) {
+        if((this->objectsWaiting[i]->getEstimatedArrival() < nextEvent
+                && this->objectsWaiting[i]->getEstimatedArrival() >= simTime())
+                || nextEvent == -1) {
+            nextEvent = this->objectsCharging[i]->getPointInTimeWhenDone().dbl()-currentTime.dbl();
         }
     }
 
     if(nextEvent == -1) {
         // ToDo Review minimum time without a upcoming event
-        return std::max(timeStep, 10.0);
+        if(timeStep == 0) {
+            return 10;
+        } else {
+            return timeStep;
+        }
     } else {
         return nextEvent;
     }
@@ -205,20 +224,20 @@ MobileNode* ChargingNode::getSufficientlyChargedNode(double current)
     }
     for(unsigned int i = 0; i < this->objectsWaiting.size(); i++) {
         if(sufficientlyChargedNode == nullptr) {
-            sufficientlyChargedNode = this->objectsWaiting[i].getNode();
+            sufficientlyChargedNode = this->objectsWaiting[i]->getNode();
         }
         if(sufficientlyChargedNode->getBattery()->getRemaining() > current
                 && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
-            sufficientlyChargedNode = this->objectsWaiting[i].getNode();
+            sufficientlyChargedNode = this->objectsWaiting[i]->getNode();
         }
     }
     for(unsigned int i = 0; i < this->objectsCharging.size(); i++) {
         if(sufficientlyChargedNode == nullptr) {
-            sufficientlyChargedNode = this->objectsCharging[i].getNode();
+            sufficientlyChargedNode = this->objectsCharging[i]->getNode();
         }
         if(sufficientlyChargedNode->getBattery()->getRemaining() > current
                 && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
-            sufficientlyChargedNode = this->objectsCharging[i].getNode();
+            sufficientlyChargedNode = this->objectsCharging[i]->getNode();
         }
     }
     return sufficientlyChargedNode;
@@ -227,41 +246,123 @@ MobileNode* ChargingNode::getSufficientlyChargedNode(double current)
 /**
  * Appends a MobileNode to the waiting queue.
  * Estimated wait and charge duration get calculated and appended.
+ * Default values, take place when there is no reservation and the object is already present (object appeared via startCharge):
+ *  estimatedArrival    -> 0
+ *  reservationTime     -> 0
+ *  consumption         -> 0
  */
-void ChargingNode::appendToObjectsWaiting(MobileNode* mn)
+void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, simtime_t reservationTime, simtime_t estimatedArrival, double consumption)
 {
+    // check if the waiting queue size would be exceeded
     if(this->objectsWaiting.size() >= this->spotsWaiting
             && this->spotsWaiting != 0) {
         EV_INFO << "All spots for waiting ("<< spotsWaiting <<") are already taken." << endl;
         return;
     }
+    // check if given object is already in waiting queue
+    if(this->isInWaitingQueue(mobileNode)) {
+        EV_INFO << "Mobile Node is already in waiting Queue." << endl;
+        return;
+    }
+
     // generate a new waiting element with estimated charge and waiting times
-    double chargeTimeLinear = this->calculateChargeTimeLinear(mn->getBattery()->getRemaining(), mn->getBattery()->getCapacity());
-    double chargeTimeNonLinear = this->calculateChargeTimeNonLinear(mn->getBattery()->getRemaining(), mn->getBattery()->getCapacity());
-    ChargingNodeSpotElement element = ChargingNodeSpotElement(mn,
+    // substract consumption which will occur between reservation and the charging process
+    double chargeTimeLinear = this->calculateChargeTimeLinear(mobileNode->getBattery()->getRemaining()-consumption, mobileNode->getBattery()->getCapacity());
+    double chargeTimeNonLinear = this->calculateChargeTimeNonLinear(mobileNode->getBattery()->getRemaining()-consumption, mobileNode->getBattery()->getCapacity());
+    ChargingNodeSpotElement* element = new ChargingNodeSpotElement(mobileNode,
             chargeTimeLinear + chargeTimeNonLinear,
             this->getEstimatedWaitingSeconds());
-    EV_DEBUG << "waiting time: " << element.getEstimatedWaitingDuration() << endl;
-    EV_DEBUG << "charging: " << element.getEstimatedChargeDuration() << endl;
-//    EV_DEBUG << "battery missing: " << element.getNode()->getBattery()->getMissing() << endl;
-//    EV_DEBUG << "charging amount lin: " << chargeTimeLinear << endl;
-//    EV_DEBUG << "charging amount non-lin: " << chargeTimeNonLinear << endl;
+
+    // set estimatedArrival and reservationTime if not 0, otherwise simTime() will be used as default value
+    if(!estimatedArrival.isZero()) {
+        element->setEstimatedArrival(estimatedArrival);
+    }
+    if(!reservationTime.isZero()) {
+        element->setReservationTime(reservationTime);
+    }
 
     this->objectsWaiting.push_back(element);
-    EV_INFO << "The module got appended to a waiting spot." << endl;
+    EV_INFO << "MobileNode got appended to a waiting spot." << endl;
+}
+
+bool ChargingNode::isInWaitingQueue(MobileNode* mobileNode)
+{
+    std::deque<ChargingNodeSpotElement*>::iterator objectWaiting = this->objectsWaiting.begin();
+    while(objectWaiting != this->objectsWaiting.end()) {
+        if((*objectWaiting)->getNode() == mobileNode) {
+            return true;
+        }
+        objectWaiting++;
+    }
+    return false;
 }
 
 /**
- * Moves MobileNodes from the waiting queue to the charging spots if possible.
+ * Elements in the waiting queue get prioritized by their reservationTime.
+ * Furthermore they need to be physically at the ChargingNode.
+ * @return std::deque<ChargingNodeSpotElement*>::iterator to the next element in waiting queue which is physically present
  */
-void ChargingNode::fillSpots()
+std::deque<ChargingNodeSpotElement*>::iterator ChargingNode::getNextWaitingObjectIterator()
 {
+    std::deque<ChargingNodeSpotElement*>::iterator next = this->objectsWaiting.begin();
+    std::deque<ChargingNodeSpotElement*>::iterator objectWaitingIt = this->objectsWaiting.begin();
+    while(objectWaitingIt != this->objectsWaiting.end()) {
+        if((*objectWaitingIt)->getReservationTime() < (*next)->getReservationTime()
+                && (*objectWaitingIt)->getEstimatedArrival() <= simTime()) {
+            if(!this->isPhysicallyPresent((*objectWaitingIt)->getNode())) {
+                throw "Mobile Node should be physically present (arrivalTime is in the past)!";
+            }
+            next = objectWaitingIt;
+        }
+        objectWaitingIt++;
+    }
+    return next;
+}
+
+bool ChargingNode::isPhysicallyPresent(MobileNode* mobileNode) {
+    return (mobileNode->getX() == this->getX()
+            && mobileNode->getY() == this->getY()
+            && mobileNode->getZ() == this->getZ());
+}
+
+/**
+ * Todo: adapt the estimated finishing times for objects which dont change without interruption
+ * Populates the charging nodes.
+ * Will push back nodes from charging spots to waiting spots when needed due to reservation.
+ */
+void ChargingNode::scheduleChargingSpots()
+{
+    // when there are no waiting objects, the method does nothing
+    if(this->objectsWaiting.size() == 0) {
+        return;
+    }
+
+    // get the next waiting object (see referenced method for details)
+    // variable gets used through both loops and always rewritten when the object was appended to a charging spot
+    std::deque<ChargingNodeSpotElement*>::iterator nextWaitingObject = this->getNextWaitingObjectIterator();
+
+    // loop through currently used spots and check for earlier reservations
+    // when an earlier reservation time occurs, throw out the currently charged node and push it back to the waiting objects
+    std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = this->objectsCharging.begin();
+    while(objectChargingIt != this->objectsCharging.end()) {
+        if((*objectChargingIt)->getReservationTime() > (*nextWaitingObject)->getReservationTime()) {
+            this->appendToObjectsWaiting((*objectChargingIt)->getNode(), (*objectChargingIt)->getReservationTime());
+            this->objectsCharging.erase(objectChargingIt);
+            (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
+            this->objectsCharging.push_back(*nextWaitingObject);
+            this->objectsWaiting.erase(nextWaitingObject);
+            nextWaitingObject = this->getNextWaitingObjectIterator();
+        }
+        objectChargingIt++;
+    }
+
+    // loop through empty charging spots and fill them with waiting objects
     while(this->spotsCharging > this->objectsCharging.size()
             && this->objectsWaiting.size() > 0) {
-        ChargingNodeSpotElement nextWaitingElement = this->objectsWaiting.front();
-        nextWaitingElement.setPointInTimeWhenChargingStarted(simTime());
-        this->objectsCharging.push_back(nextWaitingElement);
-        this->objectsWaiting.erase(this->objectsWaiting.begin());
+        (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
+        this->objectsCharging.push_back(*nextWaitingObject);
+        this->objectsWaiting.erase(nextWaitingObject);
+        nextWaitingObject = this->getNextWaitingObjectIterator();
     }
 }
 
@@ -272,16 +373,17 @@ void ChargingNode::fillSpots()
 void ChargingNode::charge()
 {
     for(unsigned int i = 0; i < this->objectsCharging.size(); i++) {
-        EV_INFO << "UAV in slot " << i << " is currently getting charged. Currently Remaining: " << this->objectsCharging[i].getNode()->getBattery()->getRemaining()  << endl;
+        EV_INFO << "UAV in slot " << i << " is currently getting charged. Currently Remaining: " << this->objectsCharging[i]->getNode()->getBattery()->getRemaining()  << endl;
 
-        if(this->objectsCharging[i].getNode()->getBattery()->isFull()) {
+        if(this->objectsCharging[i]->getNode()->getBattery()->isFull()) {
             EV_INFO << "UAV in slot " << i <<" is fully charged." << endl;
             // Send wait message to node
-            send(new cMessage("wait"), this->getOutputGateTo(this->objectsCharging[i].getNode()));
+            MobileNode* mobileNode = this->objectsCharging[i]->getNode();
+            send(new cMessage("wait"), this->getOutputGateTo(mobileNode));
             // Send a message to the node which signalizes that the charge process is finished
-            send(new cMessage("nextCommand"), this->getOutputGateTo(this->objectsCharging[i].getNode()));
+            send(new cMessage("nextCommand"), this->getOutputGateTo(mobileNode));
             // Push fully charged nodes to the corresponding list
-            this->objectsFinished.push_back(this->objectsCharging[i].getNode());
+            this->objectsFinished.push_back(this->objectsCharging[i]->getNode());
             // ToDo remove the right element and not the first one.
             this->objectsCharging.erase(this->objectsCharging.begin());
 
@@ -291,11 +393,11 @@ void ChargingNode::charge()
         }
         simtime_t currentTime = simTime();
         double chargeAmount = this->calculateChargeAmount(
-                this->objectsCharging[i].getNode()->getBattery()->getRemaining(),
-                this->objectsCharging[i].getNode()->getBattery()->getCapacity(),
-                (currentTime - std::max(this->lastUpdate, this->objectsCharging[i].getPointInTimeWhenChargingStarted())).dbl()
+                this->objectsCharging[i]->getNode()->getBattery()->getRemaining(),
+                this->objectsCharging[i]->getNode()->getBattery()->getCapacity(),
+                (currentTime - std::max(this->lastUpdate, this->objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl()
         );
-        this->objectsCharging[i].getNode()->getBattery()->charge(chargeAmount);
+        this->objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
         this->usedPower += chargeAmount;
         this->lastUpdate = currentTime;
     }
@@ -330,7 +432,8 @@ float ChargingNode::calculateChargeAmount(double remaining, double capacity, dou
  * ToDo Implement real (linear) values.
  * @return float, charge amount for given seconds
  */
-float ChargingNode::calculateChargeAmountLinear(double seconds) {
+float ChargingNode::calculateChargeAmountLinear(double seconds)
+{
     return seconds * 10;
 }
 
@@ -338,7 +441,8 @@ float ChargingNode::calculateChargeAmountLinear(double seconds) {
  * ToDo Implement real (nonlinear) values.
  * @return float, charge amount for given seconds
  */
-float ChargingNode::calculateChargeAmountNonLinear(double seconds, double remainingPercentage) {
+float ChargingNode::calculateChargeAmountNonLinear(double seconds, double remainingPercentage)
+{
     return seconds * 5;
 }
 
@@ -346,7 +450,8 @@ float ChargingNode::calculateChargeAmountNonLinear(double seconds, double remain
  * ToDo Add targetCapacity
  * @return double, seconds till fully charged
  */
-double ChargingNode::calculateChargeTime(double remaining, double capacity) {
+double ChargingNode::calculateChargeTime(double remaining, double capacity)
+{
     return this->calculateChargeTimeLinear(remaining, capacity) + this->calculateChargeTimeNonLinear(remaining, capacity);
 }
 
@@ -354,7 +459,8 @@ double ChargingNode::calculateChargeTime(double remaining, double capacity) {
  * ToDo Adapt to real values
  * @return double, seconds till linear charging process is finished (currently 90%)
  */
-double ChargingNode::calculateChargeTimeLinear(double remaining, double capacity) {
+double ChargingNode::calculateChargeTimeLinear(double remaining, double capacity)
+{
     if(capacity*0.9 < remaining) {
         return 0;
     }
@@ -365,7 +471,8 @@ double ChargingNode::calculateChargeTimeLinear(double remaining, double capacity
  * ToDo Adapt to real values
  * @return double, seconds till non linear charging process is finished (90% to 100%)
  */
-double ChargingNode::calculateChargeTimeNonLinear(double remaining, double capacity) {
+double ChargingNode::calculateChargeTimeNonLinear(double remaining, double capacity)
+{
     if(remaining == capacity) {
         return 0;
     }
@@ -379,17 +486,18 @@ double ChargingNode::calculateChargeTimeNonLinear(double remaining, double capac
 /*
  * @return double, seconds to wait before a newly added node would enter a charging spot
  */
-double ChargingNode::getEstimatedWaitingSeconds() {
+double ChargingNode::getEstimatedWaitingSeconds()
+{
     // initialize an Array witht he size of chargingSpots with 0's
     double waitingTimes[objectsCharging.size()] = {0.0};
 
     for(unsigned int c = 0; c < this->objectsCharging.size(); c++) {
         // set array values to the remaining seconds needed for currently charged objects
-        waitingTimes[c] = (this->objectsCharging[c].getPointInTimeWhenDone()-simTime()).dbl();
+        waitingTimes[c] = (this->objectsCharging[c]->getPointInTimeWhenDone()-simTime()).dbl();
     }
     for(unsigned int w = 0; w < this->objectsWaiting.size(); w++) {
         // add the estimated charge duration of the next waiting object to "spot" with the smallest duration
-        *std::min_element(waitingTimes, waitingTimes+this->objectsCharging.size()) += this->objectsWaiting[w].getEstimatedChargeDuration();
+        *std::min_element(waitingTimes, waitingTimes+this->objectsCharging.size()) += this->objectsWaiting[w]->getEstimatedChargeDuration();
     }
     return *std::min_element(waitingTimes, waitingTimes+this->objectsCharging.size());
 }
