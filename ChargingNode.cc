@@ -178,7 +178,6 @@ double ChargingNode::nextNeededUpdate()
     }
 
     if(nextEvent == -1) {
-        // ToDo Review minimum time without a upcoming event
         if(timeStep == 0) {
             return 10;
         } else {
@@ -326,7 +325,6 @@ bool ChargingNode::isPhysicallyPresent(MobileNode* mobileNode) {
 }
 
 /**
- * Todo: adapt the estimated finishing times for objects which dont change without interruption
  * Populates the charging nodes.
  * Will push back nodes from charging spots to waiting spots when needed due to reservation.
  */
@@ -384,7 +382,6 @@ void ChargingNode::charge()
             send(new cMessage("nextCommand"), this->getOutputGateTo(mobileNode));
             // Push fully charged nodes to the corresponding list
             this->objectsFinished.push_back(this->objectsCharging[i]->getNode());
-            // ToDo remove the right element and not the first one.
             this->objectsCharging.erase(this->objectsCharging.begin());
 
             // increment the statistics value

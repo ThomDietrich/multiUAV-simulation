@@ -306,14 +306,11 @@ void ChargeCEE::setNodeParameters()
     this->node->send(request, this->node->getOutputGateTo(this->command->getChargingNode()));
 }
 
-void ChargeCEE::updateState(double stepSize)
-{
-    // ToDo Review: should this stay empty?
-}
+void ChargeCEE::updateState(double stepSize) { }
 
 double ChargeCEE::getDuration()
 {
-    // ToDo: can this integrate the forecast from charging station?
+    // ToDo: should and can this integrate the forecast from charging station?
     throw cRuntimeError("ChargeCEE has no determined ending time");
     return 1;
 }
