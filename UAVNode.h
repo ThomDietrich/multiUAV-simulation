@@ -21,6 +21,7 @@
 #include <omnetpp.h>
 #include "MobileNode.h"
 #include <boost/math/distributions/normal.hpp>
+#include "msgs/ReserveSpotMsg.h"
 
 using namespace omnetpp;
 
