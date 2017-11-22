@@ -31,23 +31,20 @@ void ChargingNode::initialize(int stage)
     GenericNode::initialize(stage);
     switch (stage) {
         case 0:
-            // spotsWaiting = 0 -> unlimited spots.
-            // if limit is insufficient an info will be printed and the simulation possibly breaks down
-            this->spotsWaiting = 0;
-            this->spotsCharging = 2;
-            this->chargingCurrent = 2000;
+            this->spotsWaiting = par("spotsWaiting");
+            this->spotsCharging = par("spotsCharging");
             this->x = par("posX");
             this->y = par("posY");
             this->z = 2;
             this->pitch = 0;
             this->yaw = 0;
-            this->usedPower = 0;
-            this->chargedUAVs = 0;
             break;
 
         case 1:
             this->labelNode->setText("");
             this->sublabelNode->setText("");
+            WATCH(usedPower);
+            WATCH(chargedUAVs);
             break;
     }
 }

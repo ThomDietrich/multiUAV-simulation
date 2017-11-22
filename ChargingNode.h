@@ -31,6 +31,9 @@ using namespace omnetpp;
 class ChargingNodeSpotElement;
 
 class ChargingNode : public GenericNode {
+private:
+    double usedPower = 0;
+    int chargedUAVs = 0;
 protected:
     unsigned int spotsWaiting;
     unsigned int spotsCharging;
@@ -38,8 +41,6 @@ protected:
     std::deque<ChargingNodeSpotElement*> objectsCharging;
     std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
-    double usedPower;
-    int chargedUAVs;
 public:
     ChargingNode();
     virtual ~ChargingNode();

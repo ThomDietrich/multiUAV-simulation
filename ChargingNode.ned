@@ -24,4 +24,6 @@ simple ChargingNode extends GenericNode
         double posX @unit("m") = default(0m);            // the starting coordinates in meter
         double posY @unit("m") = default(0m);            // the starting coordinates in meter
         double chargeCurrent @unit("A") = default(1.0A); // the charging current, assumed as constant 
+        int spotsWaiting = default(0);                   // the amount of spots a incoming node can wait on	
+        int spotsCharging = default(0);                  // the amount of spots a node is charged on
 }
