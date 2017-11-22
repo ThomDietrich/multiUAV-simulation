@@ -106,7 +106,7 @@ void MobileNode::handleMessage(cMessage *msg)
         WaitCEE *cee = new WaitCEE(*this, *command);
 
         // Add WaitCEE to queue
-        this->cees.push_front(cee);
+        cees.push_front(cee);
     }
     else {
         // Message is unknown for Mobile Node, child classes may handle those messages

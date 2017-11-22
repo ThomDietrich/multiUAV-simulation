@@ -180,7 +180,7 @@ void GenericNode::handleMessage(cMessage *msg)
     else if (msg->isName("nextCommand")) {
         // Build and Send a Command Completed Message to Mission Control
         CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        ccmsg->setSourceNode(this->getIndex());
+        ccmsg->setSourceNode(getIndex());
         ReplacementData *replacementData = endOfOperation();
         if (replacementData != nullptr) {
             ccmsg->setReplacementData(*replacementData);
@@ -229,14 +229,14 @@ bool GenericNode::hasCommandsInQueue()
 /**
  *  Get the cGate which leads from this node to the given module.
  *  Example useage is sending messages to a UAV or GenericNode.
- *  this->send(msg, this->getOutputGateTo(node));
+ *  send(msg, getOutputGateTo(node));
  *
  * @return cGate to the given module || nullptr if module not connected to this node
  */
 cGate* GenericNode::getOutputGateTo(cModule *module)
 {
-    for (int i = 0; i < this->gateCount(); i++) {
-        cGate *gate = this->gateByOrdinal(i);
+    for (int i = 0; i < gateCount(); i++) {
+        cGate *gate = gateByOrdinal(i);
         cModule *gateOwner = gate->getPathEndGate()->getOwnerModule();
         if (gate->getType() == cGate::Type::OUTPUT && gateOwner == module) {
             return gate;
