@@ -117,8 +117,7 @@ void UAVNode::selectNextCommand()
         // Generate and send reservation message to CN
 //        cMessage *reserveSpot = new ReserveSpotMsg(simTime()+goToChargingNodeCEE->getDuration(), goToChargingNodeCEE->getProbableConsumption(), this);
 //        this->send(reserveSpot, this->getOutputGateTo(cn));
-
-        // Generate ChargeCEE
+// Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
 
@@ -135,8 +134,7 @@ void UAVNode::selectNextCommand()
     // reinject command (if no charging or takeoff command)
     if (commandsRepeat && not (commandExecEngine->getCeeType() == CeeType::TAKEOFF) //
             && not (commandExecEngine->getCeeType() == CeeType::CHARGE) //
-            && not (commandExecEngine->getCeeType() == CeeType::EXCHANGE)
-            && not (commandExecEngine->getCeeType() == CeeType::WAIT)) {
+            && not (commandExecEngine->getCeeType() == CeeType::EXCHANGE) && not (commandExecEngine->getCeeType() == CeeType::WAIT)) {
         cees.push_back(commandExecEngine);
     }
 }

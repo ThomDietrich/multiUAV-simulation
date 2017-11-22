@@ -15,7 +15,8 @@
 
 #include "ChargingNodeSpotElement.h"
 
-ChargingNodeSpotElement::ChargingNodeSpotElement(MobileNode* node, double estimatedChargeDuration, double estimatedWaitingDuration, double targetCapacityPercentage)
+ChargingNodeSpotElement::ChargingNodeSpotElement(MobileNode* node, double estimatedChargeDuration, double estimatedWaitingDuration,
+        double targetCapacityPercentage)
 {
     this->node = node;
     this->estimatedChargeDuration = estimatedChargeDuration;
@@ -30,5 +31,4 @@ ChargingNodeSpotElement::~ChargingNodeSpotElement()
 {
     // TODO Auto-generated destructor stub
 }
-
 

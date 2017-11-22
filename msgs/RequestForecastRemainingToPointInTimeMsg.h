@@ -24,7 +24,7 @@ using namespace omnetpp;
  * RequestForecastRemainingToTargetMsg provides a wrapper for cMessage class.
  * Intended to get a forecast for the charging process from the remaining current to a point in time.
  */
-class RequestForecastRemainingToPointInTimeMsg : public cMessage{
+class RequestForecastRemainingToPointInTimeMsg : public cMessage {
 public:
     RequestForecastRemainingToPointInTimeMsg(double remaining, double capacity, simtime_t pointInTime);
     virtual ~RequestForecastRemainingToPointInTimeMsg();

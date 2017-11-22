@@ -306,7 +306,9 @@ void ChargeCEE::setNodeParameters()
     this->node->send(request, this->node->getOutputGateTo(this->command->getChargingNode()));
 }
 
-void ChargeCEE::updateState(double stepSize) { }
+void ChargeCEE::updateState(double stepSize)
+{
+}
 
 double ChargeCEE::getDuration()
 {

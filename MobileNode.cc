@@ -100,14 +100,15 @@ void MobileNode::handleMessage(cMessage *msg)
      * review weather all messages should be handled in GenericNode (WaitCEE expects a MobileNode, consider moving the expectation to GenericNode)
      */
     // handle messages which possibly dont got handled in GenericNode
-    if(msg->isName("wait")) {
+    if (msg->isName("wait")) {
         // Prepare Wait Command and WaitCEE for finished node
         WaitCommand *command = new WaitCommand();
         WaitCEE *cee = new WaitCEE(*this, *command);
 
         // Add WaitCEE to queue
         this->cees.push_front(cee);
-    } else {
+    }
+    else {
         // Message is unknown for Mobile Node, child classes may handle those messages
         std::string message = "Unknown message name in Mobile Node encountered: ";
         message += msg->getFullName();

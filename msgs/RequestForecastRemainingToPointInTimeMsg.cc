@@ -15,7 +15,7 @@
 
 #include "RequestForecastRemainingToPointInTimeMsg.h"
 
-RequestForecastRemainingToPointInTimeMsg::RequestForecastRemainingToPointInTimeMsg(double remaining,  double capacity, simtime_t pointInTime)
+RequestForecastRemainingToPointInTimeMsg::RequestForecastRemainingToPointInTimeMsg(double remaining, double capacity, simtime_t pointInTime)
 {
     this->setName("requestForecastRemainingToPointInTime");
     this->addParameters(remaining, capacity, pointInTime);
