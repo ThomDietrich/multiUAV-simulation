@@ -17,14 +17,17 @@
 #define CHARGINGNODE_H_
 
 #include <omnetpp.h>
-#include "GenericNode.h"
-#include "ChargingNodeSpotElement.h"
 #include "Battery.h"
-#include "msgs/ResponseForecastMsg.h"
-#include "msgs/ResponseMobileNodeMsg.h"
+#include "ChargeAlgorithmCCCV.h"
+#include "ChargingNodeSpotElement.h"
 #include "Command.h"
 #include "CommandExecEngine.h"
+#include "GenericNode.h"
 #include "MobileNode.h"
+#include "msgs/ResponseForecastMsg.h"
+#include "msgs/ResponseMobileNodeMsg.h"
+
+
 
 using namespace omnetpp;
 
@@ -41,6 +44,7 @@ protected:
     std::deque<ChargingNodeSpotElement*> objectsCharging;
     std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
+    ChargeAlgorithmCCCV* chargeAlgorithm;
 public:
     ChargingNode();
     virtual ~ChargingNode();
@@ -92,13 +96,6 @@ protected:
     bool isPhysicallyPresent(MobileNode* mobileNode);
     void scheduleChargingSpots();
     void charge();
-    float calculateChargeAmount(double remaining, double capacity, double seconds);
-    float calculateChargeAmountLinear(double seconds);
-    float calculateChargeAmountNonLinear(double seconds, double remainingPercentage);
-    double calculateMaximumChargeTime(double remaining, double capacity);
-    double calculateChargeTime(double remaining, double capacity);
-    double calculateChargeTimeLinear(double remaining, double capacity);
-    double calculateChargeTimeNonLinear(double remaining, double capacity);
     double getEstimatedWaitingSeconds();
 };
 

@@ -39,8 +39,13 @@ void ChargingNode::initialize(int stage)
             this->pitch = 0;
             this->yaw = 0;
             break;
-
         case 1:
+            double linearGradient = par("linearGradient");
+            double expGradient = par("expGradient");
+            double nonLinearPhaseStartPercentage = par("nonLinearPhaseStartPercentage");
+            double nonLinearPhaseLimitPercentage = par("nonLinearPhaseLimitPercentage");
+            this->chargeAlgorithm = new ChargeAlgorithmCCCV(linearGradient, expGradient, nonLinearPhaseStartPercentage, nonLinearPhaseLimitPercentage);
+
             this->labelNode->setText("");
             this->sublabelNode->setText("");
             WATCH(usedPower);
@@ -182,7 +187,7 @@ double ChargingNode::nextNeededUpdate()
 double ChargingNode::getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage)
 {
     // ToDo include targetPercentage
-    return calculateChargeTime(remaining, capacity);
+    return chargeAlgorithm->calculateChargeTime(remaining, capacity, targetPercentage);
 }
 
 /**
@@ -190,7 +195,7 @@ double ChargingNode::getForecastRemainingToTarget(double remaining, double capac
  */
 double ChargingNode::getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime)
 {
-    double chargeAmount = calculateChargeAmount(remaining, capacity, (pointInTime - simTime() - getEstimatedWaitingSeconds()).dbl());
+    double chargeAmount = chargeAlgorithm->calculateChargeAmount(remaining, capacity, (pointInTime - simTime() - getEstimatedWaitingSeconds()).dbl());
     return capacity / (remaining + chargeAmount);
 }
 
@@ -252,10 +257,10 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, simtime_t rese
 
     // generate a new waiting element with estimated charge and waiting times
     // substract consumption which will occur between reservation and the charging process
-    double chargeTimeLinear = calculateChargeTimeLinear(mobileNode->getBattery()->getRemaining() - consumption, mobileNode->getBattery()->getCapacity());
-    double chargeTimeNonLinear = calculateChargeTimeNonLinear(mobileNode->getBattery()->getRemaining() - consumption,
-            mobileNode->getBattery()->getCapacity());
-    ChargingNodeSpotElement* element = new ChargingNodeSpotElement(mobileNode, chargeTimeLinear + chargeTimeNonLinear, getEstimatedWaitingSeconds());
+    // ToDo include targetPercentage
+    ChargingNodeSpotElement* element = new ChargingNodeSpotElement(mobileNode,
+            chargeAlgorithm->calculateChargeTime(mobileNode->getBattery()->getRemaining() - consumption, mobileNode->getBattery()->getCapacity(), 100),
+            getEstimatedWaitingSeconds());
 
     // set estimatedArrival and reservationTime if not 0, otherwise simTime() will be used as default value
     if (!estimatedArrival.isZero()) {
@@ -356,8 +361,8 @@ void ChargingNode::scheduleChargingSpots()
 void ChargingNode::charge()
 {
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
-        EV_INFO << "UAV in slot " << i << " is currently getting charged. Currently Remaining: "
-                << objectsCharging[i]->getNode()->getBattery()->getRemaining() << endl;
+        EV_INFO << "UAV in slot " << i << " is currently getting charged. Currently Remaining: " << objectsCharging[i]->getNode()->getBattery()->getRemaining()
+                << endl;
 
         if (objectsCharging[i]->getNode()->getBattery()->isFull()) {
             EV_INFO << "UAV in slot " << i << " is fully charged." << endl;
@@ -375,93 +380,13 @@ void ChargingNode::charge()
             break;
         }
         simtime_t currentTime = simTime();
-        double chargeAmount = calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
+        double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
         usedPower += chargeAmount;
         lastUpdate = currentTime;
     }
-}
-
-/**
- * Calculates the charge amount for a given amount of time depending on the remaining current and the capacity.
- * Combines the linear and the non-linear values.
- * ToDo: Adapt to real values.
- * @return float, charge amount for X seconds
- */
-float ChargingNode::calculateChargeAmount(double remaining, double capacity, double seconds)
-{
-    if (remaining == capacity) {
-        return 0;
-    }
-    // linear
-    // either use the given seconds or the maximum possible linear charge time
-    double linearChargeTime = std::min(seconds, calculateChargeTimeLinear(remaining, capacity));
-    float chargeAmountLinear = calculateChargeAmountLinear(linearChargeTime);
-    seconds = seconds - linearChargeTime;
-
-    // non linear
-    // either use the remaining seconds (given - linear) or the maximum possible non-linear charge time
-    double nonLinearChargeTime = std::min(seconds, calculateChargeTimeNonLinear(remaining, capacity));
-    float chargeAmountNonLinear = calculateChargeAmountNonLinear(nonLinearChargeTime, remaining / capacity);
-
-    return chargeAmountLinear + chargeAmountNonLinear;
-}
-
-/**
- * ToDo Implement real (linear) values.
- * @return float, charge amount for given seconds
- */
-float ChargingNode::calculateChargeAmountLinear(double seconds)
-{
-    return seconds * 10;
-}
-
-/**
- * ToDo Implement real (nonlinear) values.
- * @return float, charge amount for given seconds
- */
-float ChargingNode::calculateChargeAmountNonLinear(double seconds, double remainingPercentage)
-{
-    return seconds * 5;
-}
-
-/**
- * ToDo Add targetCapacity
- * @return double, seconds till fully charged
- */
-double ChargingNode::calculateChargeTime(double remaining, double capacity)
-{
-    return calculateChargeTimeLinear(remaining, capacity) + calculateChargeTimeNonLinear(remaining, capacity);
-}
-
-/*
- * ToDo Adapt to real values
- * @return double, seconds till linear charging process is finished (currently 90%)
- */
-double ChargingNode::calculateChargeTimeLinear(double remaining, double capacity)
-{
-    if (capacity * 0.9 < remaining) {
-        return 0;
-    }
-    return (capacity * 0.9 - remaining) / calculateChargeAmountLinear(1);
-}
-
-/*
- * ToDo Adapt to real values
- * @return double, seconds till non linear charging process is finished (90% to 100%)
- */
-double ChargingNode::calculateChargeTimeNonLinear(double remaining, double capacity)
-{
-    if (remaining == capacity) {
-        return 0;
-    }
-    double missing = capacity - remaining;
-    if (missing > capacity * 0.1) {
-        missing = capacity * 0.1;
-    }
-    return (missing / calculateChargeAmountNonLinear(1, remaining / capacity));
 }
 
 /*
