@@ -144,6 +144,7 @@ void GenericNode::refreshDisplay() const
 
 void GenericNode::handleMessage(cMessage *msg)
 {
+    cMessage* response = NULL;
     double stepSize = 0;
     if (msg->isName("startProvision")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
@@ -151,8 +152,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized for provisioning and on its way." << endl;
-        delete msg;
-        msg = new cMessage("update");
+        response = new cMessage("update");
         stepSize = 0;
     }
     else if (msg->isName("startMission")) {
@@ -164,8 +164,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;
-        delete msg;
-        msg = new cMessage("update");
+        response = new cMessage("update");
         stepSize = 0;
     }
     else if (msg->isName("update")) {
@@ -173,8 +172,11 @@ void GenericNode::handleMessage(cMessage *msg)
         stepSize = nextNeededUpdate();
         stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
         if (commandCompleted()) {
-            msg->setName("nextCommand");
+            response = new cMessage("nextCommand");
             stepSize = 0;
+        }
+        else {
+            response = new cMessage("update");
         }
     }
     else if (msg->isName("nextCommand")) {
@@ -191,7 +193,7 @@ void GenericNode::handleMessage(cMessage *msg)
 
         // Build and Send a Command Completed Message to Mission Control
         CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        ccmsg->setSourceNodeIndex(this->getIndex());
+        ccmsg->setSourceNodeIndex(getIndex());
         ReplacementData *replacementData = endOfOperation();
         if (replacementData != nullptr) {
             ccmsg->setReplacementData(*replacementData);
@@ -207,17 +209,21 @@ void GenericNode::handleMessage(cMessage *msg)
         EV_INFO << "Selecting next command." << endl;
         selectNextCommand();
         initializeState();
-        msg->setName("update");
+        response = new cMessage("update");
     }
     else {
-        std::string message = "Unknown message name encountered: ";
+        // Message is unknown for Generic Node, child classes may handle those messages
+        std::string message = "Unknown message name in Generic Node encountered: ";
         message += msg->getFullName();
-        throw cRuntimeError(message.c_str());
+        EV_INFO << message << endl;
+        return;
     }
 
     // schedule next update
     lastUpdate = simTime();
-    scheduleAt(lastUpdate + stepSize, msg);
+    if (response != NULL) {
+        scheduleAt(lastUpdate + stepSize, response);
+    }
 }
 
 /**

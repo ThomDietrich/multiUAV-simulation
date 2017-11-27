@@ -23,6 +23,7 @@
 #include <osgEarthUtil/ObjectLocator>
 
 #include <omnetpp.h>
+#include "GenericNode.h"
 #include "ChargingNode.h"
 #include "Battery.h"
 
@@ -57,6 +58,7 @@ protected:
 public:
     MobileNode();
     virtual ~MobileNode();
+    Battery* getBattery();
 
 protected:
     virtual void initialize(int stage) override;

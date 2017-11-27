@@ -16,7 +16,6 @@
 #ifndef __GENERICNODE_H__
 #define __GENERICNODE_H__
 
-
 #include <omnetpp.h>
 
 #include <osgEarth/MapNode>

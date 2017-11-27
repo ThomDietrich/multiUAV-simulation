@@ -298,51 +298,37 @@ void ChargeCEE::initializeCEE()
 {
     pitch = 0;
     climbAngle = 0;
-    //TODO connect to Charging station
-    //cMessage *request = new cMessage("startCharge");
-    //this->command->getChargingNode()->scheduleAt(simTime(), request);
-    // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
 }
 
 void ChargeCEE::setNodeParameters()
 {
     node->pitch = pitch;
     node->climbAngle = climbAngle;
-    timeExecutionStart = simTime();
+    cMessage *request = new cMessage("startCharge");
+    node->send(request, node->getOutputGateTo(command->getChargingNode()));
+	timeExecutionStart = simTime();
 }
 
 void ChargeCEE::updateState(double stepSize)
 {
-    float chargeAmount = fabs(consumptionPerSecond * stepSize);
-    node->battery.charge(chargeAmount);
-
-    // Charging state log report
-    int statusReport = 20; // reported these much values between 0..100%
-    float statusReportChargeSteps = (node->battery.getCapacity() / statusReport);
-    //EV_DEBUG << "chargeAmount " << chargeAmount << " statusReportChargeSteps " << statusReportChargeSteps << " node->battery.getRemaining() "
-    //        << node->battery.getRemaining() << " fmod " << fmod(node->battery.getRemaining(), statusReportChargeSteps) << endl;
-    if (fmod(node->battery.getRemaining(), statusReportChargeSteps) < chargeAmount) {
-        EV_INFO << "Energy Management: Recharging... " << node->battery.getRemainingPercentage() << "%" << endl;
-    }
 }
 
 double ChargeCEE::getOverallDuration()
 {
-    return node->battery.getCapacity() / fabs(consumptionPerSecond);
+    // ToDo: should and can this integrate the forecast from charging station?
+    throw cRuntimeError("ChargeCEE has no determined ending time");
+    return 1;
 }
 
 double ChargeCEE::getRemainingTime()
 {
-    return node->battery.getMissing() / fabs(consumptionPerSecond);
+    throw cRuntimeError("ChargeCEE has no determined ending time");
+    return 1;
 }
 
 double ChargeCEE::getProbableConsumption(bool normalized, float percentile)
 {
-    if (normalized == false) EV_WARN << __func__ << "(): non-normalized currently not supported for ChargeCEE" << endl;
-    if (isnormal(percentile)) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
-    // 3DR Solo: 5200 mAh in 1.5h = 3.5A constant -> 3.5Ah = 3500 mAh -> 0,97222 mAh / s
-    return -0.97222;
+    return 0;
 }
 
 char* ChargeCEE::getCeeTypeString()
@@ -451,4 +437,59 @@ void ExchangeCEE::performExitActions()
 GenericNode* ExchangeCEE::getOtherNode()
 {
     return command->getOtherNode();
+}
+
+
+/**
+ *  Todo: Review weather the WaitCEE should be simplyfied
+ *  Currently there is no drawn comsumption during waiting
+ */
+WaitCEE::WaitCEE(MobileNode *boundNode, WaitCommand *command)
+{
+    this->node = boundNode;
+    this->command = command;
+    this->setType(CeeType::CHARGE);
+}
+
+bool WaitCEE::commandCompleted()
+{
+    return false;
+}
+
+void WaitCEE::initializeCEE()
+{
+    // draw probable value for consumption of this CEE
+    consumptionPerSecond = getProbableConsumption(true, NAN);
+}
+
+void WaitCEE::setNodeParameters()
+{
+
+}
+
+void WaitCEE::updateState(double stepSize)
+{
+    node->getBattery()->discharge(consumptionPerSecond * stepSize);
+}
+
+double WaitCEE::getDuration()
+{
+    throw cRuntimeError("WaitCEE has no determined ending time");
+    return 1;
+}
+
+double WaitCEE::getRemainingTime()
+{
+    throw cRuntimeError("WaitCEE has no determined ending time");
+    return 1;
+}
+
+double WaitCEE::getProbableConsumption(bool normalized, float percentile)
+{
+    return 0;
+}
+
+char* WaitCEE::getCeeTypeString()
+{
+    return (char*) "Wait";
 }

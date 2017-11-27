@@ -20,6 +20,7 @@
 #include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
+#include "msgs/ReserveSpotMsg.h"
 #include <boost/math/distributions/normal.hpp>
 
 using namespace omnetpp;

@@ -17,15 +17,34 @@
 #define CHARGINGNODE_H_
 
 #include <omnetpp.h>
+#include "Battery.h"
+#include "ChargeAlgorithmCCCV.h"
+#include "ChargingNodeSpotElement.h"
+#include "Command.h"
+#include "CommandExecEngine.h"
 #include "GenericNode.h"
+#include "MobileNode.h"
+#include "msgs/ResponseForecastMsg.h"
+#include "msgs/ResponseMobileNodeMsg.h"
+
+
 
 using namespace omnetpp;
 
+class ChargingNodeSpotElement;
+
 class ChargingNode : public GenericNode {
+private:
+    double usedPower = 0;
+    int chargedUAVs = 0;
 protected:
-    int spotsLanding;
-    int spotsCharging;
+    unsigned int spotsWaiting;
+    unsigned int spotsCharging;
+    std::deque<ChargingNodeSpotElement*> objectsWaiting;
+    std::deque<ChargingNodeSpotElement*> objectsCharging;
+    std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
+    ChargeAlgorithmCCCV* chargeAlgorithm;
 public:
     ChargingNode();
     virtual ~ChargingNode();
@@ -38,10 +57,47 @@ public:
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual ReplacementData* endOfOperation() override;
+    // Could be moved to private methods, there functionality is externally available via messages
+    double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
+    double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
+    MobileNode* getSufficientlyChargedNode(double current);
+    // Getters
+    double getChargingCurrent() const
+    {
+        return chargingCurrent;
+    }
+
+    unsigned int getSpotsCharging() const
+    {
+        return spotsCharging;
+    }
+
+    unsigned int getSpotsWaiting() const
+    {
+        return spotsWaiting;
+    }
+
+    double getUsedPower() const
+    {
+        return usedPower;
+    }
+
+    int getChargedUaVs() const
+    {
+        return chargedUAVs;
+    }
+
 protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
+    void appendToObjectsWaiting(MobileNode* mobileNode, simtime_t reservationTime = 0, simtime_t estimatedArrival = 0, double consumption = 0);
+    bool isInWaitingQueue(MobileNode* mobileNode);
+    std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator();
+    bool isPhysicallyPresent(MobileNode* mobileNode);
+    void scheduleChargingSpots();
+    void charge();
+    double getEstimatedWaitingSeconds();
 };
 
 #endif /* CHARGINGNODE_H_ */

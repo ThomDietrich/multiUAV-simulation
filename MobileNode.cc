@@ -88,6 +88,7 @@ void MobileNode::refreshDisplay() const
 void MobileNode::handleMessage(cMessage *msg)
 {
     GenericNode::handleMessage(msg);
+
     // update the trail data based on the new position
     if (trailNode) {
         // store the new position to be able to create a track later
@@ -97,6 +98,33 @@ void MobileNode::handleMessage(cMessage *msg)
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
         if (trail.size() > trailLength) trail.erase(trail.begin());
     }
+
+    /**
+     * ToDo
+     * handle ONLY messages which dont got handled in GenericNode
+     * review weather all messages should be handled in GenericNode (WaitCEE expects a MobileNode, consider moving the expectation to GenericNode)
+     */
+    // handle messages which possibly dont got handled in GenericNode
+    if (msg->isName("wait")) {
+        // Prepare Wait Command and WaitCEE for finished node
+        WaitCommand *command = new WaitCommand();
+        WaitCEE *cee = new WaitCEE(*this, *command);
+
+        // Add WaitCEE to queue
+        cees.push_front(cee);
+    }
+    else {
+        // Message is unknown for Mobile Node, child classes may handle those messages
+        std::string message = "Unknown message name in Mobile Node encountered: ";
+        message += msg->getFullName();
+//        EV_INFO << message << endl;
+        return;
+    }
+
+    // Todo: do we need to schedule a next update in here aswell? Where to we take stepSize from?
+//    // schedule next update
+//    lastUpdate = simTime();
+//    scheduleAt(lastUpdate + stepSize, msg);
 }
 
 ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ)
@@ -122,6 +150,11 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
     }
     //EV << "ChargingNode selected: " << nearest->getFullName() << endl;
     return nearest;
+}
+
+Battery* MobileNode::getBattery()
+{
+    return &battery;
 }
 
 #endif // WITH_OSG

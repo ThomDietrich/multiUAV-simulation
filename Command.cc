@@ -142,3 +142,12 @@ bool ExchangeCommand::isRechargeRequested()
 {
     return scheduleRechargeAfter;
 }
+
+/**
+ *
+ * @param seconds
+ */
+WaitCommand::WaitCommand()
+{
+    this->setMessageName("wait");
+}
