@@ -109,6 +109,8 @@ ifeq ($(WITH_OSGEARTH),yes)
 OMNETPP_LIBS += $(filter-out $(USERIF_LIBS),$(OSGEARTH_LIBS) -losgEarthFeatures -losgEarthSymbology -losgEarthAnnotation)
 endif
 
+COPTS += -isystem $(OMNETPP_ROOT)/include-boost
+
 # <<<
 #------------------------------------------------------------------------------
 
