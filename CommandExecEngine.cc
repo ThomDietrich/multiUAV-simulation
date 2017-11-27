@@ -472,7 +472,7 @@ void WaitCEE::updateState(double stepSize)
     node->getBattery()->discharge(consumptionPerSecond * stepSize);
 }
 
-double WaitCEE::getDuration()
+double WaitCEE::getOverallDuration()
 {
     throw cRuntimeError("WaitCEE has no determined ending time");
     return 1;

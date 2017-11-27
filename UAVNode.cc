@@ -168,7 +168,7 @@ void UAVNode::selectNextCommand()
         // Add real value to parameter 2 (estimated consumption till arrival at ChargingNode)
         // The reserve message is not needed for charging nodes, but will make the forecasts of the node more reliable.
         // Furthermore an earlier reservation will lead to an earlier charging.
-        
+
         // Generate and send reservation message to CN
 //        cMessage *reserveSpot = new ReserveSpotMsg(simTime()+goToChargingNodeCEE->getDuration(), goToChargingNodeCEE->getProbableConsumption(), this);
 //        this->send(reserveSpot, this->getOutputGateTo(cn));
@@ -350,14 +350,6 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
         cees.push_back(cee);
     }
     EV_INFO << __func__ << "(): " << commands.size() << " commands stored in node memory." << endl;
-}
-
-/**
- * Delete the current commands/CEEs from nodes memory
- */
-void UAVNode::clearCommands()
-{
-    cees.clear();
 }
 
 /**

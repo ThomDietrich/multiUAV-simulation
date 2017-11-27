@@ -60,7 +60,7 @@ ReplacementData* ChargingNode::endOfOperation()
     return 0;
 }
 
-void ChargingNode::loadCommands(CommandQueue commands)
+void ChargingNode::loadCommands(CommandQueue commands, bool isMission)
 {
 }
 
@@ -180,6 +180,10 @@ double ChargingNode::nextNeededUpdate()
     }
 
     return (nextEvent != -1) ? nextEvent : (timeStep ? timeStep : 10);
+}
+
+void ChargingNode::collectStatistics()
+{
 }
 
 /**

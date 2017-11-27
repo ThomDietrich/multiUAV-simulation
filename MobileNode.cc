@@ -108,7 +108,7 @@ void MobileNode::handleMessage(cMessage *msg)
     if (msg->isName("wait")) {
         // Prepare Wait Command and WaitCEE for finished node
         WaitCommand *command = new WaitCommand();
-        WaitCEE *cee = new WaitCEE(*this, *command);
+        WaitCEE *cee = new WaitCEE(this, command);
 
         // Add WaitCEE to queue
         cees.push_front(cee);

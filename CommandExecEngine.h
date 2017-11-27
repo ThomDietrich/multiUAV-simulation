@@ -430,8 +430,8 @@ public:
     double getRemainingTime() override;
     double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
     char* getCeeTypeString() override;
-    
-    ExchangeCommand* extractCommand()
+
+    WaitCommand* extractCommand()
     {
         return command;
     }

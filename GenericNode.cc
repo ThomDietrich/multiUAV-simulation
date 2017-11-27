@@ -144,7 +144,7 @@ void GenericNode::refreshDisplay() const
 
 void GenericNode::handleMessage(cMessage *msg)
 {
-    cMessage* response = NULL;
+    cMessage* response = nullptr;
     double stepSize = 0;
     if (msg->isName("startProvision")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
@@ -221,7 +221,7 @@ void GenericNode::handleMessage(cMessage *msg)
 
     // schedule next update
     lastUpdate = simTime();
-    if (response != NULL) {
+    if (response != nullptr) {
         scheduleAt(lastUpdate + stepSize, response);
     }
 }

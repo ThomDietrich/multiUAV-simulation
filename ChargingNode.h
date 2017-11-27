@@ -49,13 +49,13 @@ public:
     ChargingNode();
     virtual ~ChargingNode();
     virtual void selectNextCommand() override;
-    virtual void collectStatistics() override;
     virtual void initializeState() override;
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual void clearCommands() override;
     virtual void updateState() override;
     virtual bool commandCompleted() override;
     virtual double nextNeededUpdate() override;
+    virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;
     // Could be moved to private methods, there functionality is externally available via messages
     double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
