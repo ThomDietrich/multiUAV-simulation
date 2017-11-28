@@ -79,17 +79,23 @@ void ChargingNode::handleMessage(cMessage* msg)
         EV_INFO << "MobileNode is ready to get charged" << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         appendToObjectsWaiting(mn);
-
-        scheduleAt(simTime(), new cMessage("update"));
+        if(not active) {
+            scheduleAt(simTime(), new cMessage("update"));
+            active = true;
+        }
     }
     else if (msg->isName("reserveSpot")) {
         double estimatedArrival = stod(msg->getParListPtr()->get("estimatedArrival")->str());
         double estimatedConsumption = stod(msg->getParListPtr()->get("estimatedConsumption")->str());
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getParListPtr()->get("mobileNode"));
 
-        EV_INFO << "Mobile Node is on the way to CS, reserve spot, estimated Arrival: " << estimatedArrival << endl;
+        EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << estimatedArrival << endl;
 
         appendToObjectsWaiting(mn, simTime(), estimatedArrival, estimatedConsumption);
+        if(not active) {
+            scheduleAt(simTime(), new cMessage("update"));
+            active = true;
+        }
     }
     else if (msg->isName("requestForecastRemainingToTarget")) {
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
@@ -383,7 +389,6 @@ void ChargingNode::charge()
                 (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
         usedPower += chargeAmount;
-        lastUpdate = currentTime;
     }
 }
 

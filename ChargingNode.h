@@ -45,6 +45,7 @@ protected:
     std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
     ChargeAlgorithmCCCV* chargeAlgorithm;
+    bool active;
 public:
     ChargingNode();
     virtual ~ChargingNode();
