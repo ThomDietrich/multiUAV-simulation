@@ -144,7 +144,6 @@ void GenericNode::refreshDisplay() const
 
 void GenericNode::handleMessage(cMessage *msg)
 {
-    cMessage* response = nullptr;
     double stepSize = 0;
     if (msg->isName("startProvision")) {
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
@@ -152,7 +151,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized for provisioning and on its way." << endl;
-        response = new cMessage("update");
+        msg->setName("update");
         stepSize = 0;
     }
     else if (msg->isName("startMission")) {
@@ -164,7 +163,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;
-        response = new cMessage("update");
+        msg->setName("update");
         stepSize = 0;
     }
     else if (msg->isName("update")) {
@@ -172,12 +171,10 @@ void GenericNode::handleMessage(cMessage *msg)
         stepSize = nextNeededUpdate();
         stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
         if (commandCompleted()) {
-            response = new cMessage("nextCommand");
+            msg->setName("nextCommand");
             stepSize = 0;
         }
-        else {
-            response = new cMessage("update");
-        }
+        lastUpdate = simTime();
     }
     else if (msg->isName("nextCommand")) {
 
@@ -185,15 +182,16 @@ void GenericNode::handleMessage(cMessage *msg)
 
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
-            EV_WARN << "Command completed. Queue empty. This should not happen!" << endl;
+            EV_ERROR << "Command completed. Queue empty. This should not happen!" << endl;
             delete msg;
+            msg = nullptr;
+            //TODO: The node has to do something. Insert Hovering Command?
             return;
-        //TODO: The node has to do something. Insert Hovering Command?
         }
 
         // Build and Send a Command Completed Message to Mission Control
         CmdCompletedMsg *ccmsg = new CmdCompletedMsg("commandCompleted");
-        ccmsg->setSourceNodeIndex(getIndex());
+        ccmsg->setSourceNodeIndex(this->getIndex());
         ReplacementData *replacementData = endOfOperation();
         if (replacementData != nullptr) {
             ccmsg->setReplacementData(*replacementData);
@@ -209,20 +207,22 @@ void GenericNode::handleMessage(cMessage *msg)
         EV_INFO << "Selecting next command." << endl;
         selectNextCommand();
         initializeState();
-        response = new cMessage("update");
+        msg->setName("update");
+        stepSize = 0;
     }
     else {
-        // Message is unknown for Generic Node, child classes may handle those messages
-        std::string message = "Unknown message name in Generic Node encountered: ";
+        // Message is unknown for Generic Node and all child classes the super call originated from
+        std::string message = "Unknown message name encountered: ";
         message += msg->getFullName();
-        EV_INFO << message << endl;
+        throw cRuntimeError(message.c_str());
+        delete msg;
+        msg = nullptr;
         return;
     }
 
     // schedule next update
-    lastUpdate = simTime();
-    if (response != nullptr) {
-        scheduleAt(lastUpdate + stepSize, response);
+    if (msg != nullptr) {
+        scheduleAt(simTime() + stepSize, msg);
     }
 }
 
