@@ -174,7 +174,6 @@ void GenericNode::handleMessage(cMessage *msg)
             msg->setName("nextCommand");
             stepSize = 0;
         }
-        lastUpdate = simTime();
     }
     else if (msg->isName("nextCommand")) {
 
@@ -219,6 +218,8 @@ void GenericNode::handleMessage(cMessage *msg)
         msg = nullptr;
         return;
     }
+
+    lastUpdate = simTime();
 
     // schedule next update
     if (msg != nullptr) {
