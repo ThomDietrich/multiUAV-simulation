@@ -151,8 +151,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized for provisioning and on its way." << endl;
-        delete msg;
-        msg = new cMessage("update");
+        msg->setName("update");
         stepSize = 0;
     }
     else if (msg->isName("startMission")) {
@@ -164,8 +163,7 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;
-        delete msg;
-        msg = new cMessage("update");
+        msg->setName("update");
         stepSize = 0;
     }
     else if (msg->isName("update")) {
@@ -176,6 +174,7 @@ void GenericNode::handleMessage(cMessage *msg)
             msg->setName("nextCommand");
             stepSize = 0;
         }
+        lastUpdate = simTime();
     }
     else if (msg->isName("nextCommand")) {
 
@@ -183,10 +182,11 @@ void GenericNode::handleMessage(cMessage *msg)
 
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
-            EV_WARN << "Command completed. Queue empty. This should not happen!" << endl;
+            EV_ERROR << "Command completed. Queue empty. This should not happen!" << endl;
             delete msg;
+            msg = nullptr;
+            //TODO: The node has to do something. Insert Hovering Command?
             return;
-        //TODO: The node has to do something. Insert Hovering Command?
         }
 
         // Build and Send a Command Completed Message to Mission Control
@@ -208,16 +208,22 @@ void GenericNode::handleMessage(cMessage *msg)
         selectNextCommand();
         initializeState();
         msg->setName("update");
+        stepSize = 0;
     }
     else {
+        // Message is unknown for Generic Node and all child classes the super call originated from
         std::string message = "Unknown message name encountered: ";
         message += msg->getFullName();
         throw cRuntimeError(message.c_str());
+        delete msg;
+        msg = nullptr;
+        return;
     }
 
     // schedule next update
-    lastUpdate = simTime();
-    scheduleAt(lastUpdate + stepSize, msg);
+    if (msg != nullptr) {
+        scheduleAt(simTime() + stepSize, msg);
+    }
 }
 
 /**

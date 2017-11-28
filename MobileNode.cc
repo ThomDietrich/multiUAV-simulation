@@ -87,12 +87,31 @@ void MobileNode::refreshDisplay() const
 
 void MobileNode::handleMessage(cMessage *msg)
 {
-    GenericNode::handleMessage(msg);
+    double stepSize = 0;
+    if (msg->isName("wait")) {
+        EV_INFO << __func__ << "(): wait message received" << endl;
+
+        // Prepare Wait Command and WaitCEE for finished node
+        WaitCommand *command = new WaitCommand();
+        WaitCEE *cee = new WaitCEE(this, command);
+        cees.push_front(cee);
+
+        delete msg;
+        msg = nullptr;
+    }
+    else {
+        GenericNode::handleMessage(msg);
+        msg = nullptr;
+    }
+
+    if (msg != nullptr) {
+        scheduleAt(simTime() + stepSize, msg);
+    }
+
     // update the trail data based on the new position
     if (trailNode) {
         // store the new position to be able to create a track later
-        //TODO fix
-        //trail.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
+        trail.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
 
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
         if (trail.size() > trailLength) trail.erase(trail.begin());
@@ -122,6 +141,11 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
     }
     //EV << "ChargingNode selected: " << nearest->getFullName() << endl;
     return nearest;
+}
+
+Battery* MobileNode::getBattery()
+{
+    return &battery;
 }
 
 #endif // WITH_OSG

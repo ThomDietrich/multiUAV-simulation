@@ -58,12 +58,14 @@ void UAVNode::initialize(int stage)
 
 void UAVNode::handleMessage(cMessage *msg)
 {
+    double stepSize = 0;
     if (msg->isName("exchangeData")) {
         EV_INFO << __func__ << "(): exchangeData message received" << endl;
 
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
             EV_WARN << __func__ << "(): Node not in ExchangeCEE. Ignoring exchangeData message." << endl;
             delete msg;
+            msg = nullptr;
             return;
         }
 
@@ -93,9 +95,15 @@ void UAVNode::handleMessage(cMessage *msg)
         }
 
         delete msg;
+        msg = nullptr;
     }
     else {
-        GenericNode::handleMessage(msg);
+        MobileNode::handleMessage(msg);
+        msg = nullptr;
+    }
+
+    if (msg != nullptr) {
+        scheduleAt(simTime() + stepSize, msg);
     }
 }
 
@@ -224,6 +232,9 @@ void UAVNode::initializeState()
             break;
         case CeeType::EXCHANGE:
             text += " EX";
+            break;
+        case CeeType::WAIT:
+            text += " WA";
             break;
         default:
             throw cRuntimeError("initializeState(): CEE type not handled for label.");

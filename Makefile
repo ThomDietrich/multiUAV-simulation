@@ -32,7 +32,9 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 OBJS = \
     $O/Battery.o \
     $O/ChannelController.o \
+    $O/ChargeAlgorithmCCCV.o \
     $O/ChargingNode.o \
+    $O/ChargingNodeSpotElement.o \
     $O/Command.o \
     $O/CommandExecEngine.o \
     $O/fallback.o \
@@ -43,6 +45,12 @@ OBJS = \
     $O/OsgEarthScene.o \
     $O/ReplacementData.o \
     $O/UAVNode.o \
+    $O/msgs/RequestForecastRemainingToPointInTimeMsg.o \
+    $O/msgs/RequestForecastRemainingToTargetMsg.o \
+    $O/msgs/RequestMobileNodeMsg.o \
+    $O/msgs/ReserveSpotMsg.o \
+    $O/msgs/ResponseForecastMsg.o \
+    $O/msgs/ResponseMobileNodeMsg.o \
     $O/CmdCompletedMsg_m.o \
     $O/MissionMsg_m.o
 
@@ -100,6 +108,8 @@ endif
 ifeq ($(WITH_OSGEARTH),yes)
 OMNETPP_LIBS += $(filter-out $(USERIF_LIBS),$(OSGEARTH_LIBS) -losgEarthFeatures -losgEarthSymbology -losgEarthAnnotation)
 endif
+
+COPTS += -isystem $(OMNETPP_ROOT)/include-boost
 
 # <<<
 #------------------------------------------------------------------------------

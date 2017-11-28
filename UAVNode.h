@@ -20,6 +20,7 @@
 #include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
+#include "msgs/ReserveSpotMsg.h"
 #include <boost/math/distributions/normal.hpp>
 
 using namespace omnetpp;
@@ -35,6 +36,7 @@ class UAVNode : public MobileNode {
     friend class TakeoffCEE;
     friend class ChargeCEE;
     friend class ExchangeCEE;
+    friend class WaitCEE;
 
 public:
     UAVNode();

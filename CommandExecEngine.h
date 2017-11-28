@@ -25,7 +25,7 @@ using namespace omnetpp;
 class MobileNode;
 
 enum class CeeType {
-    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE, EXCHANGE
+    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE, EXCHANGE, WAIT
 };
 
 /**
@@ -56,7 +56,7 @@ protected:
     simtime_t timeExecutionStart = 0;
 
 public:
-    //CommandExecEngine(SubclassNode* boundNode, SpecializedCommand* command) { };
+    //CommandExecEngine(SubclassNode *boundNode, SpecializedCommand *command) { };
 
     virtual ~CommandExecEngine()
     {
@@ -368,6 +368,10 @@ public:
     {
         return command;
     }
+    bool hasDeterminedDuration() override
+    {
+        return false;
+    }
 };
 
 /**
@@ -409,5 +413,32 @@ public:
     }
 };
 
+/**
+ * Wait Command Execution Engine
+ */
+class WaitCEE : public CommandExecEngine {
+protected:
+    MobileNode *node;
+    WaitCommand *command;
+public:
+    WaitCEE(MobileNode *boundNode, WaitCommand *command);
+    bool commandCompleted() override;
+    void initializeCEE() override;
+    void setNodeParameters() override;
+    void updateState(double stepSize) override;
+    double getOverallDuration() override;
+    double getRemainingTime() override;
+    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    char* getCeeTypeString() override;
+
+    WaitCommand* extractCommand()
+    {
+        return command;
+    }
+    bool hasDeterminedDuration() override
+    {
+        return false;
+    }
+};
 
 #endif /* COMMANDEXECENGINE_H_ */

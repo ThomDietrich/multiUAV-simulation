@@ -16,7 +16,6 @@
 #ifndef __GENERICNODE_H__
 #define __GENERICNODE_H__
 
-
 #include <omnetpp.h>
 
 #include <osgEarth/MapNode>
@@ -42,6 +41,9 @@ class ReplacementData;
  */
 class IGenericNode {
 public:
+    virtual ~IGenericNode()
+    {
+    }
     virtual double getX() const = 0;
     virtual double getY() const = 0;
     virtual double getZ() const = 0;
@@ -60,13 +62,15 @@ class GenericNode : public cSimpleModule, public IGenericNode {
 protected:
     // configuration
     double timeStep;
-    simtime_t lastUpdate;
     std::string labelColor;
     std::string label2Color;
     std::string rangeColor;
     std::string modelURL;
     bool showTxRange;
     double txRange;
+
+    /// Timestamp when the last time-related node state update happened
+    simtime_t lastUpdate;
 
     /// Contains future Command Execution Engines
     CEEQueue cees;
