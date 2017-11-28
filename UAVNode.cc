@@ -155,32 +155,6 @@ void UAVNode::selectNextCommand()
 
         if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
 
-/* Merge Conflict TODO
-        // Find nearest ChargingNode
-        ChargingNode *cn = findNearestCN(getX(), getY(), getZ());
-
-        // Generate WaypointCEE
-        WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(*this, *goToChargingNode);
-
-        // Todo:
-        // Add values to parameter 1 (estimtaded arrival time)
-        // Add real value to parameter 2 (estimated consumption till arrival at ChargingNode)
-        // The reserve message is not needed for charging nodes, but will make the forecasts of the node more reliable.
-        // Furthermore an earlier reservation will lead to an earlier charging.
-
-        // Generate and send reservation message to CN
-//        cMessage *reserveSpot = new ReserveSpotMsg(simTime()+goToChargingNodeCEE->getDuration(), goToChargingNodeCEE->getProbableConsumption(), this);
-//        this->send(reserveSpot, this->getOutputGateTo(cn));
-// Generate ChargeCEE
-        ChargeCommand *chargeCommand = new ChargeCommand(cn);
-        ChargeCEE *chargeCEE = new ChargeCEE(*this, *chargeCommand);
-
-        // Add WaypointCEE and ChargeCEE to the CEEs queue
-        cees.push_front(chargeCEE);
-        cees.push_front(goToChargingNodeCEE);
-*/
-
         // Generate and inject ExchangeCEE, only if not already done
         if (scheduledCEE->isPartOfMission()) {
             ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);

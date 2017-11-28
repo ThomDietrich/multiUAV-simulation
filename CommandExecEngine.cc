@@ -421,6 +421,17 @@ void ExchangeCEE::performExitActions()
         CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
         goToChargingNodeCEE->setPartOfMission(false);
 
+        /* TODO (copied over from Ludwig):
+         * Add values to parameter 1 (estimtaded arrival time)
+         * Add real value to parameter 2 (estimated consumption till arrival at ChargingNode)
+         * The reserve message is not needed for charging nodes, but will make the forecasts of the node more reliable.
+         * Furthermore an earlier reservation will lead to an earlier charging.
+         */
+
+        // Generate and send reservation message to CN
+        //cMessage *reserveSpot = new ReserveSpotMsg(simTime()+goToChargingNodeCEE->getDuration(), goToChargingNodeCEE->getProbableConsumption(), this);
+        //this->send(reserveSpot, this->getOutputGateTo(cn));
+
         // Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         CommandExecEngine *chargeCEE = new ChargeCEE(node, chargeCommand);
