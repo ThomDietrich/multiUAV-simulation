@@ -75,15 +75,12 @@ void ChargingNode::refreshDisplay() const
 
 void ChargingNode::handleMessage(cMessage* msg)
 {
-    GenericNode::handleMessage(msg);
-
     if (msg->isName("startCharge")) {
         EV_INFO << "MobileNode is ready to get charged" << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         appendToObjectsWaiting(mn);
 
         scheduleAt(simTime(), new cMessage("update"));
-
     }
     else if (msg->isName("reserveSpot")) {
         double estimatedArrival = stod(msg->getParListPtr()->get("estimatedArrival")->str());
@@ -93,7 +90,6 @@ void ChargingNode::handleMessage(cMessage* msg)
         EV_INFO << "Mobile Node is on the way to CS, reserve spot, estimated Arrival: " << estimatedArrival << endl;
 
         appendToObjectsWaiting(mn, simTime(), estimatedArrival, estimatedConsumption);
-
     }
     else if (msg->isName("requestForecastRemainingToTarget")) {
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
@@ -105,7 +101,6 @@ void ChargingNode::handleMessage(cMessage* msg)
         cMessage *response = new ResponseForecastMsg(forecastPointInTime, targetPercentage);
         GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
         send(response, getOutputGateTo(sender));
-
     }
     else if (msg->isName("requestForecastRemainingToPointInTime")) {
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
@@ -116,7 +111,6 @@ void ChargingNode::handleMessage(cMessage* msg)
         cMessage *response = new ResponseForecastMsg(pointInTime, forecastPercentage);
         GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
         send(response, getOutputGateTo(sender));
-
     }
     else if (msg->isName("requestMobileNode")) {
         double remaining = stod(msg->getParListPtr()->get("remaining")->str());
@@ -125,10 +119,9 @@ void ChargingNode::handleMessage(cMessage* msg)
         cMessage *response = new ResponseMobileNodeMsg(sufficientNode);
         GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
         send(response, getOutputGateTo(sender));
-
     }
     else {
-        // Message is unknown for Charging Node, child classes may handle those messages
+        GenericNode::handleMessage(msg);
         return;
     }
 }
