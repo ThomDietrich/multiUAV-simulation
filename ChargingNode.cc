@@ -80,51 +80,56 @@ void ChargingNode::handleMessage(cMessage* msg)
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         appendToObjectsWaiting(mn);
         if(not active) {
-            scheduleAt(simTime(), new cMessage("update"));
+            msg->setName("update");
+            scheduleAt(simTime(), msg);
             active = true;
         }
     }
     else if (msg->isName("reserveSpot")) {
-        double estimatedArrival = stod(msg->getParListPtr()->get("estimatedArrival")->str());
-        double estimatedConsumption = stod(msg->getParListPtr()->get("estimatedConsumption")->str());
+        ReserveSpot *rsmsg = check_and_cast<ReserveSpot*>(msg);
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getParListPtr()->get("mobileNode"));
 
-        EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << estimatedArrival << endl;
+        EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
 
-        appendToObjectsWaiting(mn, simTime(), estimatedArrival, estimatedConsumption);
+        appendToObjectsWaiting(mn, simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
         if(not active) {
-            scheduleAt(simTime(), new cMessage("update"));
+            msg->setName("update");
+            scheduleAt(simTime(), msg);
             active = true;
         }
     }
-    else if (msg->isName("requestForecastRemainingToTarget")) {
-        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
-        double capacity = stod(msg->getParListPtr()->get("capacity")->str());
-        double targetPercentage = stod(msg->getParListPtr()->get("targetPercentage")->str());
-        double forecastDuration = getForecastRemainingToTarget(remaining, capacity, targetPercentage);
-        simtime_t forecastPointInTime = simTime() + forecastDuration;
+    else if (msg->isName("forecastTargetRequest")) {
+        ForecastTargetRequest *ftmsg = check_and_cast<ForecastTargetRequest *>(msg);
+        double forecastDuration = getForecastRemainingToTarget(ftmsg->getRemaining(), ftmsg->getCapacity(), ftmsg->getTargetPercentage());
 
-        cMessage *response = new ResponseForecastMsg(forecastPointInTime, targetPercentage);
-        GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
-        send(response, getOutputGateTo(sender));
+        delete msg;
+        ForecastResponse *msg = new ForecastResponse("forecastResponse");
+        msg->setPointInTime(simTime() + forecastDuration);
+        msg->setReachedPercentage(ftmsg->getTargetPercentage());
+        send(msg, getOutputGateTo(msg->getSenderModule()));
     }
-    else if (msg->isName("requestForecastRemainingToPointInTime")) {
-        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
-        double capacity = stod(msg->getParListPtr()->get("capacity")->str());
-        simtime_t pointInTime = (simtime_t) stod(msg->getParListPtr()->get("pointInTime")->str());
-        double forecastPercentage = getForecastRemainingToPointInTime(remaining, capacity, pointInTime);
+    else if (msg->isName("forecastPointInTimeRequest")) {
+        ForecastPointInTimeRequest *fpitmsg = check_and_cast<ForecastPointInTimeRequest *>(msg);
+        double forecastPercentage = getForecastRemainingToPointInTime(fpitmsg->getRemaining(), fpitmsg->getCapacity(), fpitmsg->getPointInTime());
 
-        cMessage *response = new ResponseForecastMsg(pointInTime, forecastPercentage);
-        GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
-        send(response, getOutputGateTo(sender));
+        delete msg;
+        ForecastResponse *msg = new ForecastResponse("forecastResponse");
+        msg->setPointInTime(fpitmsg->getPointInTime());
+        msg->setReachedPercentage(forecastPercentage);
+        send(msg, getOutputGateTo(msg->getSenderModule()));
     }
-    else if (msg->isName("requestMobileNode")) {
-        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
-        MobileNode* sufficientNode = getSufficientlyChargedNode(remaining);
+    else if (msg->isName("mobileNodeRequest")) {
+        MobileNodeRequest *mnmsg = check_and_cast<MobileNodeRequest *>(msg);
 
-        cMessage *response = new ResponseMobileNodeMsg(sufficientNode);
-        GenericNode *sender = check_and_cast<GenericNode*>(msg->getSenderModule());
-        send(response, getOutputGateTo(sender));
+        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
+        MobileNode* sufficientNode = getSufficientlyChargedNode(mnmsg->getRemaining());
+
+        delete msg;
+        MobileNodeResponse *msg = new MobileNodeResponse("mobileNodeResponse");
+        cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
+        mobileNodePar->setPointerValue(sufficientNode);
+        msg->addPar(mobileNodePar);
+        send(msg, getOutputGateTo(msg->getSenderModule()));
     }
     else {
         GenericNode::handleMessage(msg);

@@ -2,7 +2,7 @@
 # OMNeT++/OMNEST Makefile for multiUAV-simulation
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -DWITH_OSG -DWITH_OSGEARTH
+#  opp_makemake -f --deep -DWITH_OSG -DWITH_OSGEARTH -I/include-boost
 #
 
 # Name of target to be created (-o option)
@@ -15,7 +15,7 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 #USERIF_LIBS = $(QTENV_LIBS)
 
 # C++ include paths (with -I)
-INCLUDE_PATH =
+INCLUDE_PATH = -I/include-boost
 
 # Additional object and library files to link with
 EXTRA_OBJS =
@@ -45,19 +45,25 @@ OBJS = \
     $O/OsgEarthScene.o \
     $O/ReplacementData.o \
     $O/UAVNode.o \
-    $O/msgs/RequestForecastRemainingToPointInTimeMsg.o \
-    $O/msgs/RequestForecastRemainingToTargetMsg.o \
-    $O/msgs/RequestMobileNodeMsg.o \
-    $O/msgs/ReserveSpotMsg.o \
-    $O/msgs/ResponseForecastMsg.o \
-    $O/msgs/ResponseMobileNodeMsg.o \
     $O/CmdCompletedMsg_m.o \
-    $O/MissionMsg_m.o
+    $O/MissionMsg_m.o \
+    $O/msgs/ForecastPointInTimeRequest_m.o \
+    $O/msgs/ForecastResponse_m.o \
+    $O/msgs/ForecastTargetRequest_m.o \
+    $O/msgs/MobileNodeRequest_m.o \
+    $O/msgs/MobileNodeResponse_m.o \
+    $O/msgs/ReserveSpot_m.o
 
 # Message files
 MSGFILES = \
     CmdCompletedMsg.msg \
-    MissionMsg.msg
+    MissionMsg.msg \
+    msgs/ForecastPointInTimeRequest.msg \
+    msgs/ForecastResponse.msg \
+    msgs/ForecastTargetRequest.msg \
+    msgs/MobileNodeRequest.msg \
+    msgs/MobileNodeResponse.msg \
+    msgs/ReserveSpot.msg
 
 # SM files
 SMFILES =

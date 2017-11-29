@@ -11,27 +11,7 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
-#include "RequestMobileNodeMsg.h"
-
-RequestMobileNodeMsg::RequestMobileNodeMsg(double remaining)
-{
-    this->setName("requestMobileNode");
-    this->addParameters(remaining);
-    
+message MobileNodeResponse {
 }
-
-RequestMobileNodeMsg::~RequestMobileNodeMsg()
-{
-    // TODO Auto-generated destructor stub
-}
-
-void RequestMobileNodeMsg::addParameters(double remaining)
-{
-    cMsgPar *remainingPar = new cMsgPar("remaining");
-    remainingPar->setDoubleValue(remaining);
-
-    this->addPar(remainingPar);
-}
-

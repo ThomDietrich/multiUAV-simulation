@@ -11,26 +11,9 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
-#ifndef MSGS_REQUESTMOBILENODEMSG_H_
-#define MSGS_REQUESTMOBILENODEMSG_H_
-
-#include <omnetpp.h>
-
-using namespace omnetpp;
-
-/*
- * RequestMobileNodeMsg provides a wrapper for cMessage class.
- * Intended to request a mobile node which fits the given current requirement.
- */
-class RequestMobileNodeMsg : public cMessage {
-public:
-    RequestMobileNodeMsg(double remaining);
-    virtual ~RequestMobileNodeMsg();
-
-protected:
-    void addParameters(double remaining);
-};
-
-#endif /* MSGS_RESPONSEFORECASTMSG_H_ */
+message ReserveSpot {
+	simtime_t estimatedArrival;
+	double consumptionTillArrival;
+}

@@ -11,25 +11,10 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
-#include "ResponseMobileNodeMsg.h"
-
-ResponseMobileNodeMsg::ResponseMobileNodeMsg(MobileNode* mobileNode)
-{
-    this->setName("responseMobileNode");
-    this->addParameters(mobileNode);
-}
-
-ResponseMobileNodeMsg::~ResponseMobileNodeMsg()
-{
-    // TODO Auto-generated destructor stub
-}
-
-void ResponseMobileNodeMsg::addParameters(MobileNode* mobileNode)
-{
-    cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
-    mobileNodePar->setPointerValue(mobileNode);
-
-    this->addPar(mobileNodePar);
+message ForecastTargetRequest {
+	double remaining;
+	double capacity;
+	double targetPercentage;
 }

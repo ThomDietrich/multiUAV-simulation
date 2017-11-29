@@ -24,10 +24,12 @@
 #include "CommandExecEngine.h"
 #include "GenericNode.h"
 #include "MobileNode.h"
-#include "msgs/ResponseForecastMsg.h"
-#include "msgs/ResponseMobileNodeMsg.h"
-
-
+#include "msgs/ForecastPointInTimeRequest_m.h"
+#include "msgs/ForecastTargetRequest_m.h"
+#include "msgs/ForecastResponse_m.h"
+#include "msgs/MobileNodeRequest_m.h"
+#include "msgs/MobileNodeResponse_m.h"
+#include "msgs/ReserveSpot_m.h"
 
 using namespace omnetpp;
 

@@ -11,27 +11,10 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
-#ifndef MSGS_RESPONSEMOBILENODEMSG_H_
-#define MSGS_RESPONSEMOBILENODEMSG_H_
-
-#include <omnetpp.h>
-#include "../MobileNode.h"
-
-using namespace omnetpp;
-
-/*
- * The class ResponseMobileNodeMsg provides a wrapper for cMessage class.
- * Intended to respond with a suitable mobileNode with enough (as much as requested) remaining current
- */
-class ResponseMobileNodeMsg : public cMessage {
-public:
-    ResponseMobileNodeMsg(MobileNode* mobileNode);
-    virtual ~ResponseMobileNodeMsg();
-
-protected:
-    void addParameters(MobileNode* mobileNode);
-};
-
-#endif /* MSGS_RESPONSEMOBILENODEMSG_H_ */
+message ForecastPointInTimeRequest {
+	double remaining;
+	double capacity;
+	simtime_t pointInTime;
+}

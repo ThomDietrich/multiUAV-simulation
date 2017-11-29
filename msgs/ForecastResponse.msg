@@ -11,27 +11,9 @@
 // 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
-#ifndef MSGS_RESPONSEFORECASTMSG_H_
-#define MSGS_RESPONSEFORECASTMSG_H_
-
-#include <omnetpp.h>
-
-using namespace omnetpp;
-
-/*
- * The class ResponseForecastMsg provides a wrapper for cMessage class,
- * Intended to respond to forecast requests.
- * It will always contain a point in time and the reached percentage for that point in time.
- */
-class ResponseForecastMsg : public cMessage {
-public:
-    ResponseForecastMsg(simtime_t pointInTime, double reachedPercentage = 100.0);
-    virtual ~ResponseForecastMsg();
-
-protected:
-    void addParameters(simtime_t pointInTime, double reachedPercentage);
-};
-
-#endif /* MSGS_RESPONSEFORECASTMSG_H_ */
+message ForecastResponse {
+	simtime_t pointInTime;
+	double reachedPercentage;
+}
