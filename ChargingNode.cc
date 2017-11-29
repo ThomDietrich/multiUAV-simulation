@@ -120,8 +120,6 @@ void ChargingNode::handleMessage(cMessage* msg)
     }
     else if (msg->isName("mobileNodeRequest")) {
         MobileNodeRequest *mnmsg = check_and_cast<MobileNodeRequest *>(msg);
-
-        double remaining = stod(msg->getParListPtr()->get("remaining")->str());
         MobileNode* sufficientNode = getSufficientlyChargedNode(mnmsg->getRemaining());
 
         delete msg;
@@ -284,7 +282,7 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, simtime_t rese
 }
 
 /*
- * @return bool true when the given mobileNode is already in the waitingQueue
+ * @return bool true when the given mobileNode is already in the waiting queue
  */
 bool ChargingNode::isInWaitingQueue(MobileNode* mobileNode)
 {
