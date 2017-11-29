@@ -304,8 +304,8 @@ void ChargeCEE::setNodeParameters()
 {
     node->pitch = pitch;
     node->climbAngle = climbAngle;
-    cMessage *request = new cMessage("startCharge");
-    node->send(request, node->getOutputGateTo(command->getChargingNode()));
+//    cMessage *request = new cMessage("startCharge");
+//    node->send(request, node->getOutputGateTo(command->getChargingNode()));
 	timeExecutionStart = simTime();
 }
 
@@ -428,13 +428,15 @@ void ExchangeCEE::performExitActions()
          */
 
         // Generate and send reservation message to CN
-//        ReserveSpot *msg = new ReserveSpot("reserveSpot");
-//        msg->setEstimatedArrival(simTime()+goToChargingNodeCEE->getOverallDuration());
-//        msg->setConsumptionTillArrival(goToChargingNodeCEE->getProbableConsumption());
-//        cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
-//        mobileNodePar->setPointerValue(this->node);
-//        msg->addPar(mobileNodePar);
-//        node->send(msg, node->getOutputGateTo(cn));
+        double goToChargingNodeDuration = (goToChargingNodeCEE->hasDeterminedDuration()) ? goToChargingNodeCEE->getOverallDuration() : goToChargingNodeCEE->getDuration();
+        EV_DEBUG << goToChargingNodeDuration << endl;
+        ReserveSpot *msg = new ReserveSpot("reserveSpot");
+        msg->setEstimatedArrival(simTime() + goToChargingNodeDuration);
+        msg->setConsumptionTillArrival(goToChargingNodeCEE->getProbableConsumption());
+        cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
+        mobileNodePar->setPointerValue(this->node);
+        msg->addPar(mobileNodePar);
+        node->send(msg, node->getOutputGateTo(cn));
 
         // Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
