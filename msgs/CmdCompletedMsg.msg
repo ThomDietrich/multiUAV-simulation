@@ -14,14 +14,13 @@
 // 
 
 cplusplus {{
-#include "Command.h"
-typedef std::deque<Command*> CommandQueue;
+    #include "../ReplacementData.h"
 }};
 
-class noncobject CommandQueue;
+class noncobject ReplacementData;
 
-message MissionMsg {
-    CommandQueue mission;
-    int missionId;
-    bool missionRepeat = false;
+message CmdCompletedMsg {
+	int sourceNodeIndex;
+	bool replacementDataAvailable = true;
+    ReplacementData replacementData;
 }

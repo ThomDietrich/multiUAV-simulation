@@ -25,8 +25,8 @@
 #include "UAVNode.h"
 #include "MobileNode.h"
 #include "GenericNode.h"
-#include "MissionMsg_m.h"
-#include "CmdCompletedMsg_m.h"
+#include "msgs/MissionMsg_m.h"
+#include "msgs/CmdCompletedMsg_m.h"
 #include "MissionControlDataMap.h"
 
 using namespace omnetpp;

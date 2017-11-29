@@ -45,22 +45,22 @@ OBJS = \
     $O/OsgEarthScene.o \
     $O/ReplacementData.o \
     $O/UAVNode.o \
-    $O/CmdCompletedMsg_m.o \
-    $O/MissionMsg_m.o \
+    $O/msgs/CmdCompletedMsg_m.o \
     $O/msgs/ForecastPointInTimeRequest_m.o \
     $O/msgs/ForecastResponse_m.o \
     $O/msgs/ForecastTargetRequest_m.o \
+    $O/msgs/MissionMsg_m.o \
     $O/msgs/MobileNodeRequest_m.o \
     $O/msgs/MobileNodeResponse_m.o \
     $O/msgs/ReserveSpot_m.o
 
 # Message files
 MSGFILES = \
-    CmdCompletedMsg.msg \
-    MissionMsg.msg \
+    msgs/CmdCompletedMsg.msg \
     msgs/ForecastPointInTimeRequest.msg \
     msgs/ForecastResponse.msg \
     msgs/ForecastTargetRequest.msg \
+    msgs/MissionMsg.msg \
     msgs/MobileNodeRequest.msg \
     msgs/MobileNodeResponse.msg \
     msgs/ReserveSpot.msg
