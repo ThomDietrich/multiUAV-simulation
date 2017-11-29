@@ -16,4 +16,5 @@
 message ReserveSpot {
 	simtime_t estimatedArrival;
 	double consumptionTillArrival;
+	double targetPercentage;
 }

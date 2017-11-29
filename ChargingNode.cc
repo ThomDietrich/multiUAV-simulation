@@ -78,8 +78,8 @@ void ChargingNode::handleMessage(cMessage* msg)
     if (msg->isName("startCharge")) {
         EV_INFO << "MobileNode is ready to get charged" << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
-        appendToObjectsWaiting(mn);
-        if(not active) {
+        appendToObjectsWaiting(mn, 100.0);
+        if (not active) {
             msg->setName("update");
             scheduleAt(simTime(), msg);
             active = true;
@@ -91,8 +91,8 @@ void ChargingNode::handleMessage(cMessage* msg)
 
         EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
 
-        appendToObjectsWaiting(mn, simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
-        if(not active) {
+        appendToObjectsWaiting(mn, rsmsg->getTargetPercentage(), simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
+        if (not active) {
             msg->setName("update");
             scheduleAt(simTime(), msg);
             active = true;
@@ -193,7 +193,6 @@ void ChargingNode::collectStatistics()
  */
 double ChargingNode::getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage)
 {
-    // ToDo include targetPercentage
     return chargeAlgorithm->calculateChargeTime(remaining, capacity, targetPercentage);
 }
 
@@ -249,7 +248,8 @@ MobileNode* ChargingNode::getSufficientlyChargedNode(double current)
  * Estimated wait and charge duration get calculated and appended.
  * Default values take place when there is no reservation and the object is already present (object appeared with startCharge message):
  */
-void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, simtime_t reservationTime, simtime_t estimatedArrival, double consumption)
+void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, double targetPercentage, simtime_t reservationTime, simtime_t estimatedArrival,
+        double consumption)
 {
     // check if the waiting queue size would be exceeded
     if (objectsWaiting.size() >= spotsWaiting && spotsWaiting != 0) {
@@ -264,10 +264,9 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, simtime_t rese
 
     // generate a new waiting element with estimated charge and waiting times
     // substract consumption which will occur between reservation and the charging process
-    // ToDo include targetPercentage
-    ChargingNodeSpotElement* element = new ChargingNodeSpotElement(mobileNode,
-            chargeAlgorithm->calculateChargeTime(mobileNode->getBattery()->getRemaining() - consumption, mobileNode->getBattery()->getCapacity(), 100),
-            getEstimatedWaitingSeconds());
+    double chargeTime = chargeAlgorithm->calculateChargeTime(mobileNode->getBattery()->getRemaining() - consumption, mobileNode->getBattery()->getCapacity(),
+            targetPercentage);
+    ChargingNodeSpotElement* element = new ChargingNodeSpotElement(mobileNode, chargeTime, getEstimatedWaitingSeconds(), targetPercentage);
 
     // set estimatedArrival and reservationTime if not 0, otherwise simTime() will be used as default value
     if (!estimatedArrival.isZero()) {
@@ -342,7 +341,8 @@ void ChargingNode::scheduleChargingSpots()
     std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
     while (objectChargingIt != objectsCharging.end()) {
         if ((*objectChargingIt)->getReservationTime() > (*nextWaitingObject)->getReservationTime()) {
-            appendToObjectsWaiting((*objectChargingIt)->getNode(), (*objectChargingIt)->getReservationTime());
+            appendToObjectsWaiting((*objectChargingIt)->getNode(), (*objectChargingIt)->getTargetCapacityPercentage(),
+                    (*objectChargingIt)->getReservationTime());
             objectsCharging.erase(objectChargingIt);
             (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
             objectsCharging.push_back(*nextWaitingObject);
@@ -371,7 +371,7 @@ void ChargingNode::charge()
         EV_INFO << "UAV in slot " << i << " is currently getting charged. Currently Remaining: " << objectsCharging[i]->getNode()->getBattery()->getRemaining()
                 << endl;
 
-        if (objectsCharging[i]->getNode()->getBattery()->isFull()) {
+        if (objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() >= objectsCharging[i]->getTargetCapacityPercentage()) {
             EV_INFO << "UAV in slot " << i << " is fully charged." << endl;
             // Send wait message to node
             MobileNode* mobileNode = objectsCharging[i]->getNode();
