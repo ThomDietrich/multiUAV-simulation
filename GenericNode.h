@@ -178,7 +178,7 @@ public:
     virtual void clearCommands();
     virtual CommandQueue* extractCommands();
 
-    virtual cGate* getOutputGateTo(GenericNode *node);
+    virtual cGate* getOutputGateTo(cModule *cMod);
 
 protected:
     virtual void initialize(int stage) override;
