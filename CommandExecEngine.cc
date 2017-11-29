@@ -424,13 +424,17 @@ void ExchangeCEE::performExitActions()
         /* TODO (copied over from Ludwig):
          * Add values to parameter 1 (estimtaded arrival time)
          * Add real value to parameter 2 (estimated consumption till arrival at ChargingNode)
-         * The reserve message is not needed for charging nodes, but will make the forecasts of the node more reliable.
-         * Furthermore an earlier reservation will lead to an earlier charging.
+         * Delete the "startCharge" message generation in ChargeCEE::setNodeParameters()
          */
 
         // Generate and send reservation message to CN
-        //cMessage *reserveSpot = new ReserveSpotMsg(simTime()+goToChargingNodeCEE->getDuration(), goToChargingNodeCEE->getProbableConsumption(), this);
-        //this->send(reserveSpot, this->getOutputGateTo(cn));
+//        ReserveSpot *msg = new ReserveSpot("reserveSpot");
+//        msg->setEstimatedArrival(simTime()+goToChargingNodeCEE->getOverallDuration());
+//        msg->setConsumptionTillArrival(goToChargingNodeCEE->getProbableConsumption());
+//        cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
+//        mobileNodePar->setPointerValue(this->node);
+//        msg->addPar(mobileNodePar);
+//        node->send(msg, node->getOutputGateTo(cn));
 
         // Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
