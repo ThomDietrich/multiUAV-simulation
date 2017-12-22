@@ -18,8 +18,9 @@
 
 #include <iostream>
 #include <cmath>
+#include "IChargeAlgorithm.h"
 
-class ChargeAlgorithmCCCV {
+class ChargeAlgorithmCCCV : public IChargeAlgorithm{
 public:
     ChargeAlgorithmCCCV(double linearGradient, double expGradient, double nonLinearPhaseStartPercentage, double nonLinearPhaseLimitPercentage);
     double calculateChargeAmount(double remaining, double capacity, double seconds);

@@ -23,6 +23,7 @@
 #include "Command.h"
 #include "CommandExecEngine.h"
 #include "GenericNode.h"
+#include "IChargeAlgorithm.h"
 #include "MobileNode.h"
 #include "msgs/ForecastPointInTimeRequest_m.h"
 #include "msgs/ForecastTargetRequest_m.h"
@@ -46,7 +47,7 @@ protected:
     std::deque<ChargingNodeSpotElement*> objectsCharging;
     std::deque<MobileNode*> objectsFinished;
     double chargingCurrent;
-    ChargeAlgorithmCCCV* chargeAlgorithm;
+    IChargeAlgorithm* chargeAlgorithm;
     bool active;
 public:
     ChargingNode();
