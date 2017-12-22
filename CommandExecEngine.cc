@@ -421,21 +421,16 @@ void ExchangeCEE::performExitActions()
         CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
         goToChargingNodeCEE->setPartOfMission(false);
 
-        /* TODO (copied over from Ludwig):
-         * Add values to parameter 1 (estimtaded arrival time)
-         * Add real value to parameter 2 (estimated consumption till arrival at ChargingNode)
-         * Delete the "startCharge" message generation in ChargeCEE::setNodeParameters()
-         */
+        // Get the duration for the flight to ChargingNode
+        // To get the information the CEE needs to be initialized
+        goToChargingNodeCEE->initializeCEE();
+        double goToChargingNodeDuration = (goToChargingNodeCEE->hasDeterminedDuration()) ? goToChargingNodeCEE->getOverallDuration() : goToChargingNodeCEE->getDuration();
 
         // Generate and send reservation message to CN
-        double goToChargingNodeDuration = (goToChargingNodeCEE->hasDeterminedDuration()) ? goToChargingNodeCEE->getOverallDuration() : goToChargingNodeCEE->getDuration();
-        EV_DEBUG << goToChargingNodeDuration << endl;
         ReserveSpot *msg = new ReserveSpot("reserveSpot");
         msg->setEstimatedArrival(simTime() + goToChargingNodeDuration);
         msg->setConsumptionTillArrival(goToChargingNodeCEE->getProbableConsumption());
-        cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
-        mobileNodePar->setPointerValue(this->node);
-        msg->addPar(mobileNodePar);
+        msg->setTargetPercentage(100.0);
         node->send(msg, node->getOutputGateTo(cn));
 
         // Generate ChargeCEE
