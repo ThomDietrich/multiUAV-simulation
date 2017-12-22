@@ -87,7 +87,7 @@ void ChargingNode::handleMessage(cMessage* msg)
     }
     else if (msg->isName("reserveSpot")) {
         ReserveSpot *rsmsg = check_and_cast<ReserveSpot*>(msg);
-        MobileNode *mn = check_and_cast<MobileNode*>(msg->getParListPtr()->get("mobileNode"));
+        MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
 
         EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
 
@@ -146,7 +146,7 @@ void ChargingNode::initializeState()
 void ChargingNode::updateState()
 {
     scheduleChargingSpots();
-    if (objectsCharging.size() == 0) {
+    if (objectsCharging.empty()) {
         return;
     }
     charge();
@@ -177,7 +177,7 @@ double ChargingNode::nextNeededUpdate()
     // get next (furure) arrival time for reservations
     for (unsigned int i = 0; i < objectsWaiting.size(); i++) {
         if ((objectsWaiting[i]->getEstimatedArrival() < nextEvent && objectsWaiting[i]->getEstimatedArrival() >= simTime()) || nextEvent == -1) {
-            nextEvent = objectsCharging[i]->getPointInTimeWhenDone().dbl() - currentTime.dbl();
+            nextEvent = objectsWaiting[i]->getPointInTimeWhenDone().dbl() - currentTime.dbl();
         }
     }
 
@@ -318,7 +318,7 @@ std::deque<ChargingNodeSpotElement*>::iterator ChargingNode::getNextWaitingObjec
 
 bool ChargingNode::isPhysicallyPresent(MobileNode* mobileNode)
 {
-    return (mobileNode->getX() == getX() && mobileNode->getY() == getY() && mobileNode->getZ() == getZ());
+    return (nearbyint(mobileNode->getX()) == getX() && nearbyint(mobileNode->getY()) == getY() && nearbyint(mobileNode->getZ()) == getZ());
 }
 
 /**
@@ -335,6 +335,9 @@ void ChargingNode::scheduleChargingSpots()
     // get the next waiting object (see referenced method for details)
     // variable gets used through both loops and always rewritten when the object was appended to a charging spot
     std::deque<ChargingNodeSpotElement*>::iterator nextWaitingObject = getNextWaitingObjectIterator();
+    if(not isPhysicallyPresent((*nextWaitingObject)->getNode())) {
+        return;
+    }
 
     // loop through currently used spots and check for earlier reservations
     // when an earlier reservation time occurs, throw out the currently charged node and push it back to the waiting objects
