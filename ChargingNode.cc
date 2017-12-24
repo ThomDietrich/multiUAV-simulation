@@ -40,6 +40,15 @@ void ChargingNode::initialize(int stage)
             this->yaw = 0;
             break;
         case 1:
+            //Initialize Energy storage
+            int capacity = int(par("batteryCapacity"));
+            (capacity == 0) ? battery = Battery() : battery = Battery(capacity);
+
+            //Initilize charge parameters
+            chargeCurrent = double(par("chargeCurrent"));
+            chargeEffectivenessPercentage = double(par("chargeEffectivenessPercentage"))/100;
+
+            //Initialize chargeAlgorithm
             double linearGradient = par("linearGradient");
             double expGradient = par("expGradient");
             double nonLinearPhaseStartPercentage = par("nonLinearPhaseStartPercentage");
@@ -51,6 +60,7 @@ void ChargingNode::initialize(int stage)
             par("stateSummary").setStringValue("");
 			WATCH(usedPower);
             WATCH(chargedUAVs);
+//            WATCH(battery.getRemaining());
             break;
     }
 }
@@ -86,7 +96,7 @@ void ChargingNode::handleMessage(cMessage* msg)
         }
     }
     else if (msg->isName("reserveSpot")) {
-        ReserveSpot *rsmsg = check_and_cast<ReserveSpot*>(msg);
+        ReserveSpotMsg *rsmsg = check_and_cast<ReserveSpotMsg*>(msg);
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
 
         EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
@@ -147,6 +157,10 @@ void ChargingNode::updateState()
 {
     scheduleChargingSpots();
     if (objectsCharging.empty()) {
+        return;
+    }
+    if (battery.isEmpty()) {
+        EV_WARN << "The battery of the Charging Station is exhausted!";
         return;
     }
     charge();
@@ -394,6 +408,7 @@ void ChargingNode::charge()
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
+        battery.discharge(chargeAmount);
         usedPower += chargeAmount;
     }
 }

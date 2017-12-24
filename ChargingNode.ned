@@ -23,6 +23,8 @@ simple ChargingNode extends GenericNode
         @display("i=block/plug");
         double posX @unit("m") = default(0m);            // the starting coordinates in meter
         double posY @unit("m") = default(0m);            // the starting coordinates in meter
+        double batteryCapacity @unit("mAh") = default(0mAh); // the capacity of the ChargingStation in mAh
+        double chargeEffectivenessPercentage = default(100.0); // the effectiveness of the battery in the Charging Station (100% - effectiveness = how much energy is wasted during charging)
         double chargeCurrent @unit("A") = default(1.0A); // the charging current, assumed as constant 
         int spotsWaiting = default(0);                   // the amount of spots a incoming node can wait on	
         int spotsCharging = default(0);                  // the amount of spots a node is charged on

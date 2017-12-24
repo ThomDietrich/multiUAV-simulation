@@ -30,7 +30,7 @@
 #include "msgs/ForecastResponse_m.h"
 #include "msgs/MobileNodeRequest_m.h"
 #include "msgs/MobileNodeResponse_m.h"
-#include "msgs/ReserveSpot_m.h"
+#include "msgs/ReserveSpotMsg_m.h"
 
 using namespace omnetpp;
 
@@ -41,12 +41,14 @@ private:
     double usedPower = 0;
     int chargedUAVs = 0;
 protected:
+    Battery battery;
+    double chargeCurrent;
+    double chargeEffectivenessPercentage;
     unsigned int spotsWaiting;
     unsigned int spotsCharging;
     std::deque<ChargingNodeSpotElement*> objectsWaiting;
     std::deque<ChargingNodeSpotElement*> objectsCharging;
     std::deque<MobileNode*> objectsFinished;
-    double chargingCurrent;
     IChargeAlgorithm* chargeAlgorithm;
     bool active;
 public:
@@ -66,11 +68,6 @@ public:
     double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
     MobileNode* getSufficientlyChargedNode(double current);
     // Getters
-    double getChargingCurrent() const
-    {
-        return chargingCurrent;
-    }
-
     unsigned int getSpotsCharging() const
     {
         return spotsCharging;
