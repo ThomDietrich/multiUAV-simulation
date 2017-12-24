@@ -13,7 +13,7 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 //
 
-message ReserveSpot {
+message ReserveSpotMsg {
 	simtime_t estimatedArrival;
 	double consumptionTillArrival;
 	double targetPercentage;
