@@ -51,6 +51,7 @@ protected:
     std::deque<MobileNode*> objectsFinished;
     IChargeAlgorithm* chargeAlgorithm;
     bool active;
+    bool prioritizeFastCharge;
 public:
     ChargingNode();
     virtual ~ChargingNode();
@@ -78,6 +79,11 @@ public:
         return spotsWaiting;
     }
 
+    IChargeAlgorithm* getChargeAlgorithm() const
+    {
+        return chargeAlgorithm;
+    }
+
     double getUsedPower() const
     {
         return usedPower;
@@ -94,9 +100,12 @@ protected:
     virtual void refreshDisplay() const override;
     void appendToObjectsWaiting(MobileNode* mobileNode, double targetPercentage, simtime_t reservationTime = 0, simtime_t estimatedArrival = 0, double consumption = 0);
     bool isInWaitingQueue(MobileNode* mobileNode);
-    std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator();
+    std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator(bool fastCharge);
+    int numberWaitingAndPhysicallyPresent();
     bool isPhysicallyPresent(MobileNode* mobileNode);
-    void scheduleChargingSpots();
+    void fillChargingSpots();
+    void clearChargingSpots();
+    void rearrangeChargingSpots();
     void charge();
     double getEstimatedWaitingSeconds();
 };
