@@ -427,7 +427,7 @@ void ExchangeCEE::performExitActions()
         double goToChargingNodeDuration = (goToChargingNodeCEE->hasDeterminedDuration()) ? goToChargingNodeCEE->getOverallDuration() : goToChargingNodeCEE->getDuration();
 
         // Generate and send reservation message to CN
-        ReserveSpot *msg = new ReserveSpot("reserveSpot");
+        ReserveSpotMsg *msg = new ReserveSpotMsg("reserveSpot");
         msg->setEstimatedArrival(simTime() + goToChargingNodeDuration);
         msg->setConsumptionTillArrival(goToChargingNodeCEE->getProbableConsumption());
         msg->setTargetPercentage(100.0);

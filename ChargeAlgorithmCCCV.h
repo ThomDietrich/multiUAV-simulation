@@ -25,6 +25,10 @@ public:
     ChargeAlgorithmCCCV(double linearGradient, double expGradient, double nonLinearPhaseStartPercentage, double nonLinearPhaseLimitPercentage);
     double calculateChargeAmount(double remaining, double capacity, double seconds);
     double calculateChargeTime(double remaining, double capacity, double targetPercentage);
+    double getFastChargePercentage()
+    {
+        return getNonLinearPhaseStartPercentage();
+    }
 
     double getLinearGradient() const
     {

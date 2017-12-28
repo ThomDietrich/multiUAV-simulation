@@ -52,7 +52,7 @@ OBJS = \
     $O/msgs/MissionMsg_m.o \
     $O/msgs/MobileNodeRequest_m.o \
     $O/msgs/MobileNodeResponse_m.o \
-    $O/msgs/ReserveSpot_m.o
+    $O/msgs/ReserveSpotMsg_m.o
 
 # Message files
 MSGFILES = \
@@ -63,7 +63,7 @@ MSGFILES = \
     msgs/MissionMsg.msg \
     msgs/MobileNodeRequest.msg \
     msgs/MobileNodeResponse.msg \
-    msgs/ReserveSpot.msg
+    msgs/ReserveSpotMsg.msg
 
 # SM files
 SMFILES =
