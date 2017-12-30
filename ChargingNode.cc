@@ -332,9 +332,7 @@ std::deque<ChargingNodeSpotElement*>::iterator ChargingNode::getNextWaitingObjec
             objectWaitingIt++;
             break;
         }
-        if (next == objectsWaiting.end()) {
-            next = objectWaitingIt;
-        } else if ((*objectWaitingIt)->getReservationTime() < (*next)->getReservationTime() && (*objectWaitingIt)->getEstimatedArrival() <= simTime()) {
+        if (next == objectsWaiting.end() || ((*objectWaitingIt)->getReservationTime() < (*next)->getReservationTime() && (*objectWaitingIt)->getEstimatedArrival() <= simTime())) {
             next = objectWaitingIt;
         }
         objectWaitingIt++;
