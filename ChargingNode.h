@@ -39,7 +39,9 @@ class ChargingNodeSpotElement;
 class ChargingNode : public GenericNode {
 private:
     double usedPower = 0;
-    int chargedUAVs = 0;
+    double chargedPower = 0;
+    int chargedMobileNodes = 0;
+    int reservations = 0;
 protected:
     Battery battery;
     double chargeCurrent;
@@ -91,7 +93,7 @@ public:
 
     int getChargedUaVs() const
     {
-        return chargedUAVs;
+        return chargedMobileNodes;
     }
 
 protected:
