@@ -100,7 +100,8 @@ protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
-    void appendToObjectsWaiting(MobileNode* mobileNode, double targetPercentage, simtime_t reservationTime = 0, simtime_t estimatedArrival = 0, double consumption = 0);
+    void appendToObjectsWaiting(MobileNode* mobileNode, double targetPercentage, simtime_t reservationTime = 0, simtime_t estimatedArrival = 0,
+            double consumption = 0);
     bool isInWaitingQueue(MobileNode* mobileNode);
     std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator(bool fastCharge);
     int numberWaitingAndPhysicallyPresent();
