@@ -59,9 +59,12 @@ void ChargingNode::initialize(int stage)
             this->labelNode->setText("");
             this->sublabelNode->setText("");
             par("stateSummary").setStringValue("");
-			WATCH(usedPower);
-            WATCH(chargedUAVs);
-//            WATCH(battery.getRemaining());
+
+            //WATCH statistical values
+            WATCH(usedPower);
+            WATCH(chargedPower);
+            WATCH(chargedMobileNodes);
+            WATCH(reservations);
             break;
     }
 }
@@ -90,6 +93,7 @@ void ChargingNode::handleMessage(cMessage* msg)
         EV_INFO << "MobileNode is ready to get charged" << endl;
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         appendToObjectsWaiting(mn, 100.0);
+
         if (not active) {
             msg->setName("update");
             scheduleAt(simTime(), msg);
@@ -99,10 +103,10 @@ void ChargingNode::handleMessage(cMessage* msg)
     else if (msg->isName("reserveSpot")) {
         ReserveSpotMsg *rsmsg = check_and_cast<ReserveSpotMsg*>(msg);
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
-
+        appendToObjectsWaiting(mn, rsmsg->getTargetPercentage(), simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
+        reservations++;
         EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
 
-        appendToObjectsWaiting(mn, rsmsg->getTargetPercentage(), simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
         if (not active) {
             msg->setName("update");
             scheduleAt(simTime(), msg);
@@ -407,7 +411,7 @@ void ChargingNode::clearChargingSpots()
             objectsFinished.push_back((*objectChargingIt)->getNode());
             objectsCharging.erase(objectsCharging.begin());
             // increment the statistics value
-            chargedUAVs++;
+            chargedMobileNodes++;
         }
         objectChargingIt++;
     }
@@ -458,8 +462,9 @@ void ChargingNode::charge()
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
-        battery.discharge(chargeAmount);
-        usedPower += chargeAmount;
+        battery.discharge(chargeAmount/this->chargeEffectivenessPercentage);
+        usedPower += chargeAmount/this->chargeEffectivenessPercentage;
+        chargedPower += chargeAmount;
     }
 }
 
