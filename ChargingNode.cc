@@ -46,7 +46,7 @@ void ChargingNode::initialize(int stage)
 
             //Initilize charge parameters
             chargeCurrent = double(par("chargeCurrent"));
-            chargeEffectivenessPercentage = double(par("chargeEffectivenessPercentage"))/100;
+            chargeEffectivenessPercentage = double(par("chargeEffectivenessPercentage")) / 100;
 
             //Initialize chargeAlgorithm
             prioritizeFastCharge = int(par("prioritizeFastCharge")) == 1;
@@ -332,16 +332,18 @@ std::deque<ChargingNodeSpotElement*>::iterator ChargingNode::getNextWaitingObjec
             objectWaitingIt++;
             break;
         }
-        if (fastCharge && static_cast<double>((*objectWaitingIt)->getNode()->getBattery()->getRemainingPercentage()) > chargeAlgorithm->getFastChargePercentage()) {
+        if (fastCharge
+                && static_cast<double>((*objectWaitingIt)->getNode()->getBattery()->getRemainingPercentage()) > chargeAlgorithm->getFastChargePercentage()) {
             objectWaitingIt++;
             break;
         }
-        if (next == objectsWaiting.end() || ((*objectWaitingIt)->getReservationTime() < (*next)->getReservationTime() && (*objectWaitingIt)->getEstimatedArrival() <= simTime())) {
+        if (next == objectsWaiting.end()
+                || ((*objectWaitingIt)->getReservationTime() < (*next)->getReservationTime() && (*objectWaitingIt)->getEstimatedArrival() <= simTime())) {
             next = objectWaitingIt;
         }
         objectWaitingIt++;
     }
-    if(fastCharge && next == objectsWaiting.end()) {
+    if (fastCharge && next == objectsWaiting.end()) {
         return getNextWaitingObjectIterator(false);
     }
     return next;
@@ -355,12 +357,12 @@ bool ChargingNode::isPhysicallyPresent(MobileNode* mobileNode)
 int ChargingNode::numberWaitingAndPhysicallyPresent()
 {
     int result = 0;
-    if(objectsWaiting.size() == 0) {
+    if (objectsWaiting.size() == 0) {
         return result;
     }
     std::deque<ChargingNodeSpotElement*>::iterator objectWaitingIt = objectsWaiting.begin();
-    while(objectWaitingIt != objectsWaiting.end()) {
-        if(isPhysicallyPresent((*objectWaitingIt)->getNode())) {
+    while (objectWaitingIt != objectsWaiting.end()) {
+        if (isPhysicallyPresent((*objectWaitingIt)->getNode())) {
             result++;
         }
         objectWaitingIt++;
@@ -400,8 +402,9 @@ void ChargingNode::clearChargingSpots()
     std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
 
     while (objectChargingIt != objectsCharging.end()) {
-        if((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage() >= (*objectChargingIt)->getTargetCapacityPercentage()) {
-            EV_INFO << "MobileNode (Id: " << (*objectChargingIt)->getNode()->getId() << ") is charged to target: " << (*objectChargingIt)->getTargetCapacityPercentage() << endl;
+        if ((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage() >= (*objectChargingIt)->getTargetCapacityPercentage()) {
+            EV_INFO << "MobileNode (Id: " << (*objectChargingIt)->getNode()->getId() << ") is charged to target: "
+                    << (*objectChargingIt)->getTargetCapacityPercentage() << endl;
             // Send wait message to node
             MobileNode* mobileNode = (*objectChargingIt)->getNode();
             send(new cMessage("wait"), getOutputGateTo(mobileNode));
@@ -423,7 +426,7 @@ void ChargingNode::clearChargingSpots()
 void ChargingNode::rearrangeChargingSpots()
 {
     // this method does nothing when either there is no object charged currently or there is no available waiting object
-    if(objectsCharging.size() == 0 || numberWaitingAndPhysicallyPresent() == 0){
+    if (objectsCharging.size() == 0 || numberWaitingAndPhysicallyPresent() == 0) {
         return;
     }
 
@@ -434,7 +437,12 @@ void ChargingNode::rearrangeChargingSpots()
     // when an earlier reservation time occurs, throw out the currently charged node and push it back to the waiting objects
     std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
     while (objectChargingIt != objectsCharging.end()) {
-        if ((*objectChargingIt)->getReservationTime() > (*nextWaitingObject)->getReservationTime() || (prioritizeFastCharge && static_cast<double>((*nextWaitingObject)->getNode()->getBattery()->getRemainingPercentage()) < getChargeAlgorithm()->getFastChargePercentage() && (static_cast<double>((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage()) >= getChargeAlgorithm()->getFastChargePercentage()))) {
+        if ((*objectChargingIt)->getReservationTime() > (*nextWaitingObject)->getReservationTime()
+                || (prioritizeFastCharge
+                        && static_cast<double>((*nextWaitingObject)->getNode()->getBattery()->getRemainingPercentage())
+                                < getChargeAlgorithm()->getFastChargePercentage()
+                        && (static_cast<double>((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage())
+                                >= getChargeAlgorithm()->getFastChargePercentage()))) {
             appendToObjectsWaiting((*objectChargingIt)->getNode(), (*objectChargingIt)->getTargetCapacityPercentage(),
                     (*objectChargingIt)->getReservationTime());
             objectsCharging.erase(objectChargingIt);
@@ -446,7 +454,6 @@ void ChargingNode::rearrangeChargingSpots()
         objectChargingIt++;
     }
 }
-
 
 /**
  * Charges the nodes placed on the charging spots depending on the last update.
@@ -462,8 +469,8 @@ void ChargingNode::charge()
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
-        battery.discharge(chargeAmount/this->chargeEffectivenessPercentage);
-        usedPower += chargeAmount/this->chargeEffectivenessPercentage;
+        battery.discharge(chargeAmount / this->chargeEffectivenessPercentage);
+        usedPower += chargeAmount / this->chargeEffectivenessPercentage;
         chargedPower += chargeAmount;
     }
 }

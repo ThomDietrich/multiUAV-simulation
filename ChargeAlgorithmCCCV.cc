@@ -75,7 +75,7 @@ double ChargeAlgorithmCCCV::calculateNonLinearChargeAmount(double remaining, dou
     double limit = calculateLimit(capacity);
     return fmin(capacity - remaining,
             (limit - ((limit - start) * pow(eulerConstant, (-expGradient * (seconds + calculateNonLinearSecondsStartToTarget(capacity, remaining))))))
-                    - (limit - ((limit - start) * pow(eulerConstant, (-expGradient * (calculateNonLinearSecondsStartToTarget(capacity, remaining)))))));
+            - (limit - ((limit - start) * pow(eulerConstant, (-expGradient * (calculateNonLinearSecondsStartToTarget(capacity, remaining)))))));
 }
 
 /*
