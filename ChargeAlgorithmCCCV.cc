@@ -18,12 +18,8 @@
 /**
  * Constructor, calculates the eulerConstant, which provides the system precision
  */
-ChargeAlgorithmCCCV::ChargeAlgorithmCCCV(double linearGradient, double expGradient, double nonLinearPhaseStartPercentage, double nonLinearPhaseLimitPercentage)
+ChargeAlgorithmCCCV::ChargeAlgorithmCCCV(double linearGradient, double current)
 {
-    this->linearGradient = linearGradient;
-    this->expGradient = expGradient;
-    this->nonLinearPhaseStartPercentage = nonLinearPhaseStartPercentage;
-    this->nonLinearPhaseLimitPercentage = nonLinearPhaseLimitPercentage;
     this->eulerConstant = std::exp(1.0);
 }
 
@@ -32,11 +28,18 @@ ChargeAlgorithmCCCV::ChargeAlgorithmCCCV(double linearGradient, double expGradie
  */
 double ChargeAlgorithmCCCV::calculateChargeAmount(double remaining, double capacity, double seconds)
 {
-    double secondsLin = fmax(0.0, fmin(seconds, calculateLinearSeconds(remaining, capacity, 100.0)));
-    double chargeAmountLin = calculateLinearChargeAmount(remaining, capacity, secondsLin);
-    double secondsNonLin = seconds - secondsLin;
-    double chargeAmountNonLin = calculateNonLinearChargeAmount(remaining + chargeAmountLin, capacity, secondsNonLin);
-    return chargeAmountLin + chargeAmountNonLin;
+    double secondsLin = fmax(0.0, calculateLinearSeconds(remaining, capacity, 100.0));
+    double amountLin = fmax(0.0, calculateLinearChargeAmount(remaining, capacity, fmin(seconds, secondsLin)));
+    if (secondsLin > seconds) {
+        return amountLin;
+    }
+    double secondsNonLin = seconds - secondsLin + fmax(0.0, calculateNonLinearSeconds(remaining + amountLin, capacity));
+    return calculateNonLinearChargeAmount(capacity, secondsNonLin) - remaining - amountLin;
+}
+
+double ChargeAlgorithmCCCV::getFastChargePercentage(double maxCapacity)
+{
+    return (-0.0291 * current + 1) * 100;
 }
 
 /**
@@ -44,16 +47,20 @@ double ChargeAlgorithmCCCV::calculateChargeAmount(double remaining, double capac
  */
 double ChargeAlgorithmCCCV::calculateChargeTime(double remaining, double capacity, double targetPercentage)
 {
-    return calculateLinearSeconds(remaining, capacity, targetPercentage) + calculateNonLinearSeconds(remaining, capacity, (capacity * targetPercentage / 100));
+    double secondsLin = fmax(0.0, calculateLinearSeconds(remaining, capacity, targetPercentage));
+    if (remaining + calculateLinearChargeAmount(remaining, capacity, secondsLin) >= capacity * targetPercentage / 100) {
+        return secondsLin;
+    }
+    return secondsLin + calculateNonLinearSeconds(capacity * targetPercentage / 100, capacity, remaining);
 }
 
 /*
- * @return chargeAmount for linear charge process  (phase 1)
+ * @return chargeAmount for linear charge process  (phase 1) in mAh
  */
 double ChargeAlgorithmCCCV::calculateLinearChargeAmount(double remaining, double capacity, double seconds)
 {
-    double missing = fmax(0.0, calculateStart(capacity) - remaining);
-    return fmin(missing, seconds * linearGradient);
+    double missing = fmax(0.0, calculateNonLinearStart(capacity) - remaining);
+    return fmin(missing, seconds * current * linearGradient);
 }
 
 /*
@@ -61,54 +68,48 @@ double ChargeAlgorithmCCCV::calculateLinearChargeAmount(double remaining, double
  */
 double ChargeAlgorithmCCCV::calculateLinearSeconds(double remaining, double capacity, double targetPercentage)
 {
-    return (fmin(capacity * targetPercentage / 100, calculateStart(capacity)) - remaining) / linearGradient;
+    return (fmin(capacity * targetPercentage / 100, calculateNonLinearStart(capacity)) - remaining) / (current * linearGradient);
 }
 
 /*
- * Use function with limited growth to calculate the charge amount for phase 2.
  * higher remaining -> lower chargeAmount
- * @return chargeAmount for non-linear charge process (phase 2) in seconds
+ * @return chargeAmount whole chargeprocess in phase 2. only applyable when at least a part of the process happens in phase 2!
  */
-double ChargeAlgorithmCCCV::calculateNonLinearChargeAmount(double remaining, double capacity, double seconds)
+double ChargeAlgorithmCCCV::calculateNonLinearChargeAmount(double capacity, double seconds)
 {
-    double start = calculateStart(capacity);
-    double limit = calculateLimit(capacity);
-    return fmin(capacity - remaining,
-            (limit - ((limit - start) * pow(eulerConstant, (-expGradient * (seconds + calculateNonLinearSecondsStartToTarget(capacity, remaining))))))
-            - (limit - ((limit - start) * pow(eulerConstant, (-expGradient * (calculateNonLinearSecondsStartToTarget(capacity, remaining)))))));
+    return capacity * (a + 1) - (capacity * (a + 1) - calculateNonLinearStart(capacity)) * pow(eulerConstant, ((-calculateNonLinearGradient(current, capacity, a)) * seconds));
 }
 
 /*
  * @return chargeTime needed for target in non-linear charge process (phase 2) in seconds
  */
-double ChargeAlgorithmCCCV::calculateNonLinearSeconds(double remaining, double capacity, double targetAmount)
+double ChargeAlgorithmCCCV::calculateNonLinearSeconds(double targetAmount, double capacity, double remaining)
 {
-    return calculateNonLinearSecondsStartToTarget(capacity, targetAmount) - calculateNonLinearSecondsStartToTarget(capacity, remaining);
+    return calculateNonLinearSeconds(targetAmount, capacity) - calculateNonLinearSeconds(remaining, capacity);
 }
-
 /*
- * @return chargeTime from phase 2 start to target in seconds
+ * @return chargeTime needed for target in non-linear charge process (phase 2) in seconds
  */
-double ChargeAlgorithmCCCV::calculateNonLinearSecondsStartToTarget(double capacity, double targetAmount)
+double ChargeAlgorithmCCCV::calculateNonLinearSeconds(double targetAmount, double capacity)
 {
-    double start = calculateStart(capacity);
-    double limit = calculateLimit(capacity);
-    return fmax(0.0, std::log((limit - targetAmount) / (limit - start)) / (-expGradient));
+    double zaehler = capacity * (a + 1) - targetAmount;
+    double nenner = capacity * (a + 1) - calculateNonLinearStart(capacity);
+    return fmax(0.0, log(zaehler / nenner) / (-calculateNonLinearGradient(current, capacity, a)));
 }
 
 /*
  * @return start of non-linear part (phase 2) in mAh
  */
-double ChargeAlgorithmCCCV::calculateStart(double capacity)
+double ChargeAlgorithmCCCV::calculateNonLinearStart(double capacity)
 {
-    return capacity * nonLinearPhaseStartPercentage / 100;
+    return capacity * getFastChargePercentage(capacity) / 100;
 }
 
 /*
- * @return limit for non-linear part (phase 2) in mAh
- * When this value is equal to the capacity, the capacity will never be reached.
+ * @return non-linear gradient (phase 2) (k)
  */
-double ChargeAlgorithmCCCV::calculateLimit(double capacity)
+double ChargeAlgorithmCCCV::calculateNonLinearGradient(double current, double capacity, double a)
 {
-    return capacity * nonLinearPhaseLimitPercentage / 100;
+    return (linearGradient * current) / (capacity * (a + 0.0291 * current));
 }
+

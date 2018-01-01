@@ -21,7 +21,7 @@ public:
     virtual ~IChargeAlgorithm() {};
     virtual double calculateChargeAmount(double remaining, double capacity, double seconds) = 0;
     virtual double calculateChargeTime(double remaining, double capacity, double targetPercentage) = 0;
-    virtual double getFastChargePercentage() = 0;
+    virtual double getFastChargePercentage(double capacity) = 0;
 };
 
 #endif /* ICHARGEALGORITHM_H_ */

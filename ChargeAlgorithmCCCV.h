@@ -22,12 +22,19 @@
 
 class ChargeAlgorithmCCCV : public IChargeAlgorithm {
 public:
-    ChargeAlgorithmCCCV(double linearGradient, double expGradient, double nonLinearPhaseStartPercentage, double nonLinearPhaseLimitPercentage);
+    ChargeAlgorithmCCCV(double linearGradient, double current);
     double calculateChargeAmount(double remaining, double capacity, double seconds);
     double calculateChargeTime(double remaining, double capacity, double targetPercentage);
-    double getFastChargePercentage()
+    double getFastChargePercentage(double maxCapacity);
+
+    double getA() const
     {
-        return getNonLinearPhaseStartPercentage();
+        return a;
+    }
+
+    void setA(double a = 0.0013)
+    {
+        this->a = a;
     }
 
     double getLinearGradient() const
@@ -40,59 +47,29 @@ public:
         this->linearGradient = linearGradient;
     }
     
-    double getExpGradient() const
+    double getCurrent() const
     {
-        return expGradient;
+        return current;
     }
     
-    void setNonLinearExpGradient(double expGradient)
+    void setCurrent(double current = 4)
     {
-        this->expGradient = expGradient;
+        this->current = current;
     }
-    
-    double getNonLinearPhaseLimitPercentage() const
-    {
-        return nonLinearPhaseLimitPercentage;
-    }
-    
-    void setNonLinearPhaseLimitPercentage(double nonLinearPhaseLimitPercentage)
-    {
-        this->nonLinearPhaseLimitPercentage = nonLinearPhaseLimitPercentage;
-    }
-    
-    double getNonLinearPhaseStartPercentage() const
-    {
-        return nonLinearPhaseStartPercentage;
-    }
-    
-    void setNonLinearPhaseStartPercentage(double nonLinearPhaseStartPercentage)
-    {
-        this->nonLinearPhaseStartPercentage = nonLinearPhaseStartPercentage;
-    }
-    
+
 protected:
-    /**
-     * ToDo: Include the batteryCapacity into the generation of the used expGradient.
-     * Intended to generate a charging speed independent from the battery capacity.
-     *
-     * Close to real values for a battery with 5200mAh capacity are:
-     * linearGradient = 0.4;
-     * expGradient = 0.0006;
-     * nonLinearPhaseStartPercentage = 90;
-     * nonLinearPhaseLimitPercentage = 101;
-     */
-    double linearGradient;
-    double expGradient;
-    double nonLinearPhaseStartPercentage;
-    double nonLinearPhaseLimitPercentage;
     double eulerConstant;
+    double a = 0.0013;
+    double linearGradient = 0.2754;
+    double current = 4;
+
     double calculateLinearChargeAmount(double remaining, double capacity, double seconds);
-    double calculateNonLinearChargeAmount(double remaining, double capacity, double seconds);
+    double calculateNonLinearChargeAmount(double capacity, double seconds);
     double calculateLinearSeconds(double remaining, double capacity, double targetPercentage);
     double calculateNonLinearSeconds(double remaining, double capacity, double targetPercentage);
-    double calculateNonLinearSecondsStartToTarget(double capacity, double targetPercentage);
-    double calculateStart(double capacity);
-    double calculateLimit(double capacity);
+    double calculateNonLinearSeconds(double remaining, double capacity);
+    double calculateNonLinearStart(double capacity);
+    double calculateNonLinearGradient(double current, double capacity, double a);
 };
 
 #endif /* CHARGEALGORITHMCCCV_H_ */
