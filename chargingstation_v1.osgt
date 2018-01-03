@@ -1,0 +1,1825 @@
+#Ascii Scene
+#Version 92
+#Generator osgexport 0.14.2
+
+osg::Group {
+  UniqueID 210
+  Name "Root"
+  StateSet TRUE {
+    osg::StateSet {
+      UniqueID 211
+      ModeList 1 {
+        GL_LIGHT0 ON
+      }
+      AttributeList 2 {
+        osg::LightModel {
+          UniqueID 212
+          AmbientIntensity 0.00000 0.00000 0.00000 1.00000
+          ColorControl SEPARATE_SPECULAR_COLOR
+          LocalViewer FALSE
+        }
+        Value OFF
+        osg::Material {
+          UniqueID 213
+          Ambient TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+          Diffuse TRUE Front 0.64000 0.64000 0.64000 1.00000 Back 0.64000 0.64000 0.64000 1.00000
+          Specular TRUE Front 0.50000 0.50000 0.50000 1.00000 Back 0.50000 0.50000 0.50000 1.00000
+          Emission TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+          Shininess TRUE Front 10.00000 Back 10.00000
+        }
+        Value OFF
+      }
+    }
+  }
+  Children 7 {
+    osg::MatrixTransform {
+      UniqueID 108
+      Name "Plane.003"
+      Children 1 {
+        osg::Geode {
+          UniqueID 137
+          Name "GeodePlane.003"
+          Drawables 1 {
+            osg::Geometry {
+              UniqueID 110
+              Name "Plane.003"
+              StateSet TRUE {
+                osg::StateSet {
+                  UniqueID 111
+                  Name "SolarzelleFürLadestation"
+                  DataVariance DYNAMIC
+                  UserDataContainer TRUE {
+                    osg::DefaultUserDataContainer {
+                      UniqueID 127
+                      UDC_UserObjects 8 {
+                        osg::StringValueObject {
+                          UniqueID 128
+                          Name "source"
+                          Value "blender"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 130
+                          Name "00_UsePremultiplyAlpha"
+                          Value "false"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 131
+                          Name "00_UseAlpha"
+                          Value "true"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 132
+                          Name "00_DiffuseColor"
+                          Value "1.0"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 133
+                          Name "00_UsePremultiplyAlpha"
+                          Value "false"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 134
+                          Name "00_UseAlpha"
+                          Value "true"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 135
+                          Name "00_Alpha"
+                          Value "1.0"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 136
+                          Name "00_BlendType"
+                          Value "MIX"
+                        }
+                      }
+                    }
+                  }
+                  AttributeList 1 {
+                    osg::Material {
+                      UniqueID 112
+                      Name "SolarzelleFürLadestation"
+                      DataVariance DYNAMIC
+                      UserDataContainer TRUE {
+                        osg::DefaultUserDataContainer {
+                          UniqueID 113
+                          UDC_UserObjects 13 {
+                            osg::StringValueObject {
+                              UniqueID 114
+                              Name "source"
+                              Value "blender"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 115
+                              Name "DiffuseIntensity"
+                              Value "1.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 116
+                              Name "DiffuseColor"
+                              Value "[ 0.800000, 0.800000, 0.800000 ]"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 117
+                              Name "SpecularIntensity"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 118
+                              Name "SpecularColor"
+                              Value "[ 1.000000, 1.000000, 1.000000 ]"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 119
+                              Name "SpecularHardness"
+                              Value "50"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 120
+                              Name "Emit"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 121
+                              Name "Ambient"
+                              Value "1.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 122
+                              Name "Translucency"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 123
+                              Name "DiffuseShader"
+                              Value "LAMBERT"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 124
+                              Name "SpecularShader"
+                              Value "COOKTORR"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 125
+                              Name "Transparency"
+                              Value "true"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 126
+                              Name "TransparencyMethod"
+                              Value "Z_TRANSPARENCY"
+                            }
+                          }
+                        }
+                      }
+                      Ambient TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Diffuse TRUE Front 0.80000 0.80000 0.80000 1.00000 Back 0.80000 0.80000 0.80000 1.00000
+                      Specular TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Emission TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Shininess TRUE Front 12.50000 Back 12.50000
+                    }
+                    Value OFF
+                  }
+                  TextureModeList 1 {
+                    Data 1 {
+                      GL_TEXTURE_2D ON
+                    }
+                  }
+                  TextureAttributeList 1 {
+                    Data 1 {
+                      osg::Texture2D {
+                        UniqueID 129
+                        Name "SolarzelleFürLadestation"
+                        WRAP_S REPEAT
+                        WRAP_T REPEAT
+                        WRAP_R REPEAT
+                        MIN_FILTER LINEAR_MIPMAP_LINEAR
+                        MAG_FILTER LINEAR
+                        Image TRUE {
+                          UniqueID 214
+                          FileName "textures/SolarzelleFürLadestation.tga"
+                          WriteHint 0 2
+                        }
+                      }
+                      Value OFF
+                    }
+                  }
+                }
+              }
+              PrimitiveSetList 1 {
+                  DrawElementsUByte GL_QUADS 4 {
+                    0 1 2 3 
+                  }
+              }
+              VertexData {
+                Array TRUE ArrayID 10 Vec3fArray 4 {
+                  -1.00000 -1.00000 0.00000
+                  1.00000 -1.00000 0.00000
+                  1.00000 1.00000 0.00000
+                  -1.00000 1.00000 0.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+              NormalData {
+                Array TRUE ArrayID 11 Vec3fArray 4 {
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+            }
+          }
+        }
+      }
+      Matrix {
+        0.95548 0.00000 0.00000 0.00000
+        0.00000 0.26188 0.00000 0.00000
+        0.00000 0.00000 1.00000 0.00000
+        -0.48001 -1.13685 1.98718 1.00000
+      }
+    }
+    osg::MatrixTransform {
+      UniqueID 138
+      Name "Plane.002"
+      Children 1 {
+        osg::Geode {
+          UniqueID 141
+          Name "GeodePlane.002"
+          Drawables 1 {
+            osg::Geometry {
+              UniqueID 140
+              Name "Plane.002"
+              StateSet TRUE {
+                osg::StateSet {
+                  UniqueID 111
+                }
+              }
+              PrimitiveSetList 1 {
+                  DrawElementsUByte GL_QUADS 4 {
+                    0 1 2 3 
+                  }
+              }
+              VertexData {
+                Array TRUE ArrayID 12 Vec3fArray 4 {
+                  -1.00000 -1.00000 0.00000
+                  1.00000 -1.00000 0.00000
+                  1.00000 1.00000 0.00000
+                  -1.00000 1.00000 0.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+              NormalData {
+                Array TRUE ArrayID 13 Vec3fArray 4 {
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+            }
+          }
+        }
+      }
+      Matrix {
+        0.96227 0.00000 0.00000 0.00000
+        0.00000 0.26513 0.00000 0.00000
+        0.00000 0.00000 1.00000 0.00000
+        -0.48261 0.82360 1.98720 1.00000
+      }
+    }
+    osg::MatrixTransform {
+      UniqueID 142
+      Name "Plane.001"
+      Children 1 {
+        osg::Geode {
+          UniqueID 145
+          Name "GeodePlane.001"
+          Drawables 1 {
+            osg::Geometry {
+              UniqueID 144
+              Name "Plane.001"
+              PrimitiveSetList 1 {
+                  DrawElementsUByte GL_QUADS 4 {
+                    0 1 2 3 
+                  }
+              }
+              VertexData {
+                Array TRUE ArrayID 14 Vec3fArray 4 {
+                  -1.00000 -1.00000 0.00000
+                  1.00000 -1.00000 0.00000
+                  1.00000 1.00000 0.00000
+                  -1.00000 1.00000 0.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+              NormalData {
+                Array TRUE ArrayID 15 Vec3fArray 4 {
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+            }
+          }
+        }
+      }
+      Matrix {
+        0.96227 0.00000 0.00000 0.00000
+        0.00000 0.26513 0.00000 0.00000
+        0.00000 0.00000 1.00000 0.00000
+        -0.48261 0.82360 1.98720 1.00000
+      }
+    }
+    osg::MatrixTransform {
+      UniqueID 146
+      Name "Plane"
+      Children 1 {
+        osg::Geode {
+          UniqueID 173
+          Name "GeodePlane"
+          Drawables 1 {
+            osg::Geometry {
+              UniqueID 148
+              Name "Plane"
+              StateSet TRUE {
+                osg::StateSet {
+                  UniqueID 149
+                  Name "ZielkreisFürLadestation"
+                  DataVariance DYNAMIC
+                  UserDataContainer TRUE {
+                    osg::DefaultUserDataContainer {
+                      UniqueID 163
+                      UDC_UserObjects 8 {
+                        osg::StringValueObject {
+                          UniqueID 164
+                          Name "source"
+                          Value "blender"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 166
+                          Name "00_UsePremultiplyAlpha"
+                          Value "false"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 167
+                          Name "00_UseAlpha"
+                          Value "true"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 168
+                          Name "00_DiffuseColor"
+                          Value "1.0"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 169
+                          Name "00_UsePremultiplyAlpha"
+                          Value "false"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 170
+                          Name "00_UseAlpha"
+                          Value "true"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 171
+                          Name "00_Alpha"
+                          Value "1.0"
+                        }
+                        osg::StringValueObject {
+                          UniqueID 172
+                          Name "00_BlendType"
+                          Value "MIX"
+                        }
+                      }
+                    }
+                  }
+                  AttributeList 1 {
+                    osg::Material {
+                      UniqueID 150
+                      Name "ZielkreisFürLadestation"
+                      DataVariance DYNAMIC
+                      UserDataContainer TRUE {
+                        osg::DefaultUserDataContainer {
+                          UniqueID 151
+                          UDC_UserObjects 11 {
+                            osg::StringValueObject {
+                              UniqueID 152
+                              Name "source"
+                              Value "blender"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 153
+                              Name "DiffuseIntensity"
+                              Value "1.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 154
+                              Name "DiffuseColor"
+                              Value "[ 0.800000, 0.000000, 0.000000 ]"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 155
+                              Name "SpecularIntensity"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 156
+                              Name "SpecularColor"
+                              Value "[ 1.000000, 1.000000, 1.000000 ]"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 157
+                              Name "SpecularHardness"
+                              Value "50"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 158
+                              Name "Emit"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 159
+                              Name "Ambient"
+                              Value "1.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 160
+                              Name "Translucency"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 161
+                              Name "DiffuseShader"
+                              Value "LAMBERT"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 162
+                              Name "SpecularShader"
+                              Value "COOKTORR"
+                            }
+                          }
+                        }
+                      }
+                      Ambient TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Diffuse TRUE Front 0.80000 0.00000 0.00000 1.00000 Back 0.80000 0.00000 0.00000 1.00000
+                      Specular TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Emission TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Shininess TRUE Front 12.50000 Back 12.50000
+                    }
+                    Value OFF
+                  }
+                  TextureModeList 1 {
+                    Data 1 {
+                      GL_TEXTURE_2D ON
+                    }
+                  }
+                  TextureAttributeList 1 {
+                    Data 1 {
+                      osg::Texture2D {
+                        UniqueID 165
+                        Name "ZielkreisFürLadestation"
+                        WRAP_S REPEAT
+                        WRAP_T REPEAT
+                        WRAP_R REPEAT
+                        MIN_FILTER LINEAR_MIPMAP_LINEAR
+                        MAG_FILTER LINEAR
+                        Image TRUE {
+                          UniqueID 215
+                          FileName "textures/ZielkreisFürLadestation.tga"
+                          WriteHint 0 2
+                        }
+                      }
+                      Value OFF
+                    }
+                  }
+                }
+              }
+              PrimitiveSetList 1 {
+                  DrawElementsUByte GL_QUADS 4 {
+                    0 1 2 3 
+                  }
+              }
+              VertexData {
+                Array TRUE ArrayID 16 Vec3fArray 4 {
+                  -1.00000 -1.00000 0.00000
+                  1.00000 -1.00000 0.00000
+                  1.00000 1.00000 0.00000
+                  -1.00000 1.00000 0.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+              NormalData {
+                Array TRUE ArrayID 17 Vec3fArray 4 {
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+            }
+          }
+        }
+      }
+      Matrix {
+        0.51521 0.00000 0.00000 0.00000
+        0.00000 0.56324 0.00000 0.00000
+        0.00000 0.00000 1.00000 0.00000
+        -0.50558 -0.14228 1.91089 1.00000
+      }
+    }
+    osg::MatrixTransform {
+      UniqueID 174
+      Name "Cube"
+      Children 1 {
+        osg::Geode {
+          UniqueID 193
+          Name "GeodeCube"
+          Drawables 1 {
+            osg::Geometry {
+              UniqueID 176
+              Name "Cube"
+              StateSet TRUE {
+                osg::StateSet {
+                  UniqueID 177
+                  Name "grundkörper"
+                  DataVariance DYNAMIC
+                  UserDataContainer TRUE {
+                    osg::DefaultUserDataContainer {
+                      UniqueID 191
+                      UDC_UserObjects 1 {
+                        osg::StringValueObject {
+                          UniqueID 192
+                          Name "source"
+                          Value "blender"
+                        }
+                      }
+                    }
+                  }
+                  AttributeList 1 {
+                    osg::Material {
+                      UniqueID 178
+                      Name "grundkörper"
+                      DataVariance DYNAMIC
+                      UserDataContainer TRUE {
+                        osg::DefaultUserDataContainer {
+                          UniqueID 179
+                          UDC_UserObjects 11 {
+                            osg::StringValueObject {
+                              UniqueID 180
+                              Name "source"
+                              Value "blender"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 181
+                              Name "DiffuseIntensity"
+                              Value "0.800000011920929"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 182
+                              Name "DiffuseColor"
+                              Value "[ 0.050856, 0.049515, 0.052219 ]"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 183
+                              Name "SpecularIntensity"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 184
+                              Name "SpecularColor"
+                              Value "[ 0.063721, 0.063721, 0.063721 ]"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 185
+                              Name "SpecularHardness"
+                              Value "40"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 186
+                              Name "Emit"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 187
+                              Name "Ambient"
+                              Value "1.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 188
+                              Name "Translucency"
+                              Value "0.0"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 189
+                              Name "DiffuseShader"
+                              Value "LAMBERT"
+                            }
+                            osg::StringValueObject {
+                              UniqueID 190
+                              Name "SpecularShader"
+                              Value "COOKTORR"
+                            }
+                          }
+                        }
+                      }
+                      Ambient TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Diffuse TRUE Front 0.04069 0.03961 0.04178 1.00000 Back 0.04069 0.03961 0.04178 1.00000
+                      Specular TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Emission TRUE Front 0.00000 0.00000 0.00000 1.00000 Back 0.00000 0.00000 0.00000 1.00000
+                      Shininess TRUE Front 10.00000 Back 10.00000
+                    }
+                    Value OFF
+                  }
+                }
+              }
+              PrimitiveSetList 2 {
+                  DrawElementsUByte GL_TRIANGLES 168 {
+                    4 4 5 
+                    6 7 8 
+                    9 10 10 
+                    11 12 13 
+                    14 15 11 
+                    8 16 17 
+                    18 14 11 
+                    19 19 20 
+                    20 20 21 
+                    22 23 24 
+                    25 26 27 
+                    28 25 27 
+                    29 30 31 
+                    32 33 34 
+                    51 51 52 
+                    53 54 55 
+                    56 57 57 
+                    58 59 60 
+                    61 62 63 
+                    64 65 66 
+                    67 68 69 
+                    20 20 57 
+                    57 70 71 
+                    72 20 57 
+                    57 71 73 
+                    72 57 57 
+                    57 73 74 
+                    57 74 72 
+                    19 19 75 
+                    76 77 78 
+                    79 80 81 
+                    76 78 79 
+                    82 51 51 
+                    81 83 76 
+                    81 76 79 
+                    10 10 182 
+                    183 184 185 
+                    186 187 188 
+                    18 183 185 
+                    185 186 188 
+                    81 17 189 
+                    51 190 51 
+                    4 4 19 
+                    19 19 191 
+                    192 193 83 
+                    194 195 196 
+                    196 192 83 
+                    83 197 194 
+                    83 194 196 
+                    51 51 198 
+                    199 200 201 
+                    201 202 203 
+                    19 19 51 
+                    199 201 203 
+                    204 188 199 
+                    199 203 204 
+                  }
+                  DrawElementsUShort GL_QUADS 648 {
+                    0 1 2 3 
+                    35 36 37 38 
+                    39 40 41 42 
+                    43 44 45 46 
+                    47 48 49 50 
+                    84 85 86 87 
+                    85 88 89 86 
+                    88 90 91 89 
+                    90 92 93 91 
+                    92 47 50 93 
+                    94 95 96 97 
+                    97 96 98 99 
+                    99 98 100 101 
+                    101 100 102 103 
+                    103 102 85 84 
+                    95 104 105 96 
+                    96 105 106 98 
+                    98 106 107 100 
+                    100 107 108 102 
+                    102 108 88 85 
+                    104 109 110 105 
+                    111 112 113 114 
+                    115 116 117 118 
+                    119 120 121 122 
+                    116 123 124 117 
+                    109 125 126 110 
+                    127 128 129 130 
+                    123 131 132 124 
+                    120 133 134 121 
+                    131 135 136 132 
+                    125 137 138 126 
+                    139 140 141 142 
+                    143 144 145 146 
+                    147 143 146 148 
+                    133 149 150 134 
+                    137 151 152 138 
+                    138 152 153 154 
+                    154 153 155 156 
+                    156 155 157 158 
+                    158 157 48 47 
+                    159 160 161 162 
+                    162 161 163 164 
+                    164 163 165 166 
+                    166 165 167 168 
+                    160 169 170 161 
+                    161 170 171 163 
+                    163 171 172 165 
+                    165 172 173 167 
+                    169 174 175 170 
+                    170 175 176 171 
+                    171 176 177 172 
+                    172 177 178 173 
+                    128 139 142 129 
+                    112 147 148 113 
+                    179 40 180 181 
+                    205 206 207 208 
+                    49 48 209 210 
+                    211 212 213 214 
+                    215 216 217 218 
+                    219 220 221 222 
+                    223 224 225 226 
+                    199 227 228 200 
+                    200 228 229 201 
+                    201 229 230 202 
+                    202 230 231 203 
+                    232 233 234 235 
+                    236 237 238 239 
+                    240 241 242 243 
+                    244 240 243 245 
+                    246 247 248 249 
+                    152 151 250 251 
+                    252 253 254 255 
+                    256 257 258 259 
+                    260 244 245 261 
+                    262 236 239 263 
+                    264 17 265 266 
+                    257 267 268 258 
+                    269 260 261 270 
+                    253 271 272 254 
+                    267 273 274 268 
+                    275 189 276 277 
+                    278 262 263 279 
+                    237 280 281 238 
+                    273 282 283 274 
+                    271 246 249 272 
+                    284 232 235 285 
+                    286 13 12 287 
+                    287 12 11 288 
+                    288 11 289 290 
+                    290 289 15 291 
+                    292 293 294 295 
+                    295 294 296 297 
+                    297 296 298 299 
+                    299 298 300 301 
+                    293 302 303 294 
+                    294 303 304 296 
+                    296 304 305 298 
+                    298 305 306 300 
+                    302 307 308 303 
+                    303 308 309 304 
+                    304 309 310 305 
+                    305 310 311 306 
+                    307 312 313 308 
+                    308 313 314 309 
+                    309 314 315 310 
+                    310 315 316 311 
+                    317 318 319 320 
+                    318 321 322 319 
+                    321 323 324 322 
+                    323 325 326 324 
+                    325 327 328 326 
+                    327 329 330 328 
+                    325 323 331 332 
+                    323 321 333 331 
+                    334 275 277 335 
+                    41 336 337 338 
+                    233 339 340 234 
+                    224 284 285 225 
+                    250 151 341 342 
+                    339 343 344 340 
+                    345 346 220 219 
+                    347 348 216 215 
+                    348 349 350 216 
+                    349 351 352 350 
+                    351 353 354 352 
+                    353 345 219 354 
+                    180 40 355 356 
+                    357 211 214 358 
+                    359 205 208 360 
+                    192 196 361 362 
+                    196 195 363 361 
+                    212 359 360 213 
+                    206 364 365 207 
+                    354 219 222 366 
+                    367 368 369 370 
+                    371 367 370 372 
+                    373 374 375 376 
+                    368 377 378 369 
+                    377 373 376 378 
+                    379 371 372 380 
+                    189 381 382 276 
+                    327 325 332 383 
+                    329 327 383 384 
+                    381 264 266 382 
+                    41 338 385 386 
+                    318 317 387 388 
+                    81 334 335 389 
+                    321 318 388 333 
+                    390 391 392 393 
+                    391 394 395 392 
+                    396 390 393 397 
+                    398 399 400 401 
+                    402 398 401 403 
+                    394 402 403 395 
+                    193 192 362 404 
+                    216 350 405 217 
+                    197 83 406 407 
+                    350 352 408 405 
+                    194 197 407 409 
+                    352 354 366 408 
+                    195 194 409 363 
+                    49 210 410 411 
+                  }
+              }
+              VertexData {
+                Array TRUE ArrayID 18 Vec3fArray 412 {
+                  1.00000 1.00000 -1.00000
+                  1.00000 -1.00000 -1.00000
+                  -1.00000 -1.00000 -1.00000
+                  -1.00000 1.00000 -1.00000
+                  -1.00000 -1.00000 1.00000
+                  -1.00000 -0.66667 1.00000
+                  -1.00000 -0.66667 1.00000
+                  -1.00000 -0.33333 1.00000
+                  -1.00000 0.00000 1.00000
+                  -1.00000 0.66667 1.00000
+                  -1.00000 1.00000 1.00000
+                  -1.00000 0.00000 1.00000
+                  -1.00000 0.33333 1.00000
+                  -1.00000 0.66667 1.00000
+                  -1.00000 -1.00000 1.00000
+                  -1.00000 -0.66667 1.00000
+                  -1.00000 0.66667 1.00000
+                  -1.00000 1.00000 1.00000
+                  -1.00000 1.00000 1.00000
+                  1.00000 -1.00000 1.00000
+                  1.00000 -1.00000 -1.00000
+                  1.00000 -1.00000 -0.66667
+                  1.00000 -1.00000 -1.00000
+                  1.00000 -1.00000 -0.66667
+                  1.00000 -1.00000 -0.33333
+                  1.00000 -1.00000 0.00000
+                  1.00000 -1.00000 0.33333
+                  1.00000 -1.00000 0.66667
+                  1.00000 -1.00000 -0.33333
+                  1.00000 -1.00000 1.00000
+                  1.00000 -1.00000 -1.00000
+                  1.00000 -1.00000 -0.33333
+                  1.00000 -1.00000 -0.33333
+                  1.00000 -1.00000 0.66667
+                  1.00000 -1.00000 1.00000
+                  1.00000 -1.00000 -1.00000
+                  1.00000 -1.00000 1.00000
+                  -1.00000 -1.00000 1.00000
+                  -1.00000 -1.00000 -1.00000
+                  -1.00000 -1.00000 -1.00000
+                  -1.00000 -1.00000 1.00000
+                  -1.00000 1.00000 1.00000
+                  -1.00000 1.00000 -1.00000
+                  1.00000 1.00000 1.00000
+                  1.00000 1.00000 -1.00000
+                  -1.00000 1.00000 -1.00000
+                  -1.00000 1.00000 1.00000
+                  1.00000 -0.66667 0.66667
+                  1.00000 -0.66667 1.00000
+                  1.00000 -1.00000 1.00000
+                  1.00000 -1.00000 0.66667
+                  1.00000 1.00000 1.00000
+                  1.00000 1.00000 0.66667
+                  1.00000 1.00000 0.66667
+                  1.00000 1.00000 0.33333
+                  1.00000 1.00000 0.00000
+                  1.00000 1.00000 -0.66667
+                  1.00000 1.00000 -1.00000
+                  1.00000 1.00000 0.00000
+                  1.00000 1.00000 -0.33333
+                  1.00000 1.00000 -0.66667
+                  1.00000 1.00000 1.00000
+                  1.00000 1.00000 0.66667
+                  1.00000 1.00000 0.00000
+                  1.00000 1.00000 -0.66667
+                  1.00000 1.00000 -1.00000
+                  1.00000 1.00000 1.00000
+                  1.00000 1.00000 1.00000
+                  1.00000 1.00000 0.00000
+                  1.00000 1.00000 -0.66667
+                  1.00000 0.66667 -1.00000
+                  1.00000 0.33333 -1.00000
+                  1.00000 -0.66667 -1.00000
+                  1.00000 -0.00000 -1.00000
+                  1.00000 -0.33333 -1.00000
+                  1.00000 -0.66667 1.00000
+                  1.00000 -0.66667 1.00000
+                  1.00000 -0.33333 1.00000
+                  1.00000 -0.00000 1.00000
+                  1.00000 0.33333 1.00000
+                  1.00000 0.66667 1.00000
+                  1.00000 1.00000 1.00000
+                  1.00000 0.33333 1.00000
+                  1.00000 -1.00000 1.00000
+                  1.00000 -0.66667 -1.00000
+                  1.00000 -0.66667 -0.66667
+                  1.00000 -1.00000 -0.66667
+                  1.00000 -1.00000 -1.00000
+                  1.00000 -0.66667 -0.33333
+                  1.00000 -1.00000 -0.33333
+                  1.00000 -0.66667 0.00000
+                  1.00000 -1.00000 0.00000
+                  1.00000 -0.66667 0.33333
+                  1.00000 -1.00000 0.33333
+                  1.00000 1.00000 -1.00000
+                  1.00000 1.00000 -0.66667
+                  1.00000 0.66667 -0.66667
+                  1.00000 0.66667 -1.00000
+                  1.00000 0.33333 -0.66667
+                  1.00000 0.33333 -1.00000
+                  1.00000 -0.00000 -0.66667
+                  1.00000 -0.00000 -1.00000
+                  1.00000 -0.33333 -0.66667
+                  1.00000 -0.33333 -1.00000
+                  1.00000 1.00000 -0.33333
+                  1.00000 0.66667 -0.33333
+                  1.00000 0.33333 -0.33333
+                  1.00000 -0.00000 -0.33333
+                  1.00000 -0.33333 -0.33333
+                  1.00000 1.00000 0.00000
+                  1.00000 0.66667 0.00000
+                  1.00000 0.66667 0.66667
+                  1.00000 0.33333 0.66667
+                  0.69270 0.33333 0.66667
+                  0.69270 0.66667 0.66667
+                  1.00000 -0.66667 -0.33333
+                  1.00000 -0.33333 -0.33333
+                  0.69270 -0.33333 -0.33333
+                  0.69270 -0.66667 -0.33333
+                  1.00000 0.66667 -0.33333
+                  1.00000 0.66667 0.00000
+                  0.69270 0.66667 0.00000
+                  0.69270 0.66667 -0.33333
+                  1.00000 -0.00000 -0.33333
+                  0.69270 -0.00000 -0.33333
+                  1.00000 1.00000 0.33333
+                  1.00000 0.66667 0.33333
+                  1.00000 -0.66667 0.66667
+                  1.00000 -0.66667 0.33333
+                  0.69270 -0.66667 0.33333
+                  0.69270 -0.66667 0.66667
+                  1.00000 0.33333 -0.33333
+                  0.69270 0.33333 -0.33333
+                  1.00000 0.66667 0.33333
+                  0.69270 0.66667 0.33333
+                  1.00000 0.66667 -0.33333
+                  0.69270 0.66667 -0.33333
+                  1.00000 1.00000 0.66667
+                  1.00000 0.66667 0.66667
+                  1.00000 -0.66667 0.00000
+                  1.00000 -0.66667 -0.33333
+                  0.69270 -0.66667 -0.33333
+                  0.69270 -0.66667 0.00000
+                  1.00000 -0.33333 0.66667
+                  1.00000 -0.66667 0.66667
+                  0.69270 -0.66667 0.66667
+                  0.69270 -0.33333 0.66667
+                  1.00000 -0.00000 0.66667
+                  0.69270 -0.00000 0.66667
+                  1.00000 0.66667 0.66667
+                  0.69270 0.66667 0.66667
+                  1.00000 1.00000 1.00000
+                  1.00000 0.66667 1.00000
+                  1.00000 0.33333 1.00000
+                  1.00000 0.33333 0.66667
+                  1.00000 -0.00000 1.00000
+                  1.00000 -0.00000 0.66667
+                  1.00000 -0.33333 1.00000
+                  1.00000 -0.33333 0.66667
+                  0.69270 0.66667 -0.33333
+                  0.69270 0.66667 0.00000
+                  0.69270 0.33333 0.00000
+                  0.69270 0.33333 -0.33333
+                  0.69270 -0.00000 0.00000
+                  0.69270 -0.00000 -0.33333
+                  0.69270 -0.33333 0.00000
+                  0.69270 -0.33333 -0.33333
+                  0.69270 -0.66667 0.00000
+                  0.69270 -0.66667 -0.33333
+                  0.69270 0.66667 0.33333
+                  0.69270 0.33333 0.33333
+                  0.69270 -0.00000 0.33333
+                  0.69270 -0.33333 0.33333
+                  0.69270 -0.66667 0.33333
+                  0.69270 0.66667 0.66667
+                  0.69270 0.33333 0.66667
+                  0.69270 -0.00000 0.66667
+                  0.69270 -0.33333 0.66667
+                  0.69270 -0.66667 0.66667
+                  -1.00000 -0.66667 1.00000
+                  -1.00000 -1.00000 1.23800
+                  -1.00000 -0.66667 1.23800
+                  -0.66667 1.00000 1.00000
+                  -0.66667 1.00000 1.00000
+                  -0.33333 1.00000 1.00000
+                  0.00000 1.00000 1.00000
+                  0.33333 1.00000 1.00000
+                  0.66667 1.00000 1.00000
+                  1.00000 1.00000 1.00000
+                  0.00000 1.00000 1.00000
+                  0.00000 1.00000 1.00000
+                  0.66667 -1.00000 1.00000
+                  -0.66667 -1.00000 1.00000
+                  -1.00000 -1.00000 1.00000
+                  0.33333 -1.00000 1.00000
+                  -0.00000 -1.00000 1.00000
+                  -0.33333 -1.00000 1.00000
+                  0.66667 -1.00000 1.00000
+                  1.00000 0.66667 1.00000
+                  1.00000 0.66667 1.00000
+                  1.00000 0.33333 1.00000
+                  1.00000 -0.00000 1.00000
+                  1.00000 -0.33333 1.00000
+                  1.00000 -0.66667 1.00000
+                  1.00000 -1.00000 1.00000
+                  -0.33333 -0.66667 1.00000
+                  -0.66667 -0.66667 1.00000
+                  -0.66667 -0.66667 1.23800
+                  -0.33333 -0.66667 1.23800
+                  1.00000 -0.66667 1.23800
+                  1.00000 -1.00000 1.23800
+                  0.66667 -0.66667 1.00000
+                  0.33333 -0.66667 1.00000
+                  0.33333 -0.66667 1.23800
+                  0.66667 -0.66667 1.23800
+                  1.00000 -1.00000 1.23800
+                  0.66667 -1.00000 1.23800
+                  0.66667 -1.27200 1.23800
+                  1.00000 -1.27200 1.23800
+                  -0.66667 -1.00000 1.23800
+                  -1.00000 -1.00000 1.23800
+                  -1.00000 -1.27200 1.23800
+                  -0.66667 -1.27200 1.23800
+                  -1.00000 0.66667 1.00000
+                  -0.66667 0.66667 1.00000
+                  -0.66667 0.66667 1.23802
+                  -1.00000 0.66667 1.23802
+                  0.66667 0.66667 1.00000
+                  0.66667 0.33333 1.00000
+                  0.66667 -0.00000 1.00000
+                  0.66667 -0.33333 1.00000
+                  0.66667 -0.66667 1.00000
+                  0.00000 0.66667 1.00000
+                  0.33333 0.66667 1.00000
+                  0.33333 0.66667 1.23802
+                  0.00000 0.66667 1.23802
+                  -0.00000 -0.66667 1.00000
+                  0.33333 -0.66667 1.00000
+                  0.33333 -0.66667 1.16170
+                  -0.00000 -0.66667 1.16170
+                  -0.66667 -0.33333 1.00000
+                  -0.66667 -0.66667 1.00000
+                  -0.66667 -0.66667 1.16170
+                  -0.66667 -0.33333 1.16170
+                  -0.66667 0.00000 1.00000
+                  -0.66667 0.00000 1.16170
+                  -0.33333 0.66667 1.00000
+                  -0.66667 0.66667 1.00000
+                  -0.66667 0.66667 1.16170
+                  -0.33333 0.66667 1.16170
+                  1.00000 1.00000 1.23802
+                  1.00000 0.66667 1.23802
+                  0.66667 0.66667 1.00000
+                  0.33333 0.66667 1.00000
+                  0.33333 0.66667 1.16170
+                  0.66667 0.66667 1.16170
+                  0.66667 -0.66667 1.00000
+                  0.66667 -0.33333 1.00000
+                  0.66667 -0.33333 1.16170
+                  0.66667 -0.66667 1.16170
+                  -0.66667 0.33333 1.00000
+                  -0.66667 0.33333 1.16170
+                  -0.33333 -0.66667 1.00000
+                  -0.33333 -0.66667 1.16170
+                  -0.66667 1.00000 1.00000
+                  -1.00000 1.27179 1.00000
+                  -0.66667 1.27179 1.00000
+                  0.66667 -0.00000 1.00000
+                  0.66667 -0.00000 1.16170
+                  -0.66667 0.66667 1.00000
+                  -0.66667 0.66667 1.16170
+                  0.00000 0.66667 1.00000
+                  0.00000 0.66667 1.16170
+                  0.66667 0.33333 1.00000
+                  0.66667 0.33333 1.16170
+                  0.33333 1.00000 1.00000
+                  0.00000 1.27179 1.00000
+                  0.33333 1.27179 1.00000
+                  -0.66667 -0.66667 1.00000
+                  -0.66667 -0.66667 1.16170
+                  0.66667 -0.66667 1.00000
+                  0.66667 -0.66667 1.16170
+                  0.66667 0.66667 1.00000
+                  0.66667 0.66667 1.16170
+                  -0.33333 0.66667 1.00000
+                  -0.33333 0.66667 1.23802
+                  -0.66667 0.66667 1.00000
+                  -0.66667 0.33333 1.00000
+                  -0.66667 0.00000 1.00000
+                  -1.00000 -0.33333 1.00000
+                  -0.66667 -0.33333 1.00000
+                  -0.66667 -0.66667 1.00000
+                  0.66667 0.66667 1.16170
+                  0.33333 0.66667 1.16170
+                  0.33333 0.33333 1.16170
+                  0.66667 0.33333 1.16170
+                  0.33333 -0.00000 1.16170
+                  0.66667 -0.00000 1.16170
+                  0.33333 -0.33333 1.16170
+                  0.66667 -0.33333 1.16170
+                  0.33333 -0.66667 1.16170
+                  0.66667 -0.66667 1.16170
+                  0.00000 0.66667 1.16170
+                  -0.00000 0.33333 1.16170
+                  -0.00000 -0.00000 1.16170
+                  -0.00000 -0.33333 1.16170
+                  -0.00000 -0.66667 1.16170
+                  -0.33333 0.66667 1.16170
+                  -0.33333 0.33333 1.16170
+                  -0.33333 -0.00000 1.16170
+                  -0.33333 -0.33333 1.16170
+                  -0.33333 -0.66667 1.16170
+                  -0.66667 0.66667 1.16170
+                  -0.66667 0.33333 1.16170
+                  -0.66667 0.00000 1.16170
+                  -0.66667 -0.33333 1.16170
+                  -0.66667 -0.66667 1.16170
+                  1.00000 1.00000 1.23802
+                  0.66667 1.00000 1.23802
+                  0.66667 0.66667 1.23802
+                  1.00000 0.66667 1.23802
+                  0.33333 1.00000 1.23802
+                  0.33333 0.66667 1.23802
+                  0.00000 1.00000 1.23802
+                  0.00000 0.66667 1.23802
+                  -0.33333 1.00000 1.23802
+                  -0.33333 0.66667 1.23802
+                  -0.66667 1.00000 1.23802
+                  -0.66667 0.66667 1.23802
+                  -1.00000 1.00000 1.23802
+                  -1.00000 0.66667 1.23802
+                  0.00000 1.27179 1.23802
+                  -0.33333 1.27179 1.23802
+                  0.33333 1.27179 1.23802
+                  0.66667 1.00000 1.00000
+                  0.66667 1.27179 1.00000
+                  -1.00000 0.66667 1.00000
+                  -1.00000 0.66667 1.23802
+                  -1.00000 1.00000 1.23802
+                  0.66667 0.66667 1.00000
+                  0.66667 0.66667 1.23802
+                  1.00000 1.27179 1.00000
+                  1.00000 1.27179 1.23802
+                  1.00000 0.66667 1.00000
+                  1.00000 0.66667 1.23802
+                  -0.66667 -0.66667 1.23800
+                  -1.00000 -0.66667 1.23800
+                  1.00000 -0.66667 1.23800
+                  0.66667 -0.66667 1.23800
+                  0.33333 -0.66667 1.23800
+                  0.33333 -1.00000 1.23800
+                  -0.00000 -0.66667 1.23800
+                  -0.00000 -1.00000 1.23800
+                  -0.33333 -0.66667 1.23800
+                  -0.33333 -1.00000 1.23800
+                  -1.00000 -1.27200 1.00000
+                  -1.00000 -1.27200 1.23800
+                  1.00000 -0.66667 1.00000
+                  1.00000 -0.66667 1.23800
+                  -0.00000 -0.66667 1.00000
+                  -0.00000 -0.66667 1.23800
+                  -0.33333 -1.27200 1.00000
+                  -0.66667 -1.27200 1.00000
+                  -0.00000 -1.27200 1.00000
+                  -1.00000 -0.66667 1.00000
+                  -1.00000 -0.66667 1.23800
+                  -0.33333 -1.27200 1.23800
+                  0.33333 1.27179 1.00000
+                  0.00000 1.27179 1.00000
+                  0.00000 1.27179 1.23802
+                  0.33333 1.27179 1.23802
+                  0.66667 1.27179 1.00000
+                  0.66667 1.27179 1.23802
+                  -0.66667 1.27179 1.00000
+                  -1.00000 1.27179 1.00000
+                  -1.00000 1.27179 1.23802
+                  -0.66667 1.27179 1.23802
+                  -0.33333 1.27179 1.00000
+                  -0.33333 1.27179 1.23802
+                  1.00000 1.27179 1.00000
+                  1.00000 1.27179 1.23802
+                  -0.33333 1.00000 1.00000
+                  -0.33333 1.27179 1.00000
+                  -0.66667 1.27179 1.23802
+                  -1.00000 1.27179 1.23802
+                  -1.00000 1.27179 1.23802
+                  -1.00000 1.27179 1.00000
+                  1.00000 1.27179 1.23802
+                  0.66667 1.27179 1.23802
+                  1.00000 1.27179 1.00000
+                  -0.66667 -1.27200 1.00000
+                  -0.33333 -1.27200 1.00000
+                  -0.33333 -1.27200 1.23800
+                  -0.66667 -1.27200 1.23800
+                  -0.00000 -1.27200 1.00000
+                  -0.00000 -1.27200 1.23800
+                  -1.00000 -1.27200 1.00000
+                  -1.00000 -1.27200 1.23800
+                  0.66667 -1.27200 1.00000
+                  1.00000 -1.27200 1.00000
+                  1.00000 -1.27200 1.23800
+                  0.66667 -1.27200 1.23800
+                  0.33333 -1.27200 1.00000
+                  0.33333 -1.27200 1.23800
+                  -1.00000 -1.27200 1.00000
+                  0.33333 -1.27200 1.23800
+                  1.00000 -1.27200 1.00000
+                  0.66667 -1.27200 1.00000
+                  -0.00000 -1.27200 1.23800
+                  0.33333 -1.27200 1.00000
+                  1.00000 -1.27200 1.23800
+                  1.00000 -1.27200 1.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+              NormalData {
+                Array TRUE ArrayID 19 Vec3fArray 412 {
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.70711 -0.70711 0.00000
+                  0.70711 -0.70711 0.00000
+                  0.70711 -0.70711 0.00000
+                  -1.00000 -0.00000 -0.00000
+                  -1.00000 -0.00000 -0.00000
+                  -1.00000 -0.00000 -0.00000
+                  -1.00000 0.00000 -0.00000
+                  -0.89443 0.44721 -0.00000
+                  -0.89443 0.44721 -0.00000
+                  -0.89443 0.44721 -0.00000
+                  0.55470 0.83205 0.00000
+                  0.55470 0.83205 0.00000
+                  0.55470 0.83205 0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -1.00000 0.00000 -0.00000
+                  -1.00000 0.00000 -0.00000
+                  -1.00000 0.00000 -0.00000
+                  -1.00000 0.00000 -0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  -0.70711 -0.70711 0.00000
+                  -0.70711 -0.70711 0.00000
+                  -0.70711 -0.70711 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  -0.00000 1.00000 0.00000
+                  -0.00000 1.00000 0.00000
+                  -0.00000 1.00000 0.00000
+                  0.44721 0.89443 0.00000
+                  0.44721 0.89443 0.00000
+                  0.44721 0.89443 0.00000
+                  -0.44721 0.89443 0.00000
+                  -0.44721 0.89443 0.00000
+                  -0.44721 0.89443 0.00000
+                  -0.89443 -0.44721 0.00000
+                  -0.89443 -0.44721 0.00000
+                  -0.89443 -0.44721 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 -0.00000 -1.00000
+                  1.00000 0.00000 0.00000
+                  1.00000 0.00000 0.00000
+                  1.00000 0.00000 0.00000
+                  1.00000 0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 0.00000 -0.00000
+                  1.00000 0.00000 -0.00000
+                  1.00000 0.00000 -0.00000
+                  1.00000 0.00000 -0.00000
+                  1.00000 0.00000 -0.00000
+                  1.00000 0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  -0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 -0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  -0.00000 -0.00000 -1.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 0.00000
+                  -0.00000 -0.00000 -1.00000
+                  -0.00000 -0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 0.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  -0.00000 0.00000 1.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  1.00000 0.00000 0.00000
+                  1.00000 0.00000 0.00000
+                  0.00000 -1.00000 -0.00000
+                  0.00000 -1.00000 -0.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 -0.00000 1.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 1.00000 0.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 -0.00000 -1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  -1.00000 0.00000 0.00000
+                  -1.00000 0.00000 0.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 0.00000 1.00000
+                  0.00000 -0.00000 -1.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  0.00000 -1.00000 -0.00000
+                  0.00000 -1.00000 -0.00000
+                  0.00000 -1.00000 -0.00000
+                  0.00000 -1.00000 -0.00000
+                  -0.00000 -1.00000 0.00000
+                  -0.00000 -1.00000 0.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 0.00000 -1.00000
+                  0.00000 -0.00000 1.00000
+                  0.00000 0.00000 -1.00000
+                  1.00000 -0.00000 0.00000
+                  1.00000 -0.00000 0.00000
+                }
+                Indices FALSE
+                Binding BIND_PER_VERTEX
+                Normalize 0
+              }
+            }
+          }
+        }
+      }
+      Matrix {
+        1.00000 0.00000 0.00000 0.00000
+        0.00000 1.00000 0.00000 0.00000
+        0.00000 0.00000 1.00000 0.00000
+        -0.48031 -0.16402 0.74918 1.00000
+      }
+    }
+    osg::MatrixTransform {
+      UniqueID 194
+      Name "Lamp"
+      Children 1 {
+        osg::LightSource {
+          UniqueID 195
+          Name "Lamp"
+          Light TRUE {
+            osg::Light {
+              UniqueID 196
+              UserDataContainer TRUE {
+                osg::DefaultUserDataContainer {
+                  UniqueID 197
+                  UDC_UserObjects 9 {
+                    osg::StringValueObject {
+                      UniqueID 198
+                      Name "source"
+                      Value "blender"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 199
+                      Name "Energy"
+                      Value "1.0"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 200
+                      Name "Color"
+                      Value "[ 1.000000, 1.000000, 1.000000 ]"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 201
+                      Name "UseDiffuse"
+                      Value "true"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 202
+                      Name "UseSpecular"
+                      Value "true"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 203
+                      Name "Distance"
+                      Value "29.999982833862305"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 204
+                      Name "FalloffType"
+                      Value "INVERSE_SQUARE"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 205
+                      Name "UseSphere"
+                      Value "false"
+                    }
+                    osg::StringValueObject {
+                      UniqueID 206
+                      Name "Type"
+                      Value "POINT"
+                    }
+                  }
+                }
+              }
+              LightNum 0
+              Ambient 1.00000 1.00000 1.00000 1.00000
+              Diffuse 1.00000 1.00000 1.00000 1.00000
+              Specular 1.00000 1.00000 1.00000 1.00000
+              Position 0.00000 0.00000 0.00000 1.00000
+              Direction 0.00000 0.00000 -1.00000
+              ConstantAttenuation 0.00000
+              LinearAttenuation 0.00000
+              QuadraticAttenuation 0.03333
+              SpotExponent 0.00000
+              SpotCutoff 180.00000
+            }
+          }
+        }
+      }
+      Matrix {
+        -0.29086 0.95517 -0.05519 0.00000
+        -0.77110 -0.19988 0.60452 0.00000
+        0.56639 0.21839 0.79467 0.00000
+        4.07625 1.00545 5.90386 1.00000
+      }
+    }
+    osg::MatrixTransform {
+      UniqueID 208
+      Name "Camera"
+      Matrix {
+        0.68592 0.72768 0.00000 0.00000
+        -0.32401 0.30542 0.89540 0.00000
+        0.65156 -0.61417 0.44527 0.00000
+        7.48113 -6.50764 5.34367 1.00000
+      }
+    }
+  }
+}
