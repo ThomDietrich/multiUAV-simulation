@@ -70,6 +70,8 @@ public:
     double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
     double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
     MobileNode* getSufficientlyChargedNode(double current);
+    bool checkForSufficientlyChargedNode(MobileNode* nextNode, MobileNode* sufficientlyChargedNode, double current);
+    bool checkForHighestChargedNode(MobileNode* nextNode, MobileNode* highestChargedNode);
     // Getters
     unsigned int getSpotsCharging() const
     {

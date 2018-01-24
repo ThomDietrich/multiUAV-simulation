@@ -48,7 +48,6 @@ void ChargingNode::initialize(int stage)
             chargeEffectivenessPercentage = double(par("chargeEffectivenessPercentage")) / 100;
             prioritizeFastCharge = int(par("prioritizeFastCharge")) == 1;
 
-
             //Initialize chargeAlgorithm
             double linearGradient = double(par("linearGradient"));
             double chargeCurrent = double(par("chargeCurrent"));
@@ -135,12 +134,19 @@ void ChargingNode::handleMessage(cMessage* msg)
         MobileNodeRequest *mnmsg = check_and_cast<MobileNodeRequest *>(msg);
         MobileNode* sufficientNode = getSufficientlyChargedNode(mnmsg->getRemaining());
 
+        MobileNodeResponse *answerMsg = new MobileNodeResponse("mobileNodeResponse");
+        if (sufficientNode != nullptr) {
+            answerMsg->setNodeFound(true);
+            answerMsg->setMobileNodeIndex(sufficientNode->getIndex());
+            answerMsg->setCapacity(sufficientNode->getBattery()->getCapacity());
+            answerMsg->setRemaining(sufficientNode->getBattery()->getRemaining());
+        }
+        else {
+            answerMsg->setNodeFound(false);
+        }
+
+        send(answerMsg, getOutputGateTo(msg->getSenderModule()));
         delete msg;
-        MobileNodeResponse *msg = new MobileNodeResponse("mobileNodeResponse");
-        cMsgPar *mobileNodePar = new cMsgPar("mobileNode");
-        mobileNodePar->setPointerValue(sufficientNode);
-        msg->addPar(mobileNodePar);
-        send(msg, getOutputGateTo(msg->getSenderModule()));
     }
     else {
         GenericNode::handleMessage(msg);
@@ -224,41 +230,63 @@ double ChargingNode::getForecastRemainingToPointInTime(double remaining, double 
 }
 
 /**
- * ToDo: Refactor according to DRY
  * Won't work as good as possible when nodes have different energy consumption.
- * @return MobileNode*|nullptr, node with lowest sufficent remaining current, if there is no suitable: nullptr
+ * @return MobileNode*|nullptr, node with lowest sufficent remaining current, if there is no suitable it returns the one with most remaining energy
  */
 MobileNode* ChargingNode::getSufficientlyChargedNode(double current)
 {
     MobileNode* sufficientlyChargedNode = nullptr;
+    MobileNode* highestChargedNode = nullptr;
     for (unsigned int i = 0; i < objectsFinished.size(); i++) {
-        if (sufficientlyChargedNode == nullptr) {
+        if (checkForSufficientlyChargedNode(objectsFinished[i], sufficientlyChargedNode, current)) {
             sufficientlyChargedNode = objectsFinished[i];
         }
-        if (sufficientlyChargedNode->getBattery()->getRemaining() > current
-                && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
-            sufficientlyChargedNode = objectsFinished[i];
+        if (checkForHighestChargedNode(objectsFinished[i], highestChargedNode)) {
+            highestChargedNode = objectsFinished[i];
         }
     }
     for (unsigned int i = 0; i < objectsWaiting.size(); i++) {
-        if (sufficientlyChargedNode == nullptr) {
+        if (checkForSufficientlyChargedNode(objectsWaiting[i]->getNode(), sufficientlyChargedNode, current)) {
             sufficientlyChargedNode = objectsWaiting[i]->getNode();
         }
-        if (sufficientlyChargedNode->getBattery()->getRemaining() > current
-                && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
-            sufficientlyChargedNode = objectsWaiting[i]->getNode();
+        if (checkForHighestChargedNode(objectsWaiting[i]->getNode(), highestChargedNode)) {
+            highestChargedNode = objectsWaiting[i]->getNode();
         }
     }
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
-        if (sufficientlyChargedNode == nullptr) {
+        if (checkForSufficientlyChargedNode(objectsCharging[i]->getNode(), sufficientlyChargedNode, current)) {
             sufficientlyChargedNode = objectsCharging[i]->getNode();
         }
-        if (sufficientlyChargedNode->getBattery()->getRemaining() > current
-                && sufficientlyChargedNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
-            sufficientlyChargedNode = objectsCharging[i]->getNode();
+        if (checkForHighestChargedNode(objectsCharging[i]->getNode(), highestChargedNode)) {
+            highestChargedNode = objectsCharging[i]->getNode();
         }
     }
-    return sufficientlyChargedNode;
+    if (sufficientlyChargedNode) {
+        return (sufficientlyChargedNode->getBattery()->getRemaining() > current) ? sufficientlyChargedNode : highestChargedNode;
+    }
+    return nullptr;
+}
+
+bool ChargingNode::checkForSufficientlyChargedNode(MobileNode* nextNode, MobileNode* sufficientlyChargedNode, double current)
+{
+    if (sufficientlyChargedNode == nullptr) {
+        return true;
+    }
+    if (nextNode->getBattery()->getRemaining() > current && nextNode->getBattery()->getRemaining() < sufficientlyChargedNode->getBattery()->getRemaining()) {
+        return true;
+    }
+    return false;
+}
+
+bool ChargingNode::checkForHighestChargedNode(MobileNode* nextNode, MobileNode* highestChargedNode)
+{
+    if (highestChargedNode == nullptr) {
+        return true;
+    }
+    if (nextNode->getBattery()->getRemaining() > highestChargedNode->getBattery()->getRemaining()) {
+        return true;
+    }
+    return false;
 }
 
 /**

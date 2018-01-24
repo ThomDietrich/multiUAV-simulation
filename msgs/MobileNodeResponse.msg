@@ -14,4 +14,8 @@
 //
 
 message MobileNodeResponse {
+    bool nodeFound;
+    int mobileNodeIndex;
+    double remaining;
+    double capacity;
 }
