@@ -100,10 +100,11 @@ void MissionControl::handleMessage(cMessage *msg)
 
         EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex();
         EV_INFO << " (replacing node " << nodeShadow->getNodeIndex() << ")" << endl;
-    } else if (msg->isName("mobileNodeResponse")) {
+    }
+    else if (msg->isName("mobileNodeResponse")) {
         // write requested mobileNode information in corresponding nodeShadow's
         MobileNodeResponse *mnmsg = check_and_cast<MobileNodeResponse *>(msg);
-        if(mnmsg->getNodeFound()) {
+        if (mnmsg->getNodeFound()) {
             NodeShadow* nodeShadow = managedNodeShadows.get(mnmsg->getMobileNodeIndex());
             nodeShadow->setKnownBattery(new Battery(mnmsg->getCapacity(), mnmsg->getRemaining()));
         }
@@ -140,10 +141,11 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacingNode(replNode);
     }
     else {
+        // ToDo: Add highest capacity from config
         this->requestChargedNodesInformation(5400);
         // Get first free IDLE node
         NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
-        if(!replacingNodeShadow) {
+        if (!replacingNodeShadow) {
             replacingNodeShadow = managedNodeShadows.getHighestCharged();
         }
         // Assign as replacing node to this node
@@ -176,9 +178,11 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         // Delete and reschedule if old msg available
         bool reprovision = false;
         if (nodeShadow->hasReplacementMsg()) {
-            cancelEvent(nodeShadow->getReplacementMsg());
-            delete nodeShadow->getReplacementMsg();
-            reprovision = true;
+            if (nodeShadow->getReplacementMsg()->isSelfMessage()) {
+                cancelEvent(nodeShadow->getReplacementMsg());
+                delete nodeShadow->getReplacementMsg();
+                reprovision = true;
+            }
         }
         nodeShadow->setReplacementMsg(replacementMsg);
         scheduleAt(timeOfProvisioning, replacementMsg);
@@ -262,7 +266,8 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
     return commands;
 }
 
-void MissionControl::requestChargedNodesInformation(double remainingBattery) {
+void MissionControl::requestChargedNodesInformation(double remainingBattery)
+{
     // Send request to all ChargingStations
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     for (SubmoduleIterator it(network); !it.end(); ++it) {
