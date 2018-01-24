@@ -22,6 +22,7 @@
 
 #include "GenericNode.h"
 #include "ReplacementData.h"
+#include "Battery.h"
 
 using namespace omnetpp;
 
@@ -42,6 +43,7 @@ private:
     NodeStatus status = NodeStatus::IDLE;
     ReplacementData* replacementData = nullptr;
     cMessage* replacementMsg = nullptr;
+    Battery* knownBattery = nullptr;
 public:
     NodeShadow(GenericNode* node);
     virtual ~NodeShadow();
@@ -141,6 +143,16 @@ public:
     void setReplacementData(ReplacementData* replacementData);
     void setReplacementMsg(cMessage* replacementMsg);
     void setReplacingNode(GenericNode* replacingNode);
+
+    Battery* getKnownBattery()
+    {
+        return knownBattery;
+    }
+    
+    void setKnownBattery(Battery* knownBattery = nullptr)
+    {
+        this->knownBattery = knownBattery;
+    }
 };
 
 
@@ -161,6 +173,7 @@ public:
     NodeShadow* get(int index);
     NodeShadow* get(GenericNode* node);
     NodeShadow* getFirst(NodeStatus currentStatus);
+    NodeShadow* getHighestCharged();
     NodeShadow* getNodeRequestingReplacement(cMessage *msg); //TODO: Replace!
     int size() const
     {
