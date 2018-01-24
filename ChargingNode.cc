@@ -205,7 +205,7 @@ double ChargingNode::nextNeededUpdate()
         }
     }
 
-    return (nextEvent != -1) ? nextEvent : (timeStep ? timeStep : 10);
+    return (nextEvent > 0) ? nextEvent : (timeStep ? timeStep : 10);
 }
 
 void ChargingNode::collectStatistics()
@@ -411,6 +411,7 @@ void ChargingNode::fillChargingSpots()
 
     // loop through empty charging spots and fill them with waiting objects
     while (spotsCharging > objectsCharging.size() && availableNodes > 0) {
+        EV_INFO << "MobileNode ID(" << (*nextWaitingObject)->getNode()->getId() << ") is added to charging spot." << endl;
         (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
         objectsCharging.push_back(*nextWaitingObject);
         objectsWaiting.erase(nextWaitingObject);
@@ -426,24 +427,23 @@ void ChargingNode::clearChargingSpots()
 {
     std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
 
-    while (objectChargingIt != objectsCharging.end()) {
-        if ((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage() > (*objectChargingIt)->getTargetCapacityPercentage()
-                || (*objectChargingIt)->getNode()->getBattery()->isFull()) {
-            EV_INFO << "MobileNode (Id: " << (*objectChargingIt)->getNode()->getId() << ") is charged to target: "
-                    << (*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage() << "/" << (*objectChargingIt)->getTargetCapacityPercentage()
+    for (unsigned int i = 0; i < objectsCharging.size(); i++) {
+        if (objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() > objectsCharging[i]->getTargetCapacityPercentage()
+                || objectsCharging[i]->getNode()->getBattery()->isFull()) {
+            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - charged to target: "
+                    << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "/" << objectsCharging[i]->getTargetCapacityPercentage()
                     << "%" << endl;
             // Send wait message to node
-            MobileNode* mobileNode = (*objectChargingIt)->getNode();
+            MobileNode* mobileNode = objectsCharging[i]->getNode();
             send(new cMessage("wait"), getOutputGateTo(mobileNode));
             // Send a message to the node which signalizes that the charge process is finished
             send(new cMessage("nextCommand"), getOutputGateTo(mobileNode));
             // Push fully charged nodes to the corresponding list
-            objectsFinished.push_back((*objectChargingIt)->getNode());
-            objectsCharging.erase(objectChargingIt);
+            objectsFinished.push_back(objectsCharging[i]->getNode());
+            objectsCharging.erase(objectsCharging.begin()+i);
             // increment the statistics value
             chargedMobileNodes++;
         }
-        objectChargingIt++;
     }
 }
 
@@ -464,15 +464,18 @@ void ChargingNode::rearrangeChargingSpots()
     // when an earlier reservation time occurs, throw out the currently charged node and push it back to the waiting objects
     std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
     while (objectChargingIt != objectsCharging.end()) {
-        if (((*objectChargingIt)->getReservationTime() > (*nextWaitingObject)->getReservationTime()
-                && (not prioritizeFastCharge
-                        || static_cast<double>((*nextWaitingObject)->getNode()->getBattery()->getRemainingPercentage())
-                        < getChargeAlgorithm()->getFastChargePercentage((*nextWaitingObject)->getNode()->getBattery()->getCapacity())))
-                        || (prioritizeFastCharge
-                        && static_cast<double>((*nextWaitingObject)->getNode()->getBattery()->getRemainingPercentage())
-                                < getChargeAlgorithm()->getFastChargePercentage((*nextWaitingObject)->getNode()->getBattery()->getCapacity())
-                                && (static_cast<double>((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage())
-                                        >= getChargeAlgorithm()->getFastChargePercentage((*objectChargingIt)->getNode()->getBattery()->getCapacity())))) {
+        simtime_t chargingObjResTime = (*objectChargingIt)->getReservationTime();
+        simtime_t waitingObjResTime = (*nextWaitingObject)->getReservationTime();
+        double waitingObjRemainingP = static_cast<double>((*nextWaitingObject)->getNode()->getBattery()->getRemainingPercentage());
+        double chargingObjRemainingP = static_cast<double>((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage());
+        double waitingObjFastChargeP = getChargeAlgorithm()->getFastChargePercentage((*nextWaitingObject)->getNode()->getBattery()->getCapacity());
+        double chagingObjFastChargeP = getChargeAlgorithm()->getFastChargePercentage((*objectChargingIt)->getNode()->getBattery()->getCapacity());
+//        EV_DEBUG << "chargingObjResTime " << chargingObjRevTime <<  endl;
+//        EV_DEBUG << "waitingObjResTime " << waitingObjRevTime <<  endl;
+        if (
+                (chargingObjResTime > waitingObjResTime && (not prioritizeFastCharge || waitingObjRemainingP < waitingObjFastChargeP))
+                || (prioritizeFastCharge && waitingObjRemainingP < waitingObjFastChargeP && chargingObjRemainingP >= chagingObjFastChargeP)
+            ) {
             ChargingNodeSpotElement* temp = *nextWaitingObject;
             *nextWaitingObject = *objectChargingIt;
             *objectChargingIt = temp;
