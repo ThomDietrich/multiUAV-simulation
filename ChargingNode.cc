@@ -428,6 +428,11 @@ void ChargingNode::clearChargingSpots()
     std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
 
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
+        if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
+            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - not physically present anymore." << endl;
+            objectsCharging.erase(objectsCharging.begin()+i);
+            continue;
+        }
         if (objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() > objectsCharging[i]->getTargetCapacityPercentage()
                 || objectsCharging[i]->getNode()->getBattery()->isFull()) {
             EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - charged to target: "
@@ -497,6 +502,9 @@ void ChargingNode::charge()
 {
     simtime_t currentTime = simTime();
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
+        if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
+            continue;
+        }
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(),
                 (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
