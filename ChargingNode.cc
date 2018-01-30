@@ -432,7 +432,11 @@ double ChargingNode::calculateSecondsToNextEvent(MobileNode* mn, bool prioritize
 {
     double remaining = mn->getBattery()->getRemaining();
     double capacity = mn->getBattery()->getCapacity();
-    double targetPercentage = prioritizeFastCharge ? chargeAlgorithm->getFastChargePercentage(capacity) : 100.0;
+    double fastChargePercentage = chargeAlgorithm->getFastChargePercentage(capacity);
+    double targetPercentage = fastChargePercentage;
+    if (!prioritizeFastCharge || remaining / capacity * 100 >= fastChargePercentage) {
+        targetPercentage = 100.0;
+    }
     return chargeAlgorithm->calculateChargeTime(remaining, capacity, targetPercentage);
 }
 
