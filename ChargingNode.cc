@@ -148,6 +148,11 @@ void ChargingNode::handleMessage(cMessage* msg)
         send(answerMsg, getOutputGateTo(msg->getSenderModule()));
         delete msg;
     }
+    else if (msg->isName("mobileNodeExit")) {
+        MobileNode* sender = check_and_cast<MobileNode*>(msg->getSenderModule());
+        removeFromChargingNode(sender);
+        updateState();
+    }
     else {
         GenericNode::handleMessage(msg);
         return;
@@ -290,6 +295,29 @@ bool ChargingNode::checkForHighestChargedNode(MobileNode* nextNode, MobileNode* 
 }
 
 /**
+ * Removes all connections to the given MobileNode.
+ * This needs to be executed before a MobileNode can safely leave the ChargingNode.
+ */
+void ChargingNode::removeFromChargingNode(MobileNode* mobileNode)
+{
+    for (unsigned int i = 0; i < objectsFinished.size(); i++) {
+        if (objectsFinished[i] == mobileNode) {
+            objectsFinished.erase(objectsFinished.begin() + i);
+        }
+    }
+    for (unsigned int i = 0; i < objectsWaiting.size(); i++) {
+        if (objectsWaiting[i]->getNode() == mobileNode) {
+            objectsWaiting.erase(objectsWaiting.begin() + i);
+        }
+    }
+    for (unsigned int i = 0; i < objectsCharging.size(); i++) {
+        if (objectsCharging[i]->getNode() == mobileNode) {
+            objectsCharging.erase(objectsCharging.begin() + i);
+        }
+    }
+}
+
+/**
  * Appends a MobileNode to the waiting queue.
  * Estimated wait and charge duration get calculated and appended.
  * Default values take place when there is no reservation and the object is already present (object appeared with startCharge message):
@@ -429,15 +457,16 @@ void ChargingNode::clearChargingSpots()
 
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
-            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - not physically present anymore." << endl;
-            objectsCharging.erase(objectsCharging.begin()+i);
+            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - not physically present anymore."
+                    << endl;
+            objectsCharging.erase(objectsCharging.begin() + i);
             continue;
         }
         if (objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() > objectsCharging[i]->getTargetCapacityPercentage()
                 || objectsCharging[i]->getNode()->getBattery()->isFull()) {
             EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - charged to target: "
-                    << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "/" << objectsCharging[i]->getTargetCapacityPercentage()
-                    << "%" << endl;
+                    << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "/" << objectsCharging[i]->getTargetCapacityPercentage() << "%"
+                    << endl;
             // Send wait message to node
             MobileNode* mobileNode = objectsCharging[i]->getNode();
             send(new cMessage("wait"), getOutputGateTo(mobileNode));
@@ -445,7 +474,7 @@ void ChargingNode::clearChargingSpots()
             send(new cMessage("nextCommand"), getOutputGateTo(mobileNode));
             // Push fully charged nodes to the corresponding list
             objectsFinished.push_back(objectsCharging[i]->getNode());
-            objectsCharging.erase(objectsCharging.begin()+i);
+            objectsCharging.erase(objectsCharging.begin() + i);
             // increment the statistics value
             chargedMobileNodes++;
         }
@@ -475,12 +504,10 @@ void ChargingNode::rearrangeChargingSpots()
         double chargingObjRemainingP = static_cast<double>((*objectChargingIt)->getNode()->getBattery()->getRemainingPercentage());
         double waitingObjFastChargeP = getChargeAlgorithm()->getFastChargePercentage((*nextWaitingObject)->getNode()->getBattery()->getCapacity());
         double chagingObjFastChargeP = getChargeAlgorithm()->getFastChargePercentage((*objectChargingIt)->getNode()->getBattery()->getCapacity());
-//        EV_DEBUG << "chargingObjResTime " << chargingObjRevTime <<  endl;
-//        EV_DEBUG << "waitingObjResTime " << waitingObjRevTime <<  endl;
-        if (
-                (chargingObjResTime > waitingObjResTime && (not prioritizeFastCharge || waitingObjRemainingP < waitingObjFastChargeP))
-                || (prioritizeFastCharge && waitingObjRemainingP < waitingObjFastChargeP && chargingObjRemainingP >= chagingObjFastChargeP)
-            ) {
+        //        EV_DEBUG << "chargingObjResTime " << chargingObjRevTime <<  endl;
+        //        EV_DEBUG << "waitingObjResTime " << waitingObjRevTime <<  endl;
+        if ((chargingObjResTime > waitingObjResTime && (not prioritizeFastCharge || waitingObjRemainingP < waitingObjFastChargeP))
+                || (prioritizeFastCharge && waitingObjRemainingP < waitingObjFastChargeP && chargingObjRemainingP >= chagingObjFastChargeP)) {
             ChargingNodeSpotElement* temp = *nextWaitingObject;
             *nextWaitingObject = *objectChargingIt;
             *objectChargingIt = temp;

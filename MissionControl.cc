@@ -83,6 +83,14 @@ void MissionControl::handleMessage(cMessage *msg)
         ReplacementData *replData = nodeShadow->getReplacementData();
         EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
 
+        // When the replacing node ist charging currently send a message to stop the process
+        if (replacingNode->getCommandExecEngine()) {
+            if (replacingNode->getCommandExecEngine()->getCeeType() == CeeType::CHARGE) {
+                cMessage *exitMessage = new cMessage("mobileNodeExit");
+                send(exitMessage, "gate$o", replacingNode->getIndex());
+            }
+        }
+
         // Send provision mission to replacing node
         CommandQueue provMission;
         provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
