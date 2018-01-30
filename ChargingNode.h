@@ -109,6 +109,7 @@ protected:
     std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator(bool fastCharge);
     int numberWaitingAndPhysicallyPresent();
     bool isPhysicallyPresent(MobileNode* mobileNode);
+    double calculateSecondsToNextEvent(MobileNode* mn, bool prioritizeFastCharge);
     void fillChargingSpots();
     void clearChargingSpots();
     void rearrangeChargingSpots();

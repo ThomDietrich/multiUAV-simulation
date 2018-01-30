@@ -132,6 +132,7 @@ void ChargingNode::handleMessage(cMessage* msg)
     }
     else if (msg->isName("mobileNodeRequest")) {
         MobileNodeRequest *mnmsg = check_and_cast<MobileNodeRequest *>(msg);
+        updateState();
         MobileNode* sufficientNode = getSufficientlyChargedNode(mnmsg->getRemaining());
 
         MobileNodeResponse *answerMsg = new MobileNodeResponse("mobileNodeResponse");
@@ -424,6 +425,18 @@ int ChargingNode::numberWaitingAndPhysicallyPresent()
 }
 
 /**
+ * Calculates the seconds for the charging process for the given MobileNode.
+ * The next event is either fully charged or the fastChargePercentage depending on the configuration.
+ */
+double ChargingNode::calculateSecondsToNextEvent(MobileNode* mn, bool prioritizeFastCharge)
+{
+    double remaining = mn->getBattery()->getRemaining();
+    double capacity = mn->getBattery()->getCapacity();
+    double targetPercentage = prioritizeFastCharge ? chargeAlgorithm->getFastChargePercentage(capacity) : 100.0;
+    return chargeAlgorithm->calculateChargeTime(remaining, capacity, targetPercentage);
+}
+
+/**
  * Populates the charging nodes.
  */
 void ChargingNode::fillChargingSpots()
@@ -441,6 +454,9 @@ void ChargingNode::fillChargingSpots()
     while (spotsCharging > objectsCharging.size() && availableNodes > 0) {
         EV_INFO << "MobileNode ID(" << (*nextWaitingObject)->getNode()->getId() << ") is added to charging spot." << endl;
         (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
+        // set the point in time when the next event needs to be executed
+        double secondsToNextEvent = calculateSecondsToNextEvent((*nextWaitingObject)->getNode(), prioritizeFastCharge);
+        (*nextWaitingObject)->setPointInTimeWhenDone(simTime() + secondsToNextEvent);
         objectsCharging.push_back(*nextWaitingObject);
         objectsWaiting.erase(nextWaitingObject);
         nextWaitingObject = getNextWaitingObjectIterator(prioritizeFastCharge);
@@ -512,6 +528,9 @@ void ChargingNode::rearrangeChargingSpots()
             *nextWaitingObject = *objectChargingIt;
             *objectChargingIt = temp;
             (*objectChargingIt)->setPointInTimeWhenChargingStarted(simTime());
+            // set the point in time when the next event needs to be executed
+            double secondsToNextEvent = calculateSecondsToNextEvent((*objectChargingIt)->getNode(), prioritizeFastCharge);
+            (*objectChargingIt)->setPointInTimeWhenDone(simTime() + secondsToNextEvent);
 
             EV_INFO << "MobileNode ID(" << (*nextWaitingObject)->getNode()->getId() << ") charge spot exchanged with ID("
                     << (*objectChargingIt)->getNode()->getId() << ") waiting spot." << endl;
