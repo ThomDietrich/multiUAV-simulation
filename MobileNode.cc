@@ -46,6 +46,8 @@ void MobileNode::initialize(int stage)
         case 0:
             trailLength = par("trailLength");
             trailColor = par("trailColor").stringValue();
+            waypointsShown = par("waypointsShown").boolValue();
+            waypointColor = osgEarth::Color(par("waypointColor").stringValue());
             break;
 
         case 1:
@@ -59,6 +61,14 @@ void MobileNode::initialize(int stage)
                 trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
                 locatorNode->addChild(trailNode);
             }
+            if (waypointsShown) {
+                waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->color() = waypointColor;
+                waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->width() = 5.0f;
+                auto geoSRS = mapNode->getMapSRS();
+                waypointsNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
+                mapNode->getModelLayerGroup()->addChild(waypointsNode);
+            }
+
             //Initialize Energy storage
             int capacity = int(par("batteryCapacity"));
             battery = Battery(capacity, capacity / 2 + rand() % capacity / 2);
@@ -83,6 +93,11 @@ void MobileNode::refreshDisplay() const
         trailFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
         trailNode->setFeature(trailFeature);
     }
+    if (waypointsShown) {
+        auto waypointsFeature = new Feature(new LineString(&waypoints), geoSRS, waypointStyle);
+        waypointsFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
+        waypointsNode->setFeature(waypointsFeature);
+    }
 }
 
 void MobileNode::handleMessage(cMessage *msg)
@@ -98,6 +113,24 @@ void MobileNode::handleMessage(cMessage *msg)
 
         delete msg;
         msg = nullptr;
+    }
+    else if (msg->isName("startMission")) {
+        GenericNode::handleMessage(msg);
+        msg = nullptr;
+        if (waypointsShown) {
+            if (not waypoints.empty()) waypoints.clear();
+            CommandQueue* missionCommands = extractCommands();
+            for (std::deque<Command*>::iterator it = missionCommands->begin(); it != missionCommands->end(); it++) {
+                waypoints.push_back(osg::Vec3d(                                   // pretty
+                        OsgEarthScene::getInstance()->toLongitude((*it)->getX()), // set X
+                        OsgEarthScene::getInstance()->toLatitude((*it)->getY()),  // set Y
+                        (*it)->getZ()                                             // set Z
+                        ));
+            }
+            delete missionCommands;
+            // close the circle
+            waypoints.push_back(waypoints.front());
+        }
     }
     else {
         GenericNode::handleMessage(msg);

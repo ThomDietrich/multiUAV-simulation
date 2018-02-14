@@ -23,7 +23,9 @@ simple MobileNode extends GenericNode
         @class(MobileNode);
         @display("i=block/broadcast");
         // decorations and annotations
+        string waypointColor = default("#00000055"); // the color of the waypoint movement indicator in hex RRGGBBAA format
         string trailColor = default("#000000ff");    // the color of the trail indicator in hex RRGGBBAA format
+        bool waypointsShown = default(true);         // decides whether or not to display waypoints
         int trailLength = default(0);	             // the length of the trail in time steps showing the past movement of the node. 0 disables the trail
         //energy consumption        
         double batteryCapacity @unit("mAh") = default(2200mAh); // the battery capacity (in mAh, "0" for infinite energy storage)
