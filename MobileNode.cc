@@ -46,6 +46,7 @@ void MobileNode::initialize(int stage)
         case 0:
             trailLength = par("trailLength");
             trailColor = par("trailColor").stringValue();
+            waypointLength = par("waypointLength");
             waypointsShown = par("waypointsShown").boolValue();
             waypointColor = osgEarth::Color(par("waypointColor").stringValue());
             break;
@@ -114,22 +115,32 @@ void MobileNode::handleMessage(cMessage *msg)
         delete msg;
         msg = nullptr;
     }
-    else if (msg->isName("startMission")) {
+    else if (msg->isName("nextCommand")) {
         GenericNode::handleMessage(msg);
         msg = nullptr;
         if (waypointsShown) {
             if (not waypoints.empty()) waypoints.clear();
-            CommandQueue* missionCommands = extractCommands();
-            for (std::deque<Command*>::iterator it = missionCommands->begin(); it != missionCommands->end(); it++) {
-                waypoints.push_back(osg::Vec3d(                                   // pretty
-                        OsgEarthScene::getInstance()->toLongitude((*it)->getX()), // set X
-                        OsgEarthScene::getInstance()->toLatitude((*it)->getY()),  // set Y
-                        (*it)->getZ()                                             // set Z
+            waypoints.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
+
+            Command* extractedCommand = commandExecEngine->extractCommand();
+            if (0 != strcmp("charge", extractedCommand->getMessageName())) {
+                waypoints.push_back(osg::Vec3d(                                              // pretty
+                        OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
+                        OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
+                        extractedCommand->getZ()                                             // set Z
                         ));
             }
-            delete missionCommands;
-            // close the circle
-            waypoints.push_back(waypoints.front());
+            if (not cees.empty()) {
+                for (std::deque<CommandExecEngine*>::iterator it = cees.begin(); it != cees.end(); ++it) {
+                    if (waypointLength > 0 && waypoints.size() >= waypointLength) break;
+                    extractedCommand = (*it)->extractCommand();
+                    waypoints.push_back(osg::Vec3d(                                              // pretty
+                            OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
+                            OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
+                            extractedCommand->getZ()                                             // set Z
+                            ));
+                }
+            }
         }
     }
     else {

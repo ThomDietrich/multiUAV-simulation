@@ -49,6 +49,7 @@ protected:
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> waypointsNode = nullptr;
     osgEarth::Vec3dVector waypoints;
     bool waypointsShown;
+    unsigned int waypointLength;
     osgEarth::Style waypointStyle;
     osgEarth::Color waypointColor;
 
