@@ -106,6 +106,7 @@ void HoldPositionCommand::setHoldSeconds(int value)
 ChargeCommand::ChargeCommand(ChargingNode* node)
 {
     this->node = node;
+    this->setMessageName("charge");
 }
 
 ChargingNode* ChargeCommand::getChargingNode()

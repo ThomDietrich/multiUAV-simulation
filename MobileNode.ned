@@ -27,6 +27,8 @@ simple MobileNode extends GenericNode
         string trailColor = default("#000000ff");    // the color of the trail indicator in hex RRGGBBAA format
         bool waypointsShown = default(true);         // decides whether or not to display waypoints
         int trailLength = default(0);	             // the length of the trail in time steps showing the past movement of the node. 0 disables the trail
+        int waypointLength = default(3);	         // the length of the waypoint movement in time steps showing the planned movement of the node. 0 shows all
+        
         //energy consumption        
         double batteryCapacity @unit("mAh") = default(2200mAh); // the battery capacity (in mAh, "0" for infinite energy storage)
         double batteryRemaining @unit("mAh") = default(2200mAh); // the battery capacity remaining on simulation start (in mAh, must be equal or less than batteryCapacity)
