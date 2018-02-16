@@ -74,6 +74,9 @@ protected:
     virtual void handleMessage(cMessage *msg) override;
     static ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) = 0;
+
+private:
+    void inline evaluateBatteryCharge();
 };
 
 #endif

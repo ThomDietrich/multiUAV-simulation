@@ -152,6 +152,8 @@ void MobileNode::handleMessage(cMessage *msg)
         scheduleAt(simTime() + stepSize, msg);
     }
 
+    evaluateBatteryCharge();
+
     // update the trail data based on the new position
     if (trailNode) {
         // store the new position to be able to create a track later
@@ -161,6 +163,42 @@ void MobileNode::handleMessage(cMessage *msg)
         if (trail.size() > trailLength) trail.erase(trail.begin());
     }
 }
+
+void inline MobileNode::evaluateBatteryCharge()
+{
+    switch (getBattery()->getRemainingPercentage() / 20) {
+        case 0:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::Red;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::DarkGray;
+            break;
+        case 1:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::Orange;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::DarkGray;
+            break;
+        case 2:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::Yellow;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::DarkGray;
+            break;
+        case 3:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::Green;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::Gray;
+            break;
+        case 4:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::Blue;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::Gray;
+            break;
+        case 5:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::Black;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::Gray;
+            break;
+        default:
+            labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color::White;
+            labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::DarkGray;
+            break;
+    }
+    sublabelNode.get()->setStyle(labelStyle);
+}
+
 
 ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ)
 {

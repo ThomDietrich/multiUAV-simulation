@@ -22,6 +22,7 @@
 #include <osg/PositionAttitudeTransform>
 #include <osgEarth/Capabilities>
 #include <osgEarthAnnotation/LabelNode>
+#include <osgEarthAnnotation/RectangleNode>
 #include <osgEarthSymbology/Geometry>
 #include <osgEarthFeatures/Feature>
 
@@ -86,11 +87,12 @@ void GenericNode::initialize(int stage)
 
             // set the name label if the color is specified
             if (!labelColor.empty()) {
-                Style labelStyle;
                 labelStyle.getOrCreate<TextSymbol>()->alignment() = TextSymbol::ALIGN_CENTER_TOP;
                 labelStyle.getOrCreate<TextSymbol>()->declutter() = true;
                 labelStyle.getOrCreate<TextSymbol>()->pixelOffset() = osg::Vec2s(0, 40);
                 labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(labelColor);
+                labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::DarkGray;
+                labelStyle.getOrCreate<TextSymbol>()->haloOffset() = 0.2;
                 labelNode = new LabelNode(getFullName(), labelStyle);
                 labelNode->setDynamic(true);
                 locatorNode->addChild(labelNode);
