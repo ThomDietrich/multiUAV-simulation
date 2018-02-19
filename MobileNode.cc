@@ -15,6 +15,7 @@
 
 #ifdef WITH_OSG
 #include <osg/Node>
+#include <osg/ShapeDrawable>
 #include <osg/PositionAttitudeTransform>
 #include <osgEarth/Capabilities>
 #include <osgEarthAnnotation/LabelNode>
@@ -70,6 +71,34 @@ void MobileNode::initialize(int stage)
                 mapNode->getModelLayerGroup()->addChild(waypointsNode);
             }
 
+            osg::Group* coordsArrows = new osg::Group();
+            const double heading = 1.5708; // (in radians)
+
+            osg::Group* arrowX = new osg::Group();
+            createArrow(arrowX, osgEarth::Color::Red);
+            auto transformArrowX = new osg::PositionAttitudeTransform();
+            transformArrowX->addChild(arrowX);
+            transformArrowX->setPosition(osg::Vec3d(1.55, 0, 4.7));
+            transformArrowX->setAttitude(osg::Quat(heading, osg::Vec3d(0, 1, 0)));
+            coordsArrows->addChild(transformArrowX);
+
+            osg::Group* arrowY = new osg::Group();
+            createArrow(arrowY, osgEarth::Color::Blue);
+            auto transformArrowY = new osg::PositionAttitudeTransform();
+            transformArrowY->addChild(arrowY);
+            transformArrowY->setPosition(osg::Vec3d(0, 1.55, 4.7));
+            transformArrowY->setAttitude(osg::Quat(-heading, osg::Vec3d(1, 0, 0)));
+            coordsArrows->addChild(transformArrowY);
+
+            osg::Group* arrowZ = new osg::Group();
+            createArrow(arrowZ, osgEarth::Color::Green);
+            auto transformArrowZ = new osg::PositionAttitudeTransform();
+            transformArrowZ->addChild(arrowZ);
+            transformArrowZ->setPosition(osg::Vec3d(0, 0, 6));
+            coordsArrows->addChild(transformArrowZ);
+
+            locatorNode->addChild(coordsArrows);
+
             //Initialize Energy storage
             int capacity = int(par("batteryCapacity"));
             battery = Battery(capacity, capacity / 2 + rand() % capacity / 2);
@@ -80,6 +109,39 @@ void MobileNode::initialize(int stage)
             WATCH(utilizationEnergyMaintenance);
             break;
     }
+}
+
+void MobileNode::createArrow(osg::Group* arrow, osgEarth::Color& color)
+{
+    const float coneRadius = 1;
+    const float coneHeight = 2;
+    auto cone = new osg::Cone(osg::Vec3(0, 0, 0), coneRadius, coneHeight);
+    auto coneDrawable = new osg::ShapeDrawable(cone);
+    auto coneGeode = new osg::Geode;
+    auto coneStateSet = coneGeode->getOrCreateStateSet();
+    auto coneMaterial = new osg::Material();
+    coneMaterial->setAmbient(osg::Material::FRONT_AND_BACK, color);
+    coneMaterial->setDiffuse(osg::Material::FRONT_AND_BACK, color);
+    coneMaterial->setAlpha(osg::Material::FRONT_AND_BACK, 1.0);
+    coneStateSet->setAttribute(coneMaterial, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+    coneGeode->addDrawable(coneDrawable);
+    auto transformConeNode = new osg::PositionAttitudeTransform();
+    transformConeNode->addChild(coneGeode);
+    transformConeNode->setPosition(osg::Vec3d(0, 0, 2));
+    arrow->addChild(transformConeNode);
+    const float lineThickness = 0.4;
+    const float lineLength = 3;
+    auto line = new osg::Box(osg::Vec3(0, 0, 0), lineThickness, lineThickness, lineLength);
+    auto lineDrawable = new osg::ShapeDrawable(line);
+    auto lineGeode = new osg::Geode;
+    auto lineStateSet = lineGeode->getOrCreateStateSet();
+    auto lineMaterial = new osg::Material();
+    lineMaterial->setAmbient(osg::Material::FRONT_AND_BACK, osgEarth::Color::Black);
+    lineMaterial->setDiffuse(osg::Material::FRONT_AND_BACK, osgEarth::Color::Black);
+    lineMaterial->setAlpha(osg::Material::FRONT_AND_BACK, 1.0);
+    lineStateSet->setAttribute(lineMaterial, osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
+    lineGeode->addDrawable(lineDrawable);
+    arrow->addChild(lineGeode);
 }
 
 void MobileNode::refreshDisplay() const
@@ -198,7 +260,6 @@ void inline MobileNode::evaluateBatteryCharge()
     }
     sublabelNode.get()->setStyle(labelStyle);
 }
-
 
 ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ)
 {
