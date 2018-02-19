@@ -22,7 +22,6 @@
 #include <osg/PositionAttitudeTransform>
 #include <osgEarth/Capabilities>
 #include <osgEarthAnnotation/LabelNode>
-#include <osgEarthAnnotation/RectangleNode>
 #include <osgEarthSymbology/Geometry>
 #include <osgEarthFeatures/Feature>
 
