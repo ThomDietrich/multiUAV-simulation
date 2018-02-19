@@ -412,6 +412,10 @@ ReplacementData* UAVNode::endOfOperation()
     while (true) {
         CommandExecEngine *nextCEE = cees.at(nextCommandsFeasible % cees.size());
 
+        if (nextCEE->isCeeType(CeeType::WAIT)) {
+            return nullptr;
+        }
+
         if (not nextCEE->isPartOfMission()) {
             EV_WARN << __func__ << "(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
             return nullptr;

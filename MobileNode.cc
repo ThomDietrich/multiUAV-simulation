@@ -205,6 +205,13 @@ void MobileNode::handleMessage(cMessage *msg)
             }
         }
     }
+    else if (msg->isName("mobileNodeExit")) {
+        ChargeCEE *cee = check_and_cast<ChargeCEE *>(commandExecEngine);
+        ChargingNode *cn = cee->extractCommand()->getChargingNode();
+        delete msg;
+        msg = nullptr;
+        send(new cMessage("mobileNodeExit"), getOutputGateTo(cn));
+    }
     else {
         GenericNode::handleMessage(msg);
         msg = nullptr;

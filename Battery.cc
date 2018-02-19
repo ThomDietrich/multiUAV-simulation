@@ -86,6 +86,7 @@ bool Battery::discharge(float amount)
     if (remaining < 0) {
         remaining = 0;
         EV_WARN << "Battery storage exhausted over limit 0" << endl;
+        throw cRuntimeError("Battery storage exhausted over limit 0");
         return false;
     }
     return true;

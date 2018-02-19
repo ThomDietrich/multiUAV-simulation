@@ -31,10 +31,12 @@
 #include "msgs/MissionMsg_m.h"
 #include "msgs/CmdCompletedMsg_m.h"
 #include "ReplacementData.h"
+//#include "ChargingNode.h"
 
 using namespace omnetpp;
 
 class ReplacementData;
+class ChargingNode;
 
 /**
  * Interface to be implemented by nodes to be able to register in ChannelController.
@@ -173,6 +175,10 @@ public:
     double getClimbAngle() const
     {
         return climbAngle;
+    }
+    CommandExecEngine* getCommandExecEngine() const
+    {
+        return commandExecEngine;
     }
     virtual bool hasCommandsInQueue();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) = 0;
