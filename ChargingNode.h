@@ -70,6 +70,8 @@ public:
     double getForecastRemainingToTarget(double remaining, double capacity, double targetPercentage = 100.0);
     double getForecastRemainingToPointInTime(double remaining, double capacity, simtime_t pointInTime);
     MobileNode* getSufficientlyChargedNode(double current);
+    bool checkForSufficientlyChargedNode(MobileNode* nextNode, MobileNode* sufficientlyChargedNode, double current);
+    bool checkForHighestChargedNode(MobileNode* nextNode, MobileNode* highestChargedNode);
     // Getters
     unsigned int getSpotsCharging() const
     {
@@ -100,12 +102,14 @@ protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
+    void removeFromChargingNode(MobileNode* mobileNode);
     void appendToObjectsWaiting(MobileNode* mobileNode, double targetPercentage, simtime_t reservationTime = 0, simtime_t estimatedArrival = 0,
             double consumption = 0);
     bool isInWaitingQueue(MobileNode* mobileNode);
     std::deque<ChargingNodeSpotElement*>::iterator getNextWaitingObjectIterator(bool fastCharge);
     int numberWaitingAndPhysicallyPresent();
     bool isPhysicallyPresent(MobileNode* mobileNode);
+    double calculateSecondsToNextEvent(MobileNode* mn, bool prioritizeFastCharge);
     void fillChargingSpots();
     void clearChargingSpots();
     void rearrangeChargingSpots();

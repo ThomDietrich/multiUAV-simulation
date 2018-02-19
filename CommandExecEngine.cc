@@ -460,7 +460,7 @@ WaitCEE::WaitCEE(MobileNode *boundNode, WaitCommand *command)
 {
     this->node = boundNode;
     this->command = command;
-    this->setType(CeeType::CHARGE);
+    this->setType(CeeType::WAIT);
 }
 
 bool WaitCEE::commandCompleted()

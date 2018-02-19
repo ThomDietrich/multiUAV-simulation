@@ -83,6 +83,14 @@ void MissionControl::handleMessage(cMessage *msg)
         ReplacementData *replData = nodeShadow->getReplacementData();
         EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
 
+        // When the replacing node ist charging currently send a message to stop the process
+        if (replacingNode->getCommandExecEngine()) {
+            if (replacingNode->getCommandExecEngine()->getCeeType() == CeeType::CHARGE) {
+                cMessage *exitMessage = new cMessage("mobileNodeExit");
+                send(exitMessage, "gate$o", replacingNode->getIndex());
+            }
+        }
+
         // Send provision mission to replacing node
         CommandQueue provMission;
         provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
@@ -100,6 +108,14 @@ void MissionControl::handleMessage(cMessage *msg)
 
         EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex();
         EV_INFO << " (replacing node " << nodeShadow->getNodeIndex() << ")" << endl;
+    }
+    else if (msg->isName("mobileNodeResponse")) {
+        // write requested mobileNode information in corresponding nodeShadow's
+        MobileNodeResponse *mnmsg = check_and_cast<MobileNodeResponse *>(msg);
+        if (mnmsg->getNodeFound()) {
+            NodeShadow* nodeShadow = managedNodeShadows.get(mnmsg->getMobileNodeIndex());
+            nodeShadow->setKnownBattery(new Battery(mnmsg->getCapacity(), mnmsg->getRemaining()));
+        }
     }
     else {
         std::string message = "Unknown message name encountered: ";
@@ -133,8 +149,13 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacingNode(replNode);
     }
     else {
+        // ToDo: Add highest capacity from config
+        this->requestChargedNodesInformation(5400);
         // Get first free IDLE node
         NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
+        if (!replacingNodeShadow) {
+            replacingNodeShadow = managedNodeShadows.getHighestCharged();
+        }
         // Assign as replacing node to this node
         replacingNodeShadow->setStatus(NodeStatus::RESERVED);
         nodeShadow->setReplacementData(new ReplacementData(replData));
@@ -165,9 +186,11 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         // Delete and reschedule if old msg available
         bool reprovision = false;
         if (nodeShadow->hasReplacementMsg()) {
-            cancelEvent(nodeShadow->getReplacementMsg());
-            delete nodeShadow->getReplacementMsg();
-            reprovision = true;
+            if (nodeShadow->getReplacementMsg()->isSelfMessage()) {
+                cancelEvent(nodeShadow->getReplacementMsg());
+                delete nodeShadow->getReplacementMsg();
+                reprovision = true;
+            }
         }
         nodeShadow->setReplacementMsg(replacementMsg);
         scheduleAt(timeOfProvisioning, replacementMsg);
@@ -249,6 +272,42 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
         }
     }
     return commands;
+}
+
+void MissionControl::requestChargedNodesInformation(double remainingBattery)
+{
+    // Send request to all ChargingStations
+    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+    for (SubmoduleIterator it(network); !it.end(); ++it) {
+        cModule *module = *it;
+        if (not module->isName("cs")) {
+            continue;
+        }
+        MobileNodeRequest *mnRequest = new MobileNodeRequest("mobileNodeRequest");
+        mnRequest->setRemaining(remainingBattery);
+        send(mnRequest, getOutputGateTo(module));
+    }
+}
+
+/**
+ * Find and return the cGate pointing to another cModule.
+ *
+ * @param cMod
+ * @return cGate*, 'nullptr' if no gate found
+ */
+cGate* MissionControl::getOutputGateTo(cModule *cMod)
+{
+    for (int i = 0; i < this->gateCount(); i++) {
+        cGate *gate = this->gateByOrdinal(i);
+        if (gate->getType() == cGate::Type::OUTPUT) {
+            cModule *gateOwner = gate->getPathEndGate()->getOwnerModule();
+            if (gateOwner == cMod) {
+                return gate;
+            }
+            //EV_INFO << "Node is connected to " << gateOwner->getFullName() << " through gate at index " << i << ": " << gate->getFullName() << endl;
+        }
+    }
+    return nullptr;
 }
 
 #endif // WITH_OSG
