@@ -114,9 +114,29 @@ NodeShadow* ManagedNodeShadows::getFirst(NodeStatus currentStatus)
             return it->second;
         }
     }
-    throw cRuntimeError("getNode(): No available Nodes found. This case is not handled yet.");
+//    throw cRuntimeError("getNode(): No available Nodes found. This case is not handled yet.");
     return nullptr;
 
+}
+
+/**
+ *
+ */
+NodeShadow* ManagedNodeShadows::getHighestCharged()
+{
+    NodeShadow* highestChargedNode = nullptr;
+    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        Battery* tempKnownBattery = it->second->getKnownBattery();
+        if (tempKnownBattery == nullptr) {
+            continue;
+        }
+        if (highestChargedNode == nullptr) {
+            highestChargedNode = it->second;
+        } else if (highestChargedNode->getKnownBattery()->getRemainingPercentage() <= tempKnownBattery->getRemainingPercentage()) {
+            highestChargedNode = it->second;
+        }
+    }
+    return highestChargedNode;
 }
 
 NodeShadow* ManagedNodeShadows::getNodeRequestingReplacement(cMessage* msg)

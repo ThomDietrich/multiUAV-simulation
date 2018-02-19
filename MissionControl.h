@@ -27,6 +27,8 @@
 #include "GenericNode.h"
 #include "msgs/MissionMsg_m.h"
 #include "msgs/CmdCompletedMsg_m.h"
+#include "msgs/MobileNodeRequest_m.h"
+#include "msgs/MobileNodeResponse_m.h"
 #include "MissionControlDataMap.h"
 
 using namespace omnetpp;
@@ -43,6 +45,8 @@ protected:
     virtual void handleMessage(cMessage *msg);
     virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
     virtual void handleReplacementMessage(ReplacementData replData);
+    virtual void requestChargedNodesInformation(double remainingBattery);
+    virtual cGate* getOutputGateTo(cModule *cMod);
 };
 
 #endif

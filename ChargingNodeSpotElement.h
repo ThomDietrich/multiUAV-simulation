@@ -73,6 +73,11 @@ public:
         return pointInTimeWhenDone;
     }
 
+    void setPointInTimeWhenDone(const simtime_t& pointInTimeWhenDone)
+    {
+        this->pointInTimeWhenDone = pointInTimeWhenDone;
+    }
+
     double getTargetCapacityPercentage() const
     {
         return targetCapacityPercentage;
