@@ -20,9 +20,7 @@ Define_Module(MissionControl);
 
 void MissionControl::initialize()
 {
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
-    //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
-    //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
+    missionQueue.push_back(loadCommandsFromWaypointsFile(par("waypointFile").stringValue()));
 
     // Add all GenericNodes to managedNodes list (map)
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
