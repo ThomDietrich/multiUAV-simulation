@@ -122,6 +122,7 @@ ExchangeCommand::ExchangeCommand(GenericNode* otherNode, bool scheduleRechargeAf
     this->otherNode = otherNode;
     this->scheduleRechargeAfter = scheduleRechargeAfter;
     this->thisNodeHasDataToExchange = transmitData;
+    this->setMessageName("exchange");
 }
 
 void ExchangeCommand::setOtherNode(GenericNode* otherNode)

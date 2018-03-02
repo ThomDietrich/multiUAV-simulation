@@ -418,13 +418,13 @@ void ExchangeCEE::performExitActions()
 
         // Generate WaypointCEE
         WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
+        WaypointCEE *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
         goToChargingNodeCEE->setPartOfMission(false);
 
         // Get the duration for the flight to ChargingNode
         // To get the information the CEE needs to be initialized
         goToChargingNodeCEE->initializeCEE();
-        double goToChargingNodeDuration = (goToChargingNodeCEE->hasDeterminedDuration()) ? goToChargingNodeCEE->getOverallDuration() : goToChargingNodeCEE->getDuration();
+        double goToChargingNodeDuration = goToChargingNodeCEE->getOverallDuration();
 
         // Generate and send reservation message to CN
         ReserveSpotMsg *msg = new ReserveSpotMsg("reserveSpot");
