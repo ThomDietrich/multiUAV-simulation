@@ -15,6 +15,7 @@
 
 #ifdef WITH_OSG
 #include <osg/Node>
+#include <osg/ShapeDrawable>
 #include <osg/PositionAttitudeTransform>
 #include <osgEarth/Capabilities>
 #include <osgEarthAnnotation/LabelNode>
@@ -46,9 +47,9 @@ void MobileNode::initialize(int stage)
         case 0:
             trailLength = par("trailLength");
             trailColor = par("trailColor").stringValue();
-            waypointLength = par("waypointLength");
-            waypointsShown = par("waypointsShown").boolValue();
-            waypointColor = osgEarth::Color(par("waypointColor").stringValue());
+            commandCount = par("commandCount");
+            commandPreviewEnabled = par("commandPreviewEnabled").boolValue();
+            commandPreviewColor = osgEarth::Color(par("commandPreviewColor").stringValue());
             break;
 
         case 1:
@@ -62,8 +63,8 @@ void MobileNode::initialize(int stage)
                 trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
                 locatorNode->addChild(trailNode);
             }
-            if (waypointsShown) {
-                waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->color() = waypointColor;
+            if (commandPreviewEnabled) {
+                waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->color() = commandPreviewColor;
                 waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->width() = 5.0f;
                 auto geoSRS = mapNode->getMapSRS();
                 waypointsNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
@@ -94,11 +95,6 @@ void MobileNode::refreshDisplay() const
         trailFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
         trailNode->setFeature(trailFeature);
     }
-    if (waypointsShown) {
-        auto waypointsFeature = new Feature(new LineString(&waypoints), geoSRS, waypointStyle);
-        waypointsFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
-        waypointsNode->setFeature(waypointsFeature);
-    }
 }
 
 void MobileNode::handleMessage(cMessage *msg)
@@ -118,21 +114,44 @@ void MobileNode::handleMessage(cMessage *msg)
     else if (msg->isName("nextCommand")) {
         GenericNode::handleMessage(msg);
         msg = nullptr;
-        if (waypointsShown) {
+        if (commandPreviewEnabled) {
             if (not waypoints.empty()) waypoints.clear();
+            if (not holdCommandNodes.empty()) holdCommandNodes.clear();
+
+            // add current location
+            unsigned short count = 1;
             waypoints.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
 
             Command* extractedCommand = commandExecEngine->extractCommand();
-            if (0 != strcmp("charge", extractedCommand->getMessageName())) {
+            if (0 == strcmp("waypoint", extractedCommand->getMessageName())) {
                 waypoints.push_back(osg::Vec3d(                                              // pretty
                         OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
                         OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
                         extractedCommand->getZ()                                             // set Z
                         ));
             }
+            else if (0 == strcmp("holdPosition", extractedCommand->getMessageName())) {
+                auto sphere = new osg::Sphere(osg::Vec3(0, 0, 0), 15);
+                auto sphereDrawable = new osg::ShapeDrawable(sphere);
+                sphereDrawable->setColor(commandPreviewColor);
+                sphereDrawable->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+                auto sphereGeode = new osg::Geode();
+                sphereGeode->addDrawable(sphereDrawable);
+                osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> node = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
+                node->addChild(sphereGeode);
+                node->getLocator()->setPosition(osg::Vec3d(                                  // pretty
+                        OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
+                        OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
+                        extractedCommand->getZ()                                             // set Z
+                        ));
+                mapNode->getModelLayerGroup()->addChild(node);
+                holdCommandNodes.push_back(node);
+            }
+            else if (0 == strcmp("exchangeData", extractedCommand->getMessageName()))
+            count += 1;
             if (not cees.empty()) {
                 for (std::deque<CommandExecEngine*>::iterator it = cees.begin(); it != cees.end(); ++it) {
-                    if (waypointLength > 0 && waypoints.size() >= waypointLength) break;
+                    if (commandCount > 0 && waypoints.size() >= commandCount) break;
                     extractedCommand = (*it)->extractCommand();
                     waypoints.push_back(osg::Vec3d(                                              // pretty
                             OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
@@ -141,6 +160,10 @@ void MobileNode::handleMessage(cMessage *msg)
                             ));
                 }
             }
+            auto geoSRS = mapNode->getMapSRS();
+            auto waypointsFeature = new Feature(new LineString(&waypoints), geoSRS, waypointStyle);
+            waypointsFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
+            waypointsNode->setFeature(waypointsFeature);
         }
     }
     else if (msg->isName("mobileNodeExit")) {
