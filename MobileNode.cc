@@ -64,6 +64,7 @@ void MobileNode::initialize(int stage)
                 trailNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
                 locatorNode->addChild(trailNode);
             }
+
             if (commandPreviewEnabled) {
                 waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->color() = commandPreviewColor;
                 waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->width() = 5.0f;
@@ -96,6 +97,11 @@ void MobileNode::refreshDisplay() const
         trailFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
         trailNode->setFeature(trailFeature);
     }
+    if (waypointsShown) {
+        auto waypointsFeature = new Feature(new LineString(&waypoints), geoSRS, waypointStyle);
+        waypointsFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
+        waypointsNode->setFeature(waypointsFeature);
+    }
 }
 
 void MobileNode::handleMessage(cMessage *msg)
@@ -115,6 +121,7 @@ void MobileNode::handleMessage(cMessage *msg)
     else if (msg->isName("nextCommand")) {
         GenericNode::handleMessage(msg);
         msg = nullptr;
+
         if (commandPreviewEnabled) {
             if (not waypoints.empty()) waypoints.clear();
             if (not holdCommandNodes.empty()) {
