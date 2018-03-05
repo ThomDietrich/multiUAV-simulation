@@ -97,11 +97,6 @@ void MobileNode::refreshDisplay() const
         trailFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
         trailNode->setFeature(trailFeature);
     }
-    if (waypointsShown) {
-        auto waypointsFeature = new Feature(new LineString(&waypoints), geoSRS, waypointStyle);
-        waypointsFeature->geoInterp() = GEOINTERP_GREAT_CIRCLE;
-        waypointsNode->setFeature(waypointsFeature);
-    }
 }
 
 void MobileNode::handleMessage(cMessage *msg)
