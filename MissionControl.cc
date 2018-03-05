@@ -20,7 +20,7 @@ Define_Module(MissionControl);
 
 void MissionControl::initialize()
 {
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
+    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle_Hold.waypoints"));
     //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
     //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
 
@@ -250,7 +250,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             case 19: { // LOITER_TIME
-                commands.push_back(new HoldPositionCommand(p1));
+                commands.push_back(new HoldPositionCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt, p1));
                 break;
             }
             case 20: { // RETURN_TO_LAUNCH

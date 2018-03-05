@@ -15,6 +15,7 @@
 
 #ifdef WITH_OSG
 #include <osg/Node>
+#include <osg/Texture2D>
 #include <osg/ShapeDrawable>
 #include <osg/PositionAttitudeTransform>
 #include <osgEarth/Capabilities>
@@ -116,22 +117,23 @@ void MobileNode::handleMessage(cMessage *msg)
         msg = nullptr;
         if (commandPreviewEnabled) {
             if (not waypoints.empty()) waypoints.clear();
-            if (not holdCommandNodes.empty()) holdCommandNodes.clear();
+            if (not holdCommandNodes.empty()) {
+                for (std::vector<osg::ref_ptr<osgEarth::Util::ObjectLocatorNode>>::iterator it = holdCommandNodes.begin(); it != holdCommandNodes.end(); ++it) {
+                    mapNode->getModelLayerGroup()->removeChild(*it);
+                }
+                holdCommandNodes.clear();
+            }
 
             // add current location
             unsigned short count = 1;
             waypoints.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
 
             Command* extractedCommand = commandExecEngine->extractCommand();
-            if (0 == strcmp("waypoint", extractedCommand->getMessageName())) {
-                waypoints.push_back(osg::Vec3d(                                              // pretty
-                        OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
-                        OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
-                        extractedCommand->getZ()                                             // set Z
-                        ));
+            if (0 == strcmp("charge", extractedCommand->getMessageName())) {
+                // do nothing
             }
             else if (0 == strcmp("holdPosition", extractedCommand->getMessageName())) {
-                auto sphere = new osg::Sphere(osg::Vec3(0, 0, 0), 15);
+                auto sphere = new osg::Sphere(osg::Vec3(0, 0, 0), 5);
                 auto sphereDrawable = new osg::ShapeDrawable(sphere);
                 sphereDrawable->setColor(commandPreviewColor);
                 sphereDrawable->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
@@ -147,17 +149,96 @@ void MobileNode::handleMessage(cMessage *msg)
                 mapNode->getModelLayerGroup()->addChild(node);
                 holdCommandNodes.push_back(node);
             }
-            else if (0 == strcmp("exchangeData", extractedCommand->getMessageName()))
+            /* TODO: check implementation later on
+             else if (0 == strcmp("exchangeCommand", extractedCommand->getMessageName())) {
+
+             auto image = osgDB::readImageFile("EXCHANGE.png");
+             auto texture = new osg::Texture2D();
+             texture->setImage(image);
+             auto icon = osg::createTexturedQuadGeometry(osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(image->s(), 0.0, 0.0), osg::Vec3(0.0, image->t(), 0.0), 0.0,
+             0.0, 1.0, 1.0);
+             icon->getOrCreateStateSet()->setTextureAttributeAndModes(0, texture);
+             icon->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+             icon->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+             icon->getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+             auto geode = new osg::Geode();
+             geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+             geode->addDrawable(icon);
+             auto autoTransform = new osg::AutoTransform();
+             autoTransform->setAutoScaleToScreen(true);
+             autoTransform->setAutoRotateMode(osg::AutoTransform::ROTATE_TO_SCREEN);
+             autoTransform->addChild(geode);
+             osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> node = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
+             node->addChild(autoTransform);
+             mapNode->getModelLayerGroup()->addChild(node);
+             holdCommandNodes.push_back(node);
+             }
+             //*/
+            else {
+                waypoints.push_back(osg::Vec3d(                                              // pretty
+                        OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
+                        OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
+                        extractedCommand->getZ()                                             // set Z
+                        ));
+            }
             count += 1;
             if (not cees.empty()) {
                 for (std::deque<CommandExecEngine*>::iterator it = cees.begin(); it != cees.end(); ++it) {
-                    if (commandCount > 0 && waypoints.size() >= commandCount) break;
+                    if (commandCount > 0 && count >= commandCount) break;
                     extractedCommand = (*it)->extractCommand();
-                    waypoints.push_back(osg::Vec3d(                                              // pretty
-                            OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
-                            OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
-                            extractedCommand->getZ()                                             // set Z
-                            ));
+                    if (0 == strcmp("charge", extractedCommand->getMessageName())) {
+                        // do nothing
+                    }
+                    else if (0 == strcmp("holdPosition", extractedCommand->getMessageName())) {
+                        auto sphere = new osg::Sphere(osg::Vec3(0, 0, 0), 5);
+                        auto sphereDrawable = new osg::ShapeDrawable(sphere);
+                        sphereDrawable->setColor(commandPreviewColor);
+                        sphereDrawable->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+                        auto sphereGeode = new osg::Geode();
+                        sphereGeode->addDrawable(sphereDrawable);
+                        osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> node = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
+                        node->addChild(sphereGeode);
+                        node->getLocator()->setPosition(osg::Vec3d(                                  // pretty
+                                OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
+                                OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
+                                extractedCommand->getZ()                                             // set Z
+                                ));
+                        mapNode->getModelLayerGroup()->addChild(node);
+                        holdCommandNodes.push_back(node);
+                    }
+                    /* TODO: check implementation later on
+                     else if (0 == strcmp("exchangeCommand", extractedCommand->getMessageName())) {
+
+                     auto image = osgDB::readImageFile("EXCHANGE.png");
+                     auto texture = new osg::Texture2D();
+                     texture->setImage(image);
+                     auto icon = osg::createTexturedQuadGeometry(osg::Vec3(0.0, 0.0, 0.0), osg::Vec3(image->s(), 0.0, 0.0), osg::Vec3(0.0, image->t(), 0.0), 0.0,
+                     0.0, 1.0, 1.0);
+                     icon->getOrCreateStateSet()->setTextureAttributeAndModes(0, texture);
+                     icon->getOrCreateStateSet()->setMode(GL_DEPTH_TEST, osg::StateAttribute::ON);
+                     icon->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+                     icon->getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
+                     auto geode = new osg::Geode();
+                     geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
+                     geode->addDrawable(icon);
+                     auto autoTransform = new osg::AutoTransform();
+                     autoTransform->setAutoScaleToScreen(true);
+                     autoTransform->setAutoRotateMode(osg::AutoTransform::ROTATE_TO_SCREEN);
+                     autoTransform->addChild(geode);
+                     osg::ref_ptr<osgEarth::Util::ObjectLocatorNode> node = new osgEarth::Util::ObjectLocatorNode(mapNode->getMap());
+                     node->addChild(autoTransform);
+                     mapNode->getModelLayerGroup()->addChild(node);
+                     holdCommandNodes.push_back(node);
+                     }
+                     //*/
+                    else {
+                        waypoints.push_back(osg::Vec3d(                                              // pretty
+                                OsgEarthScene::getInstance()->toLongitude(extractedCommand->getX()), // set X
+                                OsgEarthScene::getInstance()->toLatitude(extractedCommand->getY()),  // set Y
+                                extractedCommand->getZ()                                             // set Z
+                                ));
+                    }
+                    count += 1;
                 }
             }
             auto geoSRS = mapNode->getMapSRS();
