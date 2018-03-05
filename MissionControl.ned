@@ -21,7 +21,7 @@ simple MissionControl
     parameters:
         @display("i=block/table2");
         double startTime @unit("s") = default(2s);   // time when the mission scheduling to UAVs starts
-        string waypointFile = default("BostonParkCircle.waypoints"); // path to file from which waypoints shall be loaded
+        string missionFiles = default("BostonParkCircle.waypoints"); // path to file from which waypoints shall be loaded
 
     gates:
         inout gate[];
