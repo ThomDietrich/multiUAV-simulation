@@ -152,7 +152,7 @@ void MobileNode::handleMessage(cMessage *msg)
                 holdCommandNodes.push_back(node);
             }
             /* TODO: check implementation later on
-             else if (0 == strcmp("exchangeCommand", extractedCommand->getMessageName())) {
+             else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
 
              auto image = osgDB::readImageFile("EXCHANGE.png");
              auto texture = new osg::Texture2D();
@@ -209,7 +209,7 @@ void MobileNode::handleMessage(cMessage *msg)
                         holdCommandNodes.push_back(node);
                     }
                     /* TODO: check implementation later on
-                     else if (0 == strcmp("exchangeCommand", extractedCommand->getMessageName())) {
+                     else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
 
                      auto image = osgDB::readImageFile("EXCHANGE.png");
                      auto texture = new osg::Texture2D();
