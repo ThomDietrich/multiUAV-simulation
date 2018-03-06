@@ -215,7 +215,6 @@ HoldPositionCEE::HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *comman
     this->setType(CeeType::HOLDPOSITION);
     setFromCoordinates(node->x, node->y, node->z);
     setToCoordinates(node->x, node->y, node->z);
-    this->holdPositionTill = simTime() + command->getHoldSeconds();
 }
 
 bool HoldPositionCEE::commandCompleted()
@@ -229,6 +228,8 @@ void HoldPositionCEE::initializeCEE()
     //yaw = yaw;
     pitch = 0;
     climbAngle = 0;
+
+    this->holdPositionTill = simTime() + command->getHoldSeconds();
 
     // draw probable value for consumption of this CEE
     consumptionPerSecond = getProbableConsumption(true, NAN);
@@ -418,13 +419,13 @@ void ExchangeCEE::performExitActions()
 
         // Generate WaypointCEE
         WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
-        CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
+        WaypointCEE *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
         goToChargingNodeCEE->setPartOfMission(false);
 
         // Get the duration for the flight to ChargingNode
         // To get the information the CEE needs to be initialized
         goToChargingNodeCEE->initializeCEE();
-        double goToChargingNodeDuration = (goToChargingNodeCEE->hasDeterminedDuration()) ? goToChargingNodeCEE->getOverallDuration() : goToChargingNodeCEE->getDuration();
+        double goToChargingNodeDuration = goToChargingNodeCEE->getOverallDuration();
 
         // Generate and send reservation message to CN
         ReserveSpotMsg *msg = new ReserveSpotMsg("reserveSpot");

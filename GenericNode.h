@@ -64,6 +64,7 @@ class GenericNode : public cSimpleModule, public IGenericNode {
 protected:
     // configuration
     double timeStep;
+    osgEarth::Style labelStyle;
     std::string labelColor;
     std::string label2Color;
     std::string rangeColor;

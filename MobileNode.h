@@ -46,12 +46,15 @@ protected:
     std::string trailColor;
 
     // movement (planned waypoints)
+    bool commandPreviewEnabled;
+    unsigned int commandCount;
+    osgEarth::Color commandPreviewColor;
+    // for waypoint visualization
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> waypointsNode = nullptr;
     osgEarth::Vec3dVector waypoints;
-    bool waypointsShown;
-    unsigned int waypointLength;
     osgEarth::Style waypointStyle;
-    osgEarth::Color waypointColor;
+    // for holdPosition visualization
+    std::vector <osg::ref_ptr<osgEarth::Util::ObjectLocatorNode>> holdCommandNodes;
 
     double speed; //speed (3D) in [m/s]
     Battery battery; //energy storage
@@ -67,6 +70,7 @@ public:
     MobileNode();
     virtual ~MobileNode();
     Battery* getBattery();
+    static osg::Vec4f hsv2rgb(double h, double s, double v);
 
 protected:
     virtual void initialize(int stage) override;
@@ -74,6 +78,9 @@ protected:
     virtual void handleMessage(cMessage *msg) override;
     static ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) = 0;
+
+private:
+    void inline evaluateBatteryCharge();
 };
 
 #endif

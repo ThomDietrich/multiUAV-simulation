@@ -20,7 +20,7 @@ Define_Module(MissionControl);
 
 void MissionControl::initialize()
 {
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
+    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle_Hold.waypoints"));
     //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
     //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
 
@@ -42,9 +42,9 @@ void MissionControl::initialize()
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
-        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++) {
-            CommandQueue mission = *it;
-            int missionId = it - missionQueue.begin();
+        int missionId = 0;
+        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++, missionId++) {
+            CommandQueue& mission = *it;
 
             //Select free idle node
             NodeShadow *nodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
@@ -250,7 +250,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             case 19: { // LOITER_TIME
-                commands.push_back(new HoldPositionCommand(p1));
+                commands.push_back(new HoldPositionCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt, p1));
                 break;
             }
             case 20: { // RETURN_TO_LAUNCH
