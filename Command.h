@@ -90,7 +90,7 @@ class HoldPositionCommand : public Command {
 protected:
     int holdSeconds;
 public:
-    HoldPositionCommand(int seconds);
+    HoldPositionCommand(double x, double y, double z, int seconds);
     //HoldPositionCommand(Date till);
     void setHoldSeconds(int value);
     int getHoldSeconds() const
