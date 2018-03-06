@@ -70,6 +70,7 @@ public:
     MobileNode();
     virtual ~MobileNode();
     Battery* getBattery();
+    static osg::Vec4f hsv2rgb(double h, double s, double v);
 
 protected:
     virtual void initialize(int stage) override;
@@ -77,6 +78,9 @@ protected:
     virtual void handleMessage(cMessage *msg) override;
     static ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) = 0;
+
+private:
+    void inline evaluateBatteryCharge();
 };
 
 #endif

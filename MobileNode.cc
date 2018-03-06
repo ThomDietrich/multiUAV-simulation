@@ -265,6 +265,8 @@ void MobileNode::handleMessage(cMessage *msg)
         scheduleAt(simTime() + stepSize, msg);
     }
 
+    evaluateBatteryCharge();
+
     // update the trail data based on the new position
     if (trailNode) {
         // store the new position to be able to create a track later
@@ -273,6 +275,60 @@ void MobileNode::handleMessage(cMessage *msg)
         // if trail is at max length, remove the oldest point to keep it at "trailLength"
         if (trail.size() > trailLength) trail.erase(trail.begin());
     }
+}
+
+/**
+ * Adjusts the sublabel color according to current battery charge.
+ */
+void inline MobileNode::evaluateBatteryCharge()
+{
+    double remainingPercentage = getBattery()->getRemainingPercentage();
+    double h = 300 * (remainingPercentage / 100);
+    const double s = 1;
+    const double v = 1;
+    osg::Vec4f colorVec = hsv2rgb(h, s, v);
+    labelStyle.getOrCreate<TextSymbol>()->fill()->color() = osgEarth::Color(colorVec);
+    labelStyle.getOrCreate<TextSymbol>()->halo()->color() = osgEarth::Color::Black;
+    sublabelNode.get()->setStyle(labelStyle);
+}
+
+/**
+ * Converts HSV coloring format into RGB with alpha = 1.0f. Hue (h) must be given in range [0,360], whereas saturation (s) and value (v) must be in range [0,1].
+ * For more information about the math, see https://www.rapidtables.com/convert/color/hsl-to-rgb.html
+ */
+osg::Vec4f MobileNode::hsv2rgb(double h, double s, double v)
+{
+    double c = v * s;
+    double x = c * (1 - abs(fmod((double) ((h / 60)), (double) (2)) - 1));
+    double m = v - c;
+    osg::Vec4f colorVec;
+    switch ((int) ((h / 60))) {
+        case 0:
+            colorVec.set(c, x, 0, 1);
+            break;
+        case 1:
+            colorVec.set(x, c, 0, 1);
+            break;
+        case 2:
+            colorVec.set(0, c, x, 1);
+            break;
+        case 3:
+            colorVec.set(0, x, c, 1);
+            break;
+        case 4:
+            colorVec.set(x, 0, c, 1);
+            break;
+        case 5:
+            colorVec.set(c, 0, x, 1);
+            break;
+        default:
+            colorVec.set(0, 0, 0, 1);
+            break;
+    }
+    colorVec.x() = (colorVec.x() + m);
+    colorVec.y() = (colorVec.y() + m);
+    colorVec.z() = (colorVec.z() + m);
+    return colorVec;
 }
 
 ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ)
