@@ -277,6 +277,9 @@ void MobileNode::handleMessage(cMessage *msg)
     }
 }
 
+/**
+ * Adjusts the sublabel color according to current battery charge.
+ */
 void inline MobileNode::evaluateBatteryCharge()
 {
     double remainingPercentage = getBattery()->getRemainingPercentage();

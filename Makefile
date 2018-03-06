@@ -2,7 +2,7 @@
 # OMNeT++/OMNEST Makefile for multiUAV-simulation
 #
 # This file was generated with the command:
-#  opp_makemake -f --deep -DWITH_OSG -DWITH_OSGEARTH -I/include-boost
+#  opp_makemake -f --deep -DWITH_OSG -DWITH_OSGEARTH -ID:/Programming/omnetpp-5.1.1/include-boost
 #
 
 # Name of target to be created (-o option)
@@ -15,7 +15,7 @@ USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LI
 #USERIF_LIBS = $(QTENV_LIBS)
 
 # C++ include paths (with -I)
-INCLUDE_PATH = -I/include-boost
+INCLUDE_PATH = -ID:/Programming/omnetpp-5.1.1/include-boost
 
 # Additional object and library files to link with
 EXTRA_OBJS =
