@@ -46,12 +46,15 @@ protected:
     std::string trailColor;
 
     // movement (planned waypoints)
+    bool commandPreviewEnabled;
+    unsigned int commandCount;
+    osgEarth::Color commandPreviewColor;
+    // for waypoint visualization
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> waypointsNode = nullptr;
     osgEarth::Vec3dVector waypoints;
-    bool waypointsShown;
-    unsigned int waypointLength;
     osgEarth::Style waypointStyle;
-    osgEarth::Color waypointColor;
+    // for holdPosition visualization
+    std::vector <osg::ref_ptr<osgEarth::Util::ObjectLocatorNode>> holdCommandNodes;
 
     double speed; //speed (3D) in [m/s]
     Battery battery; //energy storage

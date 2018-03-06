@@ -46,7 +46,7 @@ void ChargingNode::initialize(int stage)
 
             //Initilize charge parameters
             chargeEffectivenessPercentage = double(par("chargeEffectivenessPercentage")) / 100;
-            prioritizeFastCharge = int(par("prioritizeFastCharge")) == 1;
+            prioritizeFastCharge = par("prioritizeFastCharge").boolValue();
 
             //Initialize chargeAlgorithm
             double linearGradient = double(par("linearGradient"));

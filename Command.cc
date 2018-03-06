@@ -88,8 +88,11 @@ void TakeoffCommand::setAltitude(double value)
  *
  * @param seconds
  */
-HoldPositionCommand::HoldPositionCommand(int seconds)
+HoldPositionCommand::HoldPositionCommand(double x, double y, double z, int seconds)
 {
+    setX(x);
+    setY(y);
+    setZ(z);
     setHoldSeconds(seconds);
     setMessageName("holdPosition");
 }
