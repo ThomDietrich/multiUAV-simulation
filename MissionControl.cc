@@ -20,7 +20,8 @@ Define_Module(MissionControl);
 
 void MissionControl::initialize()
 {
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
+    missionQueue.push_back(loadCommandsFromWaypointsFile("missions/mission1.waypoints"));
+//    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle.waypoints"));
     //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
     //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
 
