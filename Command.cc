@@ -88,8 +88,11 @@ void TakeoffCommand::setAltitude(double value)
  *
  * @param seconds
  */
-HoldPositionCommand::HoldPositionCommand(int seconds)
+HoldPositionCommand::HoldPositionCommand(double x, double y, double z, int seconds)
 {
+    setX(x);
+    setY(y);
+    setZ(z);
     setHoldSeconds(seconds);
     setMessageName("holdPosition");
 }
@@ -122,6 +125,7 @@ ExchangeCommand::ExchangeCommand(GenericNode* otherNode, bool scheduleRechargeAf
     this->otherNode = otherNode;
     this->scheduleRechargeAfter = scheduleRechargeAfter;
     this->thisNodeHasDataToExchange = transmitData;
+    this->setMessageName("exchangeCommand");
 }
 
 void ExchangeCommand::setOtherNode(GenericNode* otherNode)
