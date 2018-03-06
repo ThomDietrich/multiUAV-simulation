@@ -42,9 +42,9 @@ void MissionControl::initialize()
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
-        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++) {
-            CommandQueue mission = *it;
-            int missionId = it - missionQueue.begin();
+        int missionId = 0;
+        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++, missionId++) {
+            CommandQueue& mission = *it;
 
             //Select free idle node
             NodeShadow *nodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
