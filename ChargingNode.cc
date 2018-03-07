@@ -53,7 +53,7 @@ void ChargingNode::initialize(int stage)
             double chargeCurrent = double(par("chargeCurrent"));
             this->chargeAlgorithm = new ChargeAlgorithmCCCV(chargeCurrent, linearGradient);
 
-            this->labelNode->setText("");
+            this->labelNode->setText(getFullName());
             this->sublabelNode->setText("");
             par("stateSummary").setStringValue("");
 
