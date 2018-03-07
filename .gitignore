@@ -21,9 +21,10 @@ out/
 *.manifest
 .tkenvrc
 
-# ignore backup and temp files
+# ignore backup and temp files as well as cache
 *.bak
 *~
+/cache
 /3rdparty
 /tmp/
 */results/*
