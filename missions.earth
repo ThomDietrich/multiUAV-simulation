@@ -1,0 +1,12 @@
+<map name="Terrain for artificial missions" type="geocentric" version="2">
+	<options>
+        <!--Specify where to cache the data-->
+		<cache type="filesystem">
+            <path>cache</path>
+        </cache>
+    </options>
+	<image name="osm_mapnik" driver="xyz">
+    	    <url>http://[abc].tile.openstreetmap.org/{z}/{x}/{y}.png</url>
+        	<profile>spherical-mercator</profile>
+    </image>
+</map>

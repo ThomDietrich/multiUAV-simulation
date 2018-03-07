@@ -473,6 +473,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 {
     // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
+    if(nullptr==cn) throw omnetpp::cRuntimeError("No charging station available!");
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(this, goToChargingNode);
     goToChargingNodeCEE->setFromCoordinates(fromX, fromY, fromZ);
