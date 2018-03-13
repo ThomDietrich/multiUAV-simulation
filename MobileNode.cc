@@ -75,7 +75,7 @@ void MobileNode::initialize(int stage)
 
             //Initialize Energy storage
             int capacity = int(par("batteryCapacity"));
-            battery = Battery(capacity, capacity / 2 + rand() % capacity / 2);
+            battery = (capacity == 0) ? Battery() : Battery(capacity, capacity / 2 + rand() % capacity / 2);
             WATCH(utilizationSecMission);
             WATCH(utilizationSecMaintenance);
             WATCH(utilizationSecIdle);
@@ -337,7 +337,7 @@ ChargingNode* MobileNode::findNearestCN(double nodeX, double nodeY, double nodeZ
     //cModule* osgEarthNet = getModuleByPath("OsgEarthNet.cs");
     //EV_INFO << "MobileNode #" << this->getIndex() << " name: " << this->getFullName() << " parent name: " << osgEarthNet->getFullName() << endl;
     double minDistance = DBL_MAX;
-    ChargingNode *nearest;
+    ChargingNode *nearest = nullptr;
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     for (SubmoduleIterator it(network); !it.end(); ++it) {
         cModule *mod = *it;

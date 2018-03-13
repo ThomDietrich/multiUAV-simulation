@@ -15,14 +15,18 @@
 
 #ifdef WITH_OSG
 #include "MissionControl.h"
+#include <boost/algorithm/string.hpp>
 
 Define_Module(MissionControl);
 
 void MissionControl::initialize()
 {
-    missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkCircle_Hold.waypoints"));
-    //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkLine.waypoints"));
-    //missionQueue.push_back(loadCommandsFromWaypointsFile("BostonParkZigZag.waypoints"));
+    std::vector<std::string> missionFiles;
+    const char* missionFilesString = par("missionFiles").stringValue();
+    boost::split(missionFiles, missionFilesString, boost::algorithm::is_any_of(","), boost::token_compress_on);
+    for (auto it = missionFiles.begin(); it != missionFiles.end(); it++) {
+        missionQueue.push_back(loadCommandsFromWaypointsFile(it->c_str()));
+    }
 
     // Add all GenericNodes to managedNodes list (map)
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
@@ -42,9 +46,9 @@ void MissionControl::initialize()
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
-        int missionId = 0;
-        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++, missionId++) {
-            CommandQueue& mission = *it;
+        for (auto it = missionQueue.begin(); it != missionQueue.end(); it++) {
+            CommandQueue mission = *it;
+            int missionId = it - missionQueue.begin();
 
             //Select free idle node
             NodeShadow *nodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
