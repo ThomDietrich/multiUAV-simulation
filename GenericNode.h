@@ -181,9 +181,9 @@ public:
         return commandExecEngine;
     }
     virtual bool hasCommandsInQueue();
-    virtual void loadCommands(CommandQueue commands, bool isMission = true) = 0;
+    virtual void loadCommands(Mission& commands, bool isMission = true) = 0;
     virtual void clearCommands();
-    virtual CommandQueue* extractCommands();
+    virtual std::deque<Command*>* extractCommands();
 
     virtual cGate* getOutputGateTo(cModule *cMod);
 

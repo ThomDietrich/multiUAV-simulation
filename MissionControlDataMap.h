@@ -52,6 +52,11 @@ public:
         return index;
     }
 
+    const char * getNodeFullName() const
+    {
+        return node->getFullName();
+    }
+
     GenericNode* getNode() const
     {
         return node;

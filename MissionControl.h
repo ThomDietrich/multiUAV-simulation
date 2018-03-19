@@ -22,6 +22,7 @@
 
 #include "OsgEarthScene.h"
 #include "Command.h"
+#include "Mission.h"
 #include "UAVNode.h"
 #include "MobileNode.h"
 #include "GenericNode.h"
@@ -39,11 +40,11 @@ using namespace omnetpp;
 class MissionControl : public cSimpleModule {
 private:
     ManagedNodeShadows managedNodeShadows;
-    std::deque<CommandQueue> missionQueue;
+    std::deque<Mission> missionQueue;
 protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
-    virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
+    virtual Mission loadCommandsFromWaypointsFile(const char *fileName);
     virtual void handleReplacementMessage(ReplacementData replData);
     virtual void requestChargedNodesInformation(double remainingBattery);
     virtual cGate* getOutputGateTo(cModule *cMod);

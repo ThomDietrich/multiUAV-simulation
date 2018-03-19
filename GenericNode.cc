@@ -253,9 +253,9 @@ void GenericNode::clearCommands()
  *
  * @return An execution neutral list of commands
  */
-CommandQueue* GenericNode::extractCommands()
+std::deque<Command*>* GenericNode::extractCommands()
 {
-    CommandQueue* commands = new CommandQueue();
+    std::deque<Command*>* commands = new std::deque<Command*>();
     for (auto it = cees.begin(); it != cees.end(); it++) {
         CommandExecEngine *cee = *it;
         if (cee->isPartOfMission()) {

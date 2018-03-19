@@ -71,7 +71,7 @@ ReplacementData* ChargingNode::endOfOperation()
     return 0;
 }
 
-void ChargingNode::loadCommands(CommandQueue commands, bool isMission)
+void ChargingNode::loadCommands(Mission& commands, bool isMission)
 {
 }
 

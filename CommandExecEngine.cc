@@ -287,7 +287,7 @@ ChargeCEE::ChargeCEE(UAVNode *boundNode, ChargeCommand *command)
     this->command = command;
     this->setType(CeeType::CHARGE);
     this->setFromCoordinates(node->x, node->y, node->z);
-    this->setToCoordinates(node->x, node->y, node->z);
+    this->setToCoordinates(command->getChargingNode()->getX(), command->getChargingNode()->getY(), command->getChargingNode()->getZ());
 }
 
 bool ChargeCEE::commandCompleted()

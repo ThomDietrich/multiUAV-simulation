@@ -47,7 +47,7 @@ void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {
         for (auto it = missionQueue.begin(); it != missionQueue.end(); it++) {
-            CommandQueue mission = *it;
+            Mission mission = *it;
             int missionId = it - missionQueue.begin();
 
             //Select free idle node
@@ -63,7 +63,7 @@ void MissionControl::handleMessage(cMessage *msg)
             // Mark node accordingly
             nodeShadow->setStatus(NodeStatus::PROVISIONING);
 
-            EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << nodeShadow->getNode()->getFullName() << " (PROVISIONING)." << endl;
+            EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << nodeShadow->getNodeFullName() << " (PROVISIONING)." << endl;
         }
     }
     else if (msg->isName("commandCompleted")) {
@@ -85,7 +85,7 @@ void MissionControl::handleMessage(cMessage *msg)
         NodeShadow* nodeShadow = managedNodeShadows.getNodeRequestingReplacement(msg);
         GenericNode *replacingNode = nodeShadow->getReplacingNode();
         ReplacementData *replData = nodeShadow->getReplacementData();
-        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
+        EV_INFO << "provisionReplacement message received for " << nodeShadow->getNodeFullName() << endl;
 
         // When the replacing node ist charging currently send a message to stop the process
         if (replacingNode->getCommandExecEngine()) {
@@ -96,7 +96,7 @@ void MissionControl::handleMessage(cMessage *msg)
         }
 
         // Send provision mission to replacing node
-        CommandQueue provMission;
+        std::deque<Command> provMission;
         provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
         provMission.push_back(new ExchangeCommand(nodeShadow->getNode(), false, false));
         MissionMsg *nodeStartMission = new MissionMsg("startProvision");
@@ -110,8 +110,8 @@ void MissionControl::handleMessage(cMessage *msg)
 
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
-        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex();
-        EV_INFO << " (replacing node " << nodeShadow->getNodeIndex() << ")" << endl;
+        EV_INFO << __func__ << "(): Mission PROVISION assigned to " << replacingNode->getFullName();
+        EV_INFO << " (replacing " << nodeShadow->getNodeFullName() << ")" << endl;
     }
     else if (msg->isName("mobileNodeResponse")) {
         // write requested mobileNode information in corresponding nodeShadow's
@@ -174,7 +174,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         //Retrieve provisioning time
         //TODO unclear: nodes in NodeShadow are of GenericNode but only MobileNode knows movement
         UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeShadow->getReplacingNode());
-        CommandQueue commands;
+        std::deque<Command*> commands;
         commands.push_back(new WaypointCommand(nodeShadow->getReplacementData()->x, nodeShadow->getReplacementData()->y, nodeShadow->getReplacementData()->z));
         simtime_t timeOfReplacement = nodeShadow->getReplacementTime();
         replacingUavNode->clearCommands();
@@ -199,8 +199,8 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacementMsg(replacementMsg);
         scheduleAt(timeOfProvisioning, replacementMsg);
         EV_INFO << __func__ << "(): " << (reprovision ? "Updating provision time." : "Provisioning node.");
-        EV_INFO << " Node " << nodeShadow->getNodeIndex() << " will be replaced by node " << nodeShadow->getReplacingNodeIndex() << ".";
-        EV_INFO << " Provisioning in " << (timeOfProvisioning - simTime()) << " seconds";
+        EV_INFO << nodeShadow->getNodeFullName() << " will be replaced by " << nodeShadow->getReplacingNode()->getFullName() << ".";
+        EV_INFO << " Provisioning in " << (timeOfProvisioning - simTime()) << " seconds at (x,y,z)=(" << nodeShadow->getReplacementData()->x << "," << nodeShadow->getReplacementData()->y << ","<<nodeShadow->getReplacementData()->z << ")";
         EV_INFO << endl;
     }
     else {
@@ -214,9 +214,9 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
  *
  * @param fileName relative path to *.waypoints file
  */
-CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
+Mission MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
 {
-    CommandQueue commands;
+    Mission mission;
     std::ifstream inputFile(fileName);
     int lineCnt = 1;
     int cmdId, unknown1, unknown2, commandType;
@@ -246,7 +246,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
 
         switch (commandType) {
             case 16: { // WAYPOINT
-                commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
+                mission.add(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
                 break;
             }
             case 17: { // LOITER_UNLIM
@@ -254,7 +254,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             case 19: { // LOITER_TIME
-                commands.push_back(new HoldPositionCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt, p1));
+                mission.add(new HoldPositionCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt, p1));
                 break;
             }
             case 20: { // RETURN_TO_LAUNCH
@@ -266,7 +266,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             case 22: { // TAKEOFF
-                commands.push_back(new TakeoffCommand(alt));
+                mission.add(new TakeoffCommand(alt));
                 break;
             }
             default: {
@@ -275,7 +275,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
             }
         }
     }
-    return commands;
+    return mission.finalize();
 }
 
 void MissionControl::requestChargedNodesInformation(double remainingBattery)

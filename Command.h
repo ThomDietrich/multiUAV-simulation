@@ -52,11 +52,6 @@ public:
 };
 
 /**
- * A set of commands, generated from `*.waypoints` files, used by Nodes
- */
-typedef std::deque<Command*> CommandQueue;
-
-/**
  * The vehicle will fly a straight line to the location specified as a lat, lon and altitude (in meters).
  * http://ardupilot.org/copter/docs/mission-command-list.html#waypoint
  */

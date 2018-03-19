@@ -147,13 +147,13 @@ void UAVNode::selectNextCommand()
         //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
     }
     else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
-        EV_INFO << "Energy Management: OK. UAV has enough energy to continue";
+        EV_INFO << "Energy Management: OK. " << getFullName() << " has enough energy to continue";
         EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
     }
     else {
         // Start Replacement Process now
         if (energyRemaining < energyToCNNow) {
-            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient";
+            EV_WARN << "Energy Management: Going to " << findNearestCN(getX(), getY(), getZ())->getFullName() << ". Attention! Energy insufficient";
             EV_WARN << " (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
         }
         else {
@@ -298,31 +298,41 @@ double UAVNode::nextNeededUpdate()
 /**
  * Load a queue of commands, generate cees out of these and store them as the cees to be executed by the node.
  */
-void UAVNode::loadCommands(CommandQueue commands, bool isMission)
+void UAVNode::loadCommands(Mission& commands, bool isMission)
 {
     if (not cees.empty()) {
         EV_WARN << "Replacing non-empty CEE queue." << endl;
         cees.clear();
     }
 
+    Command *command;
+    CommandExecEngine *cee = nullptr;
+    double lastX = getX();
+    double lastY = getY();
+    double lastZ = getZ();
     for (u_int index = 0; index < commands.size(); ++index) {
-        Command *command = commands.at(index);
-        CommandExecEngine *cee = nullptr;
+        command = commands.at(index);
 
         if (WaypointCommand *cmd = dynamic_cast<WaypointCommand *>(command)) {
             cee = new WaypointCEE(this, cmd);
+            cee->setFromCoordinates(lastX, lastY, lastZ);
         }
         else if (TakeoffCommand *cmd = dynamic_cast<TakeoffCommand *>(command)) {
             cee = new TakeoffCEE(this, cmd);
         }
         else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
             cee = new HoldPositionCEE(this, cmd);
+            cee->setFromCoordinates(lastX, lastY, lastZ);
+            cee->setToCoordinates(lastX, lastY, lastZ);
         }
         else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {
             cee = new ChargeCEE(this, cmd);
+            cee->setFromCoordinates(lastX, lastY, lastZ);
         }
         else if (ExchangeCommand *cmd = dynamic_cast<ExchangeCommand *>(command)) {
             cee = new ExchangeCEE(this, cmd);
+            cee->setFromCoordinates(lastX, lastY, lastZ);
+            cee->setToCoordinates(lastX, lastY, lastZ);
         }
         else {
             throw cRuntimeError("UAVNode::loadCommands(): invalid cast or unexpected command type.");
@@ -330,6 +340,9 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
         if (not isMission) cee->setPartOfMission(false);
         cee->setCommandId(index);
         cees.push_back(cee);
+        lastX = cee->getX1();
+        lastY = cee->getY1();
+        lastZ = cee->getZ1();
     }
     EV_INFO << __func__ << "(): " << commands.size() << " commands stored in node memory." << endl;
 }
@@ -426,8 +439,8 @@ ReplacementData* UAVNode::endOfOperation()
         }
 
         // Get consumption for next command
-        nextCEE->setFromCoordinates(nextCEE->getX0(), nextCEE->getY0(), nextCEE->getZ0());
-        nextCEE->setToCoordinates(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
+//        nextCEE->setFromCoordinates(nextCEE->getX0(), nextCEE->getY0(), nextCEE->getZ0());
+//        nextCEE->setToCoordinates(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
         nextCEE->initializeCEE();
 
         float energyForNextCEE = nextCEE->predictFullConsumption(0.75);
@@ -473,7 +486,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 {
     // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
-    if(nullptr==cn) throw omnetpp::cRuntimeError("No charging station available!");
+    if (nullptr == cn) throw omnetpp::cRuntimeError("No charging station available!");
     WaypointCommand *goToChargingNode = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
     CommandExecEngine *goToChargingNodeCEE = new WaypointCEE(this, goToChargingNode);
     goToChargingNodeCEE->setFromCoordinates(fromX, fromY, fromZ);
@@ -595,3 +608,4 @@ void UAVNode::move()
 }
 
 #endif // WITH_OSG
+
