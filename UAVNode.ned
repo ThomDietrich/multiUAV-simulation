@@ -15,9 +15,13 @@ simple UAVNode extends MobileNode
     parameters:
         @class(UAVNode);
         @display("i=block/broadcast");
-        double startX @unit("m") = default(0m);      // the starting coordinates in meter
-        double startY @unit("m") = default(0m);      // the starting coordinates in meter
-        string trackFile;                            // a file with longitude latitude pairs
+        double startX @unit("m") = default(0m);          // the starting coordinates in meter
+        double startY @unit("m") = default(0m);          // the starting coordinates in meter
+        string trackFile;                                // a file with longitude latitude pairs
+        bool choseClosestCNForExchange = default(false); // instead of draining all the battery, 
+                                                         // nodes will only take commands until 
+                                                         // they can be exchanged at the shortest 
+                                                         // route to a charging node on their mission
 }
 
 //
