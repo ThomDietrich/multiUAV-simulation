@@ -383,13 +383,15 @@ double UAVNode::getHoverConsumption(float duration, float percentile)
     }
 }
 
+#define ERROR_MARGIN 0.0625
+
 /**
  * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
  * are equal, otherwise returns <code>false</code>.
  */
 bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z)
 {
-    return cmd.getX() == X && cmd.getY() == Y && cmd.getZ() == Z;
+    return abs(cmd.getX() - X) < ERROR_MARGIN && abs(cmd.getY() - Y) < ERROR_MARGIN && abs(cmd.getZ() - Z) < ERROR_MARGIN;
 }
 
 /**
@@ -398,7 +400,7 @@ bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z
  */
 bool cmpCoord(const Command& cmd1, const Command& cmd2)
 {
-    return cmd1.getX() == cmd2.getX() && cmd1.getY() == cmd2.getY() && cmd1.getZ() == cmd2.getZ();
+    return abs(cmd1.getX() - cmd2.getX()) < ERROR_MARGIN && abs(cmd1.getY() - cmd2.getY()) < ERROR_MARGIN && abs(cmd1.getZ() - cmd2.getZ()) < ERROR_MARGIN;
 }
 
 /**
@@ -477,7 +479,7 @@ ReplacementData* UAVNode::endOfOperation()
     //TODO Add current Execution Engine consumption
     energySum += 0;
 
-    bool choseClosestCNForExchange = true;
+    bool choseClosestCNForExchange = par("choseClosestCNForExchange").boolValue();
 
     if (choseClosestCNForExchange) {
 
@@ -534,12 +536,6 @@ ReplacementData* UAVNode::endOfOperation()
                 durationOfCommands += nextCEE->getOverallDuration();
             } while (not cmpCoord(*(nextCEE->extractCommand()), *closestCMD));
         }
-        energySum += energyToClosestCMD + energyFromClosestCMDtoClosestCN;
-
-        if (energySum > battery.getRemaining()) {
-            EV_ERROR << __func__ << "(): " << "Cannot reach closest command for charging node -> retract to simpler algorithm" << endl;
-            return nullptr; // todo: do better than this...
-        }
 
         // estimate energy for one complete mission run
         unsigned int startingPosition = nextCommandsFeasible % cees.size();
@@ -553,14 +549,41 @@ ReplacementData* UAVNode::endOfOperation()
             durationOfOneMissionRun += nextCEE->getOverallDuration();
         } while ((nextCommandsFeasible % cees.size()) != startingPosition);
 
-        // how many mission runs can be done
-        unsigned int missionRuns = 0;
-        while (energySum + energyForOneMissionRun < battery.getRemaining()) {
-            missionRuns++;
-            energySum += energyForOneMissionRun;
-            durationOfCommands += durationOfOneMissionRun;
+        energySum += energyToClosestCMD + energyFromClosestCMDtoClosestCN;
+        if (energySum > battery.getRemaining()) {
+            if (cmpCoord(*closestCMD, this->getX(), this->getY(), this->getZ())) {
+                EV_INFO << __func__ << "(): " << "Current position is closest to charging node and battery gets low...";
+                if (nullptr != replacingNode) {
+                    if (cmpCoord(*replacingNode->getCommandExecEngine()->extractCommand(), *closestCMD)) {
+                        EV_INFO << __func__ << "(): " << "... wait for replacing node." << endl;
+                        HoldPositionCEE* stayWhereYouAre = new HoldPositionCEE(this,
+                                new HoldPositionCommand(this->getX(), this->getY(), this->getZ(), replacingNode->getCommandExecEngine()->getRemainingTime()));
+                        stayWhereYouAre->setPartOfMission();
+                        cees.push_front(stayWhereYouAre);
+                    }
+                    else {
+                        EV_ERROR << __func__ << "(): " << "Current position is closest to charging node and battery gets low..." << endl;
+                        return nullptr;
+                    }
+                }
+                else {
+                    EV_ERROR << __func__ << "(): " << "...no replacement node available/sent... that is a problem." << endl;
+                    return nullptr;
+                }
+            }
+            EV_ERROR << __func__ << "(): " << "Current position does not match closest command." << endl;
+            return nullptr;
         }
-        EV_INFO << __func__ << "(): " << missionRuns << " more missions possible." << endl;
+        else {
+            // how many mission runs can be done
+            unsigned int missionRuns = 0;
+            while (energySum + energyForOneMissionRun < battery.getRemaining()) {
+                missionRuns++;
+                energySum += energyForOneMissionRun;
+                durationOfCommands += durationOfOneMissionRun;
+            }
+            EV_INFO << __func__ << "(): " << missionRuns << " more missions possible." << endl;
+        }
     }
     else
         while (true) {
