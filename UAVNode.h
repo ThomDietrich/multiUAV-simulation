@@ -24,6 +24,11 @@
 
 using namespace omnetpp;
 
+typedef struct {
+    ChargingNode* cn;
+    Command* cmd;
+} ClosestThings;
+
 /**
  * A mobile node that follows a predefined track.
  */
@@ -64,6 +69,8 @@ protected:
     virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
+
+    ClosestThings findClosest();
 
     //not needed
     virtual void move();

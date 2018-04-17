@@ -26,6 +26,39 @@ using namespace omnetpp;
 
 Define_Module(UAVNode);
 
+#define ERROR_MARGIN 0.0625
+
+/**
+ * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
+ * are equal, otherwise returns <code>false</code>.
+ */
+bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z);
+
+/**
+ * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
+ * are equal, otherwise returns <code>false</code>.
+ */
+bool cmpCoord(const Command& cmd1, const Command& cmd2);
+
+/**
+ * Estimates/Predicts the energy consumption for the given CEE.
+ */
+float energyForCEE(CommandExecEngine* cee);
+
+/**
+ * Estimates/Predicts the energy consumption for a waypoint command
+ * from the given coordinate (i.e. fromX, fromY, fromZ)
+ * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
+ */
+float estimateEnergy(UAVNode& fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
+
+/**
+ * Estimates/Predicts the time needed for a waypoint command
+ * from the given coordinate (i.e. fromX, fromY, fromZ)
+ * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
+ */
+double estimateDuration(UAVNode* fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
+
 UAVNode::UAVNode()
 {
 }
@@ -134,42 +167,133 @@ void UAVNode::selectNextCommand()
     scheduledCEE->setFromCoordinates(getX(), getY(), getZ());
     scheduledCEE->initializeCEE();
 
-    float energyForSheduled = scheduledCEE->predictFullConsumption(0.75);
-    float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
-    float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
-    float energyRemaining = this->battery.getRemaining();
+    bool choseClosestCNForExchange = par("choseClosestCNForExchange").boolValue();
 
-    if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
-        EV_INFO << "Energy Management: Recharging now." << endl;
-    }
-    else if (battery.isEmpty()) {
-        EV_ERROR << "Energy Management: One of our precious UAVs just died :-(" << endl;
-        //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
-    }
-    else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
-        EV_INFO << "Energy Management: OK. UAV has enough energy to continue";
-        EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
-    }
-    else {
-        // Start Replacement Process now
-        if (energyRemaining < energyToCNNow) {
-            EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient";
-            EV_WARN << " (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
+    if (choseClosestCNForExchange) {
+        ClosestThings closest = findClosest();
+
+        /*
+         *  calculate energy consumption
+         */
+
+        if (nullptr != replacingNode && cmpCoord(*replacingNode->getCommandExecEngine()->extractCommand(), getX(), getY(), getZ())) {
+            // Generate and inject ExchangeCEE, only if not already done
+            if (scheduledCEE->isPartOfMission()) {
+                ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
+                CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
+                exchangeCEE->setPartOfMission(false);
+                cees.push_front(exchangeCEE);
+                EV_INFO << __func__ << "(): ExchangeCEE added to node." << endl;
+            }
         }
         else {
-            EV_INFO << "Energy Management: Scheduling Replacement and Recharging Maintenance Process";
+            CommandExecEngine* nextCEE = nullptr;
+            u_int nextCommandsFeasible = 0;
+
+            // energy from closest command to closest charging station
+            float energyCMDtoCN = estimateEnergy(*this,                             // estimate energy flying
+                    closest.cmd->getX(), closest.cmd->getY(), closest.cmd->getZ(), // from closest command
+                    closest.cn->getX(), closest.cn->getY(), closest.cn->getZ());   // to charging station
+
+            // energy to closest command
+            float energyToCMD = 0;
+            if (not cmpCoord(*closest.cmd, this->getX(), this->getY(), this->getZ())) {
+                do {
+                    nextCEE = cees.at(nextCommandsFeasible % cees.size());
+                    nextCommandsFeasible++;
+                    energyToCMD += energyForCEE(nextCEE);
+                } while (not cmpCoord(*(nextCEE->extractCommand()), *closest.cmd));
+            }
+
+            // estimate energy for one complete mission run
+            u_int startingPosition = nextCommandsFeasible % cees.size();
+            float energyMission = 0;
+            do {
+                nextCommandsFeasible++;
+                nextCEE = cees.at(nextCommandsFeasible % cees.size());
+                energyMission += energyForCEE(nextCEE);
+            } while ((nextCommandsFeasible % cees.size()) != startingPosition);
+
+            if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
+                EV_INFO << "Energy Management: Recharging now." << endl;
+            }
+            else if (battery.isEmpty()) {
+                EV_ERROR << "Energy Management: One of our precious UAVs just died :-(" << endl;
+                //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
+            }
+            else if (energyCMDtoCN + energyToCMD + energyMission < battery.getRemaining()) {
+                // do nothing and continue at least one mission
+                EV_INFO << "Energy Management: OK. UAV has enough energy to complete at least one mission";
+                EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+            }
+            else {
+                // Start Replacement Process now
+                if (energyCMDtoCN + energyToCMD > battery.getRemaining()) {
+                    EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient";
+                    EV_WARN << " (" << battery.getRemaining() << " < " << energyCMDtoCN + energyToCMD << " mAh)." << endl;
+                }
+                else {
+                    if (cmpCoord(*closest.cmd, this->getX(), this->getY(), this->getZ())) {
+                        EV_INFO << "Energy Management: Scheduling Replacement and Recharging Maintenance Process";
+                        EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+
+                        if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
+
+                        // Generate and inject ExchangeCEE, only if not already done
+                        if (scheduledCEE->isPartOfMission()) {
+                            ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
+                            CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
+                            exchangeCEE->setPartOfMission(false);
+                            cees.push_front(exchangeCEE);
+                            EV_INFO << __func__ << "(): ExchangeCEE added to node." << endl;
+                        }
+                    }
+                    else {
+                        EV_INFO << "Energy Management: Resume flight until closest command for exchange.";
+                        EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+                    }
+                }
+            }
+        }
+    }
+    else {
+        float energyForSheduled = scheduledCEE->predictFullConsumption(0.75);
+        float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
+        float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
+        float energyRemaining = this->battery.getRemaining();
+
+        if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
+            EV_INFO << "Energy Management: Recharging now." << endl;
+        }
+        else if (battery.isEmpty()) {
+            EV_ERROR << "Energy Management: One of our precious UAVs just died :-(" << endl;
+            //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
+        }
+        else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
+            EV_INFO << "Energy Management: OK. UAV has enough energy to continue";
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
+        else {
+            // Start Replacement Process now
+            if (energyRemaining < energyToCNNow) {
+                EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient";
+                EV_WARN << " (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
+            }
+            else {
+                EV_INFO << "Energy Management: Scheduling Replacement and Recharging Maintenance Process";
+                EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
+            }
 
-        if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
+            if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
 
-        // Generate and inject ExchangeCEE, only if not already done
-        if (scheduledCEE->isPartOfMission()) {
-            ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
-            CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
-            exchangeCEE->setPartOfMission(false);
-            cees.push_front(exchangeCEE);
-            EV_INFO << __func__ << "(): ExchangeCEE added to node." << endl;
+            // Generate and inject ExchangeCEE, only if not already done
+            if (scheduledCEE->isPartOfMission()) {
+                ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
+                CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
+                exchangeCEE->setPartOfMission(false);
+                cees.push_front(exchangeCEE);
+                EV_INFO << __func__ << "(): ExchangeCEE added to node." << endl;
+            }
         }
     }
 
@@ -254,18 +378,18 @@ void UAVNode::updateState()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("updateState(): Command Engine missing.");
 
-    //distance to move, based on simulation time passed since last update
+//distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-    //update sublabel with maneuver and battery info
+//update sublabel with maneuver and battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s";
     strs << " | " << commandExecEngine->getConsumptionPerSecond() << " A";
     strs << " | " << battery.getRemainingPercentage() << " %";
-    //strs << " | ";
-    //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
-    //strs << " s left";
+//strs << " | ";
+//(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
+//strs << " s left";
     sublabelNode->setText(strs.str());
     par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
 }
@@ -383,76 +507,6 @@ double UAVNode::getHoverConsumption(float duration, float percentile)
     }
 }
 
-#define ERROR_MARGIN 0.0625
-
-/**
- * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
- * are equal, otherwise returns <code>false</code>.
- */
-bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z)
-{
-    return abs(cmd.getX() - X) < ERROR_MARGIN && abs(cmd.getY() - Y) < ERROR_MARGIN && abs(cmd.getZ() - Z) < ERROR_MARGIN;
-}
-
-/**
- * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
- * are equal, otherwise returns <code>false</code>.
- */
-bool cmpCoord(const Command& cmd1, const Command& cmd2)
-{
-    return abs(cmd1.getX() - cmd2.getX()) < ERROR_MARGIN && abs(cmd1.getY() - cmd2.getY()) < ERROR_MARGIN && abs(cmd1.getZ() - cmd2.getZ()) < ERROR_MARGIN;
-}
-
-/**
- * Estimates/Predicts the energy consumption for the given CEE.
- */
-float energyForCEE(CommandExecEngine* cee)
-{
-    if (cee->isCeeType(CeeType::WAIT)) {
-        return FLT_MAX;
-    }
-
-    if (not cee->isPartOfMission()) {
-        EV_WARN << __func__ << "(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
-        return FLT_MAX;
-    }
-    //TODO remove the following if the above works
-    if (cee->isCeeType(CeeType::CHARGE) || cee->isCeeType(CeeType::EXCHANGE)) {
-        throw cRuntimeError("endOfOperation(): charge or exchange command encountered");
-    }
-
-    // Get consumption for next command
-    cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
-    cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
-    cee->initializeCEE();
-    return cee->predictFullConsumption(0.75);
-}
-
-/**
- * Estimates/Predicts the energy consumption for a waypoint command
- * from the given coordinate (i.e. fromX, fromY, fromZ)
- * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
- */
-float estimateEnergy(UAVNode& fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
-{
-    WaypointCommand estimateCommand(toX, toY, toZ);
-    WaypointCEE estimateCEE(&fakeNode, &estimateCommand);
-    estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
-    estimateCEE.setPartOfMission(false);
-    estimateCEE.initializeCEE();
-    return estimateCEE.predictFullConsumption(0.75);
-}
-
-double estimateDuration(UAVNode* fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
-{
-    WaypointCommand estimateCommand(toX, toY, toZ);
-    WaypointCEE estimateCEE(fakeNode, &estimateCommand);
-    estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
-    estimateCEE.setPartOfMission(false);
-    estimateCEE.initializeCEE();
-    return estimateCEE.getOverallDuration();
-}
-
 /**
  * Iterates over all future CEEs and predicts their consumptions.
  * The consumption plus the needed energy to go back to a charging station are then compared against the remaining battery capacity.
@@ -476,7 +530,7 @@ ReplacementData* UAVNode::endOfOperation()
         return nullptr;
     }
 
-    //TODO Add current Execution Engine consumption
+//TODO Add current Execution Engine consumption
     energySum += 0;
 
     bool choseClosestCNForExchange = par("choseClosestCNForExchange").boolValue();
@@ -486,101 +540,62 @@ ReplacementData* UAVNode::endOfOperation()
         /*
          *  find closest ChargingNode and Command
          */
+        ClosestThings closest = findClosest();
 
-        ChargingNode* closestCN = nullptr;
-        Command* closestCMD = nullptr;
-        double distanceClosestCN = DBL_MAX;
-        for (unsigned int index = 0; index < cees.size(); index++) {
-            Command* command = cees.at(index)->extractCommand();
-            ChargingNode* chargingNode = findNearestCN(command->getX(), command->getY(), command->getZ());
-
-            // calculate distance between CN and command
-            double distance = sqrt(                                              // distance = square_root of the sum of
-                    pow((command->getX() - chargingNode->getX()), 2)             //   (CMD_X - CN_X)^2
-                    + pow((command->getY() - chargingNode->getY()), 2)           //   (CMD_Y - CN_Y)^2
-                            + pow((command->getZ() - chargingNode->getZ()), 2)); //  (CMD_Z - CN_Z)^2
-
-            if (distance < distanceClosestCN) {
-                closestCN = chargingNode;
-                closestCMD = command;
-                distanceClosestCN = distance;
-            }
-        }
-
-        ASSERT(nullptr != closestCMD);
-        ASSERT(nullptr != closestCN);
-        ASSERT(DBL_MAX != distanceClosestCN);
-
-        fromX = closestCMD->getX();
-        fromY = closestCMD->getY();
-        fromZ = closestCMD->getZ();
+        // exchange at closest command
+        fromX = closest.cmd->getX();
+        fromY = closest.cmd->getY();
+        fromZ = closest.cmd->getZ();
+        CommandExecEngine *nextCEE = nullptr;
 
         /*
          *  calculate energy consumption
          */
 
-        float energyFromClosestCMDtoClosestCN = estimateEnergy(*this,       // estimate energy flying
-                closestCMD->getX(), closestCMD->getY(), closestCMD->getZ(), // from closest command
-                closestCN->getX(), closestCN->getY(), closestCN->getZ());   // to charging station
+        // energy from closest command to closest charging station
+        float energyCMDtoCN = estimateEnergy(*this,       // estimate energy flying
+                closest.cmd->getX(), closest.cmd->getY(), closest.cmd->getZ(), // from closest command
+                closest.cn->getX(), closest.cn->getY(), closest.cn->getZ());   // to charging station
+        energyCMDtoCN *= 1.2;
 
-        // estimate energy to closest command
-        CommandExecEngine *nextCEE = nullptr;
-        float energyToClosestCMD = 0;
-
-        if (not cmpCoord(*closestCMD, this->getX(), this->getY(), this->getZ())) {
+        // energy to closest command
+        float energyToCMD = 0;
+        if (not cmpCoord(*closest.cmd, this->getX(), this->getY(), this->getZ())) {
             do {
                 nextCEE = cees.at(nextCommandsFeasible % cees.size());
                 nextCommandsFeasible++;
-                energyToClosestCMD += energyForCEE(nextCEE);
-                if (FLT_MAX == energyToClosestCMD) return nullptr;
+                energyToCMD += energyForCEE(nextCEE);
+                if (FLT_MAX == energyToCMD) return nullptr;
                 durationOfCommands += nextCEE->getOverallDuration();
-            } while (not cmpCoord(*(nextCEE->extractCommand()), *closestCMD));
+            } while (not cmpCoord(*(nextCEE->extractCommand()), *closest.cmd));
         }
+        energyToCMD *= 1.2;
 
         // estimate energy for one complete mission run
-        unsigned int startingPosition = nextCommandsFeasible % cees.size();
-        float energyForOneMissionRun = 0;
-        float durationOfOneMissionRun = 0;
+        u_int startingPosition = nextCommandsFeasible % cees.size();
+        float energyMission = 0;
+        float durationMission = 0;
         do {
             nextCommandsFeasible++;
             nextCEE = cees.at(nextCommandsFeasible % cees.size());
-            energyForOneMissionRun += energyForCEE(nextCEE);
-            if (FLT_MAX == energyForOneMissionRun) return nullptr;
-            durationOfOneMissionRun += nextCEE->getOverallDuration();
+            energyMission += energyForCEE(nextCEE);
+            if (FLT_MAX == energyMission) return nullptr;
+            durationMission += nextCEE->getOverallDuration();
         } while ((nextCommandsFeasible % cees.size()) != startingPosition);
+        energyMission *= 1.2;
 
-        energySum += energyToClosestCMD + energyFromClosestCMDtoClosestCN;
+        energySum += energyToCMD + energyCMDtoCN;
         if (energySum > battery.getRemaining()) {
-            if (cmpCoord(*closestCMD, this->getX(), this->getY(), this->getZ())) {
-                EV_INFO << __func__ << "(): " << "Current position is closest to charging node and battery gets low...";
-                if (nullptr != replacingNode) {
-                    if (cmpCoord(*replacingNode->getCommandExecEngine()->extractCommand(), *closestCMD)) {
-                        EV_INFO << __func__ << "(): " << "... wait for replacing node." << endl;
-                        HoldPositionCEE* stayWhereYouAre = new HoldPositionCEE(this,
-                                new HoldPositionCommand(this->getX(), this->getY(), this->getZ(), replacingNode->getCommandExecEngine()->getRemainingTime()));
-                        stayWhereYouAre->setPartOfMission();
-                        cees.push_front(stayWhereYouAre);
-                    }
-                    else {
-                        EV_ERROR << __func__ << "(): " << "Current position is closest to charging node and battery gets low..." << endl;
-                        return nullptr;
-                    }
-                }
-                else {
-                    EV_ERROR << __func__ << "(): " << "...no replacement node available/sent... that is a problem." << endl;
-                    return nullptr;
-                }
-            }
-            EV_ERROR << __func__ << "(): " << "Current position does not match closest command." << endl;
-            return nullptr;
+            EV_ERROR << __func__ << "(): " << "Cannot reach closest command and return to charging node." << endl;
+            return nullptr; // TODO: implement algorithm to exchange at second closest
         }
         else {
             // how many mission runs can be done
-            unsigned int missionRuns = 0;
-            while (energySum + energyForOneMissionRun < battery.getRemaining()) {
+            u_int missionRuns = 0;
+            while (energySum + energyMission < battery.getRemaining()) {
                 missionRuns++;
-                energySum += energyForOneMissionRun;
-                durationOfCommands += durationOfOneMissionRun;
+                energySum += energyMission;
+                durationOfCommands += durationMission;
             }
             EV_INFO << __func__ << "(): " << missionRuns << " more missions possible." << endl;
         }
@@ -656,7 +671,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
     double stddev;
     const u_int numAngles = 11;
     double samples[numAngles][3] = {
-    // angle [°], mean current [A], current deviation [A]
+// angle [°], mean current [A], current deviation [A]
             { -90.0, 16.86701, 0.7651131 }, //
             { -75.6, 17.97695, 0.7196844 }, //
             { -57.9, 17.34978, 0.6684724 }, //
@@ -669,7 +684,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
             { +75.6, 21.43493, 0.7625244 }, //
             { +90.0, 20.86530, 0.7350855 }  //
     };
-    //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) {
         mean = samples[0][1];
         stddev = samples[0][2];
@@ -712,7 +727,7 @@ double UAVNode::getSpeed(double angle)
 {
     const u_int numAngles = 11;
     double samples[numAngles][2] = {
-    // angle [°], mean speed [m/s]
+// angle [°], mean speed [m/s]
             { -90.0, 1.837303 }, //
             { -75.6, 1.842921 }, //
             { -57.9, 2.013429 }, //
@@ -725,10 +740,10 @@ double UAVNode::getSpeed(double angle)
             { +75.6, 2.719016 }, //
             { +90.0, 2.719048 }  //
     };
-    //Catch exactly -90°
+//Catch exactly -90°
     if (angle == samples[0][0]) return samples[0][1];
 
-    // simple linear interpolation
+// simple linear interpolation
     for (u_int idx = 1; idx < numAngles; idx++) {
         if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
             double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
@@ -747,7 +762,104 @@ double UAVNode::getSpeed(double angle)
 
 void UAVNode::move()
 {
-    //unused.
+//unused.
+}
+
+ClosestThings UAVNode::findClosest()
+{
+    ClosestThings result;
+    result.cn = nullptr;
+    result.cmd = nullptr;
+    double distanceClosestCN = DBL_MAX;
+    for (unsigned int index = 0; index < cees.size(); index++) {
+        Command* command = cees.at(index)->extractCommand();
+        ChargingNode* chargingNode = findNearestCN(command->getX(), command->getY(), command->getZ());
+
+        // calculate distance between CN and command
+        double distance = sqrt(                                              // distance = square_root of the sum of
+                pow((command->getX() - chargingNode->getX()), 2)             //   (CMD_X - CN_X)^2
+                + pow((command->getY() - chargingNode->getY()), 2)           //   (CMD_Y - CN_Y)^2
+                        + pow((command->getZ() - chargingNode->getZ()), 2)); //  (CMD_Z - CN_Z)^2
+
+        if (distance < distanceClosestCN) {
+            result.cn = chargingNode;
+            result.cmd = command;
+            distanceClosestCN = distance;
+        }
+    }
+
+    ASSERT(nullptr != result.cn);
+    ASSERT(nullptr != result.cmd);
+
+    return result;
+}
+
+/**
+ * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
+ * are equal, otherwise returns <code>false</code>.
+ */
+bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z)
+{
+    return abs(cmd.getX() - X) < ERROR_MARGIN && abs(cmd.getY() - Y) < ERROR_MARGIN && abs(cmd.getZ() - Z) < ERROR_MARGIN;
+}
+
+/**
+ * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
+ * are equal, otherwise returns <code>false</code>.
+ */
+bool cmpCoord(const Command& cmd1, const Command& cmd2)
+{
+    return abs(cmd1.getX() - cmd2.getX()) < ERROR_MARGIN && abs(cmd1.getY() - cmd2.getY()) < ERROR_MARGIN && abs(cmd1.getZ() - cmd2.getZ()) < ERROR_MARGIN;
+}
+
+/**
+ * Estimates/Predicts the energy consumption for the given CEE.
+ */
+float energyForCEE(CommandExecEngine* cee)
+{
+    if (cee->isCeeType(CeeType::WAIT)) {
+        return FLT_MAX;
+    }
+
+    if (not cee->isPartOfMission()) {
+        EV_WARN << __func__ << "(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
+        return FLT_MAX;
+    }
+    //TODO remove the following if the above works
+    if (cee->isCeeType(CeeType::CHARGE) || cee->isCeeType(CeeType::EXCHANGE)) {
+        throw cRuntimeError("endOfOperation(): charge or exchange command encountered");
+    }
+
+    // Get consumption for next command
+    cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
+    cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
+    cee->initializeCEE();
+    return cee->predictFullConsumption(0.75);
+}
+
+/**
+ * Estimates/Predicts the energy consumption for a waypoint command
+ * from the given coordinate (i.e. fromX, fromY, fromZ)
+ * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
+ */
+float estimateEnergy(UAVNode& fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
+{
+    WaypointCommand estimateCommand(toX, toY, toZ);
+    WaypointCEE estimateCEE(&fakeNode, &estimateCommand);
+    estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
+    estimateCEE.setPartOfMission(false);
+    estimateCEE.initializeCEE();
+    return estimateCEE.predictFullConsumption(0.75);
+}
+
+double estimateDuration(UAVNode* fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
+{
+    WaypointCommand estimateCommand(toX, toY, toZ);
+    WaypointCEE estimateCEE(fakeNode, &estimateCommand);
+    estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
+    estimateCEE.setPartOfMission(false);
+    estimateCEE.initializeCEE();
+    return estimateCEE.getOverallDuration();
 }
 
 #endif // WITH_OSG
