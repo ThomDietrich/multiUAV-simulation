@@ -191,7 +191,7 @@ void UAVNode::selectNextCommand()
             u_int nextCommandsFeasible = 0;
 
             // energy from closest command to closest charging station
-            float energyCMDtoCN = estimateEnergy(*this,                             // estimate energy flying
+            float energyCMDtoCN = estimateEnergy(*this,                            // estimate energy flying
                     closest.cmd->getX(), closest.cmd->getY(), closest.cmd->getZ(), // from closest command
                     closest.cn->getX(), closest.cn->getY(), closest.cn->getZ());   // to charging station
 
@@ -425,7 +425,7 @@ double UAVNode::nextNeededUpdate()
 void UAVNode::loadCommands(CommandQueue commands, bool isMission)
 {
     if (not cees.empty()) {
-        EV_WARN << "Replacing non-empty CEE queue." << endl;
+        EV_WARN << __func__ << "()" <<"Replacing non-empty CEE queue." << endl;
         cees.clear();
     }
 
@@ -553,7 +553,7 @@ ReplacementData* UAVNode::endOfOperation()
          */
 
         // energy from closest command to closest charging station
-        float energyCMDtoCN = estimateEnergy(*this,       // estimate energy flying
+        float energyCMDtoCN = estimateEnergy(*this,                            // estimate energy flying
                 closest.cmd->getX(), closest.cmd->getY(), closest.cmd->getZ(), // from closest command
                 closest.cn->getX(), closest.cn->getY(), closest.cn->getZ());   // to charging station
         energyCMDtoCN *= 1.2;
