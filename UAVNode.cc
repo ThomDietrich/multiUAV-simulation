@@ -425,7 +425,7 @@ double UAVNode::nextNeededUpdate()
 void UAVNode::loadCommands(CommandQueue commands, bool isMission)
 {
     if (not cees.empty()) {
-        EV_WARN << __func__ << "()" <<"Replacing non-empty CEE queue." << endl;
+        EV_WARN << __func__ << "()" << "Replacing non-empty CEE queue." << endl;
         cees.clear();
     }
 
@@ -667,53 +667,47 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
  */
 double UAVNode::getMovementConsumption(float angle, float duration, float percentile)
 {
-    double mean;
-    double stddev;
-    const u_int numAngles = 11;
-    double samples[numAngles][3] = {
-// angle [°], mean current [A], current deviation [A]
-            { -90.0, 16.86701, 0.7651131 }, //
-            { -75.6, 17.97695, 0.7196844 }, //
-            { -57.9, 17.34978, 0.6684724 }, //
-            { -34.8, 17.34384, 0.8729401 }, //
-            { -15.6, 15.99054, 1.1767867 }, //
-            { 000.0, 16.36526, 1.0290515 }, //
-            { +15.6, 18.83829, 2.1043467 }, //
-            { +34.8, 20.34726, 1.4018145 }, //
-            { +57.9, 21.31561, 0.8680334 }, //
-            { +75.6, 21.43493, 0.7625244 }, //
-            { +90.0, 20.86530, 0.7350855 }  //
-    };
-//Catch exactly -90°
-    if (angle == samples[0][0]) {
-        mean = samples[0][1];
-        stddev = samples[0][2];
-    }
-    else if (angle < -90.0 || angle > +90.0) {
+    double mean = 0;
+    double stddev = 0;
+    double energy = 0;
+
+    if (angle < -90.0 || angle > +90.0) {
         throw cRuntimeError("Invalid angle outside range [-90.0..+90.0].");
     }
     else {
         // simple linear interpolation
-        for (u_int idx = 1; idx < numAngles; idx++) {
-            if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
-                double mean_slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
-                mean = samples[idx - 1][1] + mean_slope * (angle - samples[idx - 1][0]);
+        for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
+            double angle0 = ANGLE2POWER[idx - 1][0];
+            double angle1 = ANGLE2POWER[idx][0];
+            double mean0 = ANGLE2POWER[idx - 1][1];
+            double mean1 = ANGLE2POWER[idx][1];
 
-                double stddev_slope = (samples[idx][2] - samples[idx - 1][2]) / (samples[idx][0] - samples[idx - 1][0]);
-                stddev = samples[idx - 1][2] + stddev_slope * (angle - samples[idx - 1][0]);
+            if ((angle0 <= angle && angle <= angle1)) {
+                mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
+                mean = mean * duration / 3600;
+
+                double var0 = getVarianceFromHFormula(idx - 1, duration);
+                double var1 = getVarianceFromHFormula(idx, duration);
+
+                double var = var0 + (var1 - var0) / (angle1 - angle0) * (angle - angle0);
+                stddev = sqrt(var);
+                break;
             }
         }
     }
     if (isnan(percentile)) {
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
-        return omnetpp::normal(network->getRNG(0), mean, stddev) * 1000 * duration / 3600;
+        do {
+            energy = omnetpp::normal(network->getRNG(0), mean, stddev);
+        } while (abs(energy - mean) > 3 * stddev);
     }
     else if (percentile < 0.0 || percentile > 1.0) {
         throw cRuntimeError("Invalid percentile outside range [0.0..1.0].");
     }
     else {
-        return boost::math::quantile(boost::math::normal(mean, stddev), percentile) * 1000 * duration / 3600;
+        energy = boost::math::quantile(boost::math::normal(mean, stddev), percentile);
     }
+    return energy / VOLTAGE * 1000;
 }
 
 /**
@@ -725,30 +719,16 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
  */
 double UAVNode::getSpeed(double angle)
 {
-    const u_int numAngles = 11;
-    double samples[numAngles][2] = {
-// angle [°], mean speed [m/s]
-            { -90.0, 1.837303 }, //
-            { -75.6, 1.842921 }, //
-            { -57.9, 2.013429 }, //
-            { -34.8, 2.450476 }, //
-            { -15.6, 3.583821 }, //
-            { 000.0, 8.056741 }, //
-            { +15.6, 6.020143 }, //
-            { +34.8, 3.337107 }, //
-            { +57.9, 2.822109 }, //
-            { +75.6, 2.719016 }, //
-            { +90.0, 2.719048 }  //
-    };
-//Catch exactly -90°
-    if (angle == samples[0][0]) return samples[0][1];
+    // simple linear interpolation
+    for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
+        if (ANGLE2SPEED[idx - 1][0] <= angle && angle <= ANGLE2SPEED[idx][0]) {
+            double slope = (ANGLE2SPEED[idx][1] - ANGLE2SPEED[idx - 1][1]) / (ANGLE2SPEED[idx][0] - ANGLE2SPEED[idx - 1][0]);
+            double mean = abs(ANGLE2SPEED[idx - 1][1] + slope * (angle - ANGLE2SPEED[idx - 1][0]));
 
-// simple linear interpolation
-    for (u_int idx = 1; idx < numAngles; idx++) {
-        if (samples[idx - 1][0] < angle && angle <= samples[idx][0]) {
-            double slope = (samples[idx][1] - samples[idx - 1][1]) / (samples[idx][0] - samples[idx - 1][0]);
-            double interpol = samples[idx - 1][1] + slope * (angle - samples[idx - 1][0]);
-            return interpol;
+            //double stddev_slope = (ANGLE2SPEED[idx][2] - ANGLE2SPEED[idx - 1][2]) / (ANGLE2SPEED[idx][0] - ANGLE2SPEED[idx - 1][0]);
+            //double stddev = abs(ANGLE2SPEED[idx - 1][2] + slope * (angle - ANGLE2SPEED[idx - 1][0]));
+
+            return mean;
         }
     }
 
