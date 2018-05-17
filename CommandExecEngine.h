@@ -183,20 +183,37 @@ public:
      * The result is drawn from a stochastic distribution.
      *
      * @param normalized Decide if the full consumption should be returned (false) or a normalized energy amount per second (true)
-     * @param percentile The percentile to apply to the inverse normal distribution function, in the range 0..1
+     * @param fromMethod 0: random  1: mean  2: predictionQuantile
      * @return statistical consumption, in [mAh] (normalized == false) or [mAh/s] (normalized == true)
      */
-    virtual double getProbableConsumption(bool normalized = true, float percentile = NAN) = 0;
+    virtual double getProbableConsumption(bool normalized = true, int fromMethod = 2) = 0;
 
     /**
      * Predict the overall consumption for the full command execution procedure
      *
-     * @param percentile The percentile to apply to the inverse normal distribution function, in the range 0..1
+     * @param fromMethod 0: random  1: mean  2: predictionQuantile
      * @return The energy to be consumed for the whole CEE, in [mAh]
      */
-    virtual double predictFullConsumption(float percentile)
+    virtual double predictFullConsumption(int fromMethod = 2)
     {
-        return getProbableConsumption(false, percentile);
+        return getProbableConsumption(false, fromMethod);
+    }
+
+    virtual double predictFullConsumptionQuantile()
+    {
+        return getProbableConsumption(false, 2);
+    }
+    virtual double predictFullConsumptionMean()
+    {
+        return getProbableConsumption(false, 1);
+    }
+    virtual double predictFullConsumptionRandom()
+    {
+        return getProbableConsumption(false, 0);
+    }
+    virtual double predictNormConsumptionRandom()
+    {
+        return getProbableConsumption(true, 0);
     }
 
     /**
@@ -283,7 +300,7 @@ public:
     void updateState(double stepSize) override;
     double getOverallDuration() override;
     double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
     WaypointCommand* extractCommand()
@@ -310,7 +327,7 @@ public:
     void updateState(double stepSize) override;
     double getOverallDuration() override;
     double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
     TakeoffCommand* extractCommand()
@@ -337,7 +354,7 @@ public:
     void updateState(double stepSize) override;
     double getOverallDuration() override;
     double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
     HoldPositionCommand* extractCommand()
@@ -361,7 +378,7 @@ public:
     void updateState(double stepSize) override;
     double getOverallDuration() override;
     double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
     ChargeCommand* extractCommand()
@@ -390,7 +407,7 @@ public:
     void updateState(double stepSize) override;
     double getOverallDuration() override;
     double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
     void performEntryActions() override;
@@ -428,7 +445,7 @@ public:
     void updateState(double stepSize) override;
     double getOverallDuration() override;
     double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, float percentile = NAN) override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
     WaitCommand* extractCommand()

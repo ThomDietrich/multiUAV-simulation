@@ -60,8 +60,8 @@ void WaypointCEE::initializeCEE()
     //update speed based on flight angle
     speed = node->getSpeed(climbAngle);
 
-    // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
+    // draw probable random value for consumption of this CEE
+    consumptionPerSecond = predictNormConsumptionRandom();
 }
 
 void WaypointCEE::setNodeParameters()
@@ -108,14 +108,14 @@ double WaypointCEE::getRemainingTime()
     return distance / speed;
 }
 
-double WaypointCEE::getProbableConsumption(bool normalized, float percentile)
+double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
     double duration = sqrt(dx * dx + dy * dy + dz * dz) / speed;
     //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s" << endl;
-    double completeConsumption = node->getMovementConsumption(climbAngle, duration, percentile);
+    double completeConsumption = node->getMovementConsumption(climbAngle, duration, fromMethod);
     if (normalized) {
         return completeConsumption / duration;
     }
@@ -156,7 +156,7 @@ void TakeoffCEE::initializeCEE()
     speed = node->getSpeed(climbAngle);
 
     // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
+    consumptionPerSecond = predictNormConsumptionRandom();
 }
 
 void TakeoffCEE::setNodeParameters()
@@ -188,10 +188,10 @@ double TakeoffCEE::getRemainingTime()
     return fabs(z1 - node->z) / speed;
 }
 
-double TakeoffCEE::getProbableConsumption(bool normalized, float percentile)
+double TakeoffCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     double duration = fabs(z1 - z0) / speed;
-    double completeConsumption = node->getMovementConsumption(climbAngle, duration, percentile);
+    double completeConsumption = node->getMovementConsumption(climbAngle, duration, fromMethod);
     if (normalized) {
         return completeConsumption / duration;
     }
@@ -232,7 +232,7 @@ void HoldPositionCEE::initializeCEE()
     this->holdPositionTill = simTime() + command->getHoldSeconds();
 
     // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
+    consumptionPerSecond = getProbableConsumption(true, 0);
 }
 
 void HoldPositionCEE::setNodeParameters()
@@ -258,10 +258,10 @@ double HoldPositionCEE::getRemainingTime()
     return (this->holdPositionTill - simTime()).dbl();
 }
 
-double HoldPositionCEE::getProbableConsumption(bool normalized, float percentile)
+double HoldPositionCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     double duration = this->command->getHoldSeconds();
-    double completeConsumption = node->getHoverConsumption(duration, percentile);
+    double completeConsumption = node->getHoverConsumption(duration, fromMethod);
     if (normalized) {
         return completeConsumption / duration;
     }
@@ -327,7 +327,7 @@ double ChargeCEE::getRemainingTime()
     return 1;
 }
 
-double ChargeCEE::getProbableConsumption(bool normalized, float percentile)
+double ChargeCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     return 0;
 }
@@ -361,7 +361,7 @@ void ExchangeCEE::initializeCEE()
     climbAngle = 0;
 
     // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
+    consumptionPerSecond = predictNormConsumptionRandom();
 }
 
 void ExchangeCEE::setNodeParameters()
@@ -389,12 +389,13 @@ double ExchangeCEE::getRemainingTime()
     return 1;
 }
 
-double ExchangeCEE::getProbableConsumption(bool normalized, float percentile)
+double ExchangeCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     //TODO duration unknown
     if (normalized == false) EV_WARN << __func__ << "(): non-normalized not supported for ExchangeCEE" << endl;
-    if (isnormal(percentile)) EV_WARN << __func__ << "(): percentile not supported for ExchangeCEE" << endl;
-    return node->getHoverConsumption(1, 0.5);
+
+    int duration = 1;
+    return node->getHoverConsumption(duration, 1);
 }
 
 char* ExchangeCEE::getCeeTypeString()
@@ -472,7 +473,7 @@ bool WaitCEE::commandCompleted()
 void WaitCEE::initializeCEE()
 {
     // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, NAN);
+    consumptionPerSecond = predictNormConsumptionRandom();
 }
 
 void WaitCEE::setNodeParameters()
@@ -497,7 +498,7 @@ double WaitCEE::getRemainingTime()
     return 1;
 }
 
-double WaitCEE::getProbableConsumption(bool normalized, float percentile)
+double WaitCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     return 0;
 }

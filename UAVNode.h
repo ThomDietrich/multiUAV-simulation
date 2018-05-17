@@ -30,6 +30,8 @@ typedef struct {
     Command* cmd;
 } ClosestThings;
 
+const float quantile = 0.95;
+
 /**
  * A mobile node that follows a predefined track.
  */
@@ -48,9 +50,9 @@ public:
     virtual ~UAVNode();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual double estimateCommandsDuration();
-    static double getHoverConsumption(float duration, float percentile = NAN);
-    static double getMovementConsumption(float angle, float duration, float percentile = NAN);
-    static double getSpeed(double angle);
+    static double getHoverConsumption(float duration, int fromMethod = 0);
+    static double getMovementConsumption(float angle, float duration, int fromMethod = 0);
+    static double getSpeed(double angle, int fromMethod = 1);
 
     //TODO part of hack111 to make the replacing node known to the Exchange command
     GenericNode* replacingNode = nullptr;

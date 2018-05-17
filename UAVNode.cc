@@ -483,31 +483,6 @@ double UAVNode::estimateCommandsDuration()
 }
 
 /**
- * Calculate the electrical consumption for one hover / hold position maneuver (no movement).
- * The calculation is based on predetermined statistical values and a derived gaussian normal distribution.
- * A specific percentile value can be calculated, if the parameter is left out a random value is drawn.
- *
- * @param duration Duration of the maneuver, in [s]
- * @param percentile The percentile in the range 0..1
- * @return The current used by the UAV, in [mAh]
- */
-double UAVNode::getHoverConsumption(float duration, float percentile)
-{
-    double mean = 18.09;  // mean current, in [A]
-    double stddev = 0.36; // deviation of the mean, in [A]
-    if (isnan(percentile)) {
-        cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
-        return omnetpp::normal(network->getRNG(0), mean, stddev) * 1000 * duration / 3600;
-    }
-    else if (percentile < 0.0 || percentile > 1.0) {
-        throw cRuntimeError("Invalid percentile outside range [0.0..1.0].");
-    }
-    else {
-        return boost::math::quantile(boost::math::normal(mean, stddev), percentile) * 1000 * duration / 3600;
-    }
-}
-
-/**
  * Iterates over all future CEEs and predicts their consumptions.
  * The consumption plus the needed energy to go back to a charging station are then compared against the remaining battery capacity.
  * Result of the calculation is the feasible amount of commands and the place of last possible replacement.
@@ -530,7 +505,7 @@ ReplacementData* UAVNode::endOfOperation()
         return nullptr;
     }
 
-//TODO Add current Execution Engine consumption
+    //TODO Add current Execution Engine consumption
     energySum += 0;
 
     bool choseClosestCNForExchange = par("choseClosestCNForExchange").boolValue();
@@ -629,7 +604,7 @@ ReplacementData* UAVNode::endOfOperation()
             fromZ = nextCEE->getZ1();
         }
 
-//EV_INFO << "Finished endOfOperation calculation." << endl;
+    //EV_INFO << "Finished endOfOperation calculation." << endl;
     ReplacementData *result = new ReplacementData();
     result->nodeToReplace = this;
     result->timeOfReplacement = simTime() + durationOfCommands;
@@ -654,58 +629,87 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 }
 
 /**
- * Calculate the electrical consumption for one flight maneuver (movement).
- * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
- * Consequently the power usage of the node is based on these factors.
- * This function will return the consumption based on real measurement values.
- * A specific percentile value can be calculated, if the parameter is left out a random value is drawn.
+ * Calculate the electrical consumption for one hover / hold position maneuver (no movement).
+ * The calculation is based on predetermined statistical values and a derived gaussian normal distribution.
  *
- * @param angle The ascent/decline angle, range: -90..+90°
  * @param duration Duration of the maneuver, in [s]
- * @param percentile The percentile in the range 0..1
- * @return The current used by the UAV in [mAh]
+ * @param fromMethod 0: random  1: mean  2: predictionQuantile
+ * @return The current used by the UAV, in [mAh]
  */
-double UAVNode::getMovementConsumption(float angle, float duration, float percentile)
+double UAVNode::getHoverConsumption(float duration, int fromMethod)
 {
-    double mean = 0;
-    double stddev = 0;
+    double mean = HOVER_MEAN * duration / 3600;
+    double var = getVarianceFromHFormula(-1, duration);
+    double stddev = sqrt(var) / 4;
+
     double energy = 0;
 
-    if (angle < -90.0 || angle > +90.0) {
-        throw cRuntimeError("Invalid angle outside range [-90.0..+90.0].");
-    }
-    else {
-        // simple linear interpolation
-        for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
-            double angle0 = ANGLE2POWER[idx - 1][0];
-            double angle1 = ANGLE2POWER[idx][0];
-            double mean0 = ANGLE2POWER[idx - 1][1];
-            double mean1 = ANGLE2POWER[idx][1];
-
-            if ((angle0 <= angle && angle <= angle1)) {
-                mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
-                mean = mean * duration / 3600;
-
-                double var0 = getVarianceFromHFormula(idx - 1, duration);
-                double var1 = getVarianceFromHFormula(idx, duration);
-
-                double var = var0 + (var1 - var0) / (angle1 - angle0) * (angle - angle0);
-                stddev = sqrt(var);
-                break;
-            }
-        }
-    }
-    if (isnan(percentile)) {
+    if (fromMethod == 0) {
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
         do {
             energy = omnetpp::normal(network->getRNG(0), mean, stddev);
         } while (abs(energy - mean) > 3 * stddev);
     }
-    else if (percentile < 0.0 || percentile > 1.0) {
-        throw cRuntimeError("Invalid percentile outside range [0.0..1.0].");
+    else if (fromMethod == 1) {
+        energy = mean;
     }
     else {
-        energy = boost::math::quantile(boost::math::normal(mean, stddev), percentile);
+        energy = boost::math::quantile(boost::math::normal(mean, stddev), quantile);
+    }
+    return energy / VOLTAGE * 1000;
+}
+
+/**
+ * Calculate the electrical consumption for one flight maneuver (movement).
+ * The speed of the UAV is selected by the UAV and depends on internal parameters and the climb angle.
+ * Consequently the power usage of the node is based on these factors.
+ * This function will return the consumption based on real measurement values.
+ *
+ * @param angle The ascent/decline angle, range: -90..+90°
+ * @param duration Duration of the maneuver, in [s]
+ * @param fromMethod 0: random  1: mean  2: predictionQuantile
+ * @return The energy used by the UAV in [mAh]
+ */
+double UAVNode::getMovementConsumption(float angle, float duration, int fromMethod)
+{
+    double mean = 0;
+    double stddev = 0;
+    double energy = 0;
+
+    ASSERT(angle >= -90.0 && angle <= +90.0);
+
+    for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
+        double angle0 = ANGLE2POWER[idx - 1][0];
+        double angle1 = ANGLE2POWER[idx][0];
+
+        if ((angle0 <= angle && angle <= angle1)) {
+            double mean0 = ANGLE2POWER[idx - 1][1];
+            double mean1 = ANGLE2POWER[idx][1];
+
+            mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
+            mean = mean * duration / 3600;
+
+            double var0 = getVarianceFromHFormula(idx - 1, duration);
+            double var1 = getVarianceFromHFormula(idx, duration);
+
+            double var = var0 + (var1 - var0) / (angle1 - angle0) * (angle - angle0);
+            stddev = sqrt(var);
+            break;
+        }
+    }
+    ASSERT(mean != 0 && stddev != 0);
+
+    if (fromMethod == 0) {
+        cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+        do {
+            energy = omnetpp::normal(network->getRNG(0), mean, stddev);
+        } while (abs(energy - mean) > 3 * stddev);
+    }
+    else if (fromMethod == 1) {
+        energy = mean;
+    }
+    else {
+        energy = boost::math::quantile(boost::math::normal(mean, stddev), quantile);
     }
     return energy / VOLTAGE * 1000;
 }
@@ -717,27 +721,45 @@ double UAVNode::getMovementConsumption(float angle, float duration, float percen
  * @param the ascent/decline angle, range: -90..+90°
  * @return the speed of the UAV in [m/s]
  */
-double UAVNode::getSpeed(double angle)
+double UAVNode::getSpeed(double angle, int fromMethod)
 {
-    // simple linear interpolation
+    double mean = 0;
+    double stddev = 0;
+    double speed = 0;
+
+    ASSERT(angle >= -90.0 && angle <= +90.0);
+
     for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
-        if (ANGLE2SPEED[idx - 1][0] <= angle && angle <= ANGLE2SPEED[idx][0]) {
-            double slope = (ANGLE2SPEED[idx][1] - ANGLE2SPEED[idx - 1][1]) / (ANGLE2SPEED[idx][0] - ANGLE2SPEED[idx - 1][0]);
-            double mean = abs(ANGLE2SPEED[idx - 1][1] + slope * (angle - ANGLE2SPEED[idx - 1][0]));
+        double angle0 = ANGLE2SPEED[idx - 1][0];
+        double angle1 = ANGLE2SPEED[idx][0];
 
-            //double stddev_slope = (ANGLE2SPEED[idx][2] - ANGLE2SPEED[idx - 1][2]) / (ANGLE2SPEED[idx][0] - ANGLE2SPEED[idx - 1][0]);
-            //double stddev = abs(ANGLE2SPEED[idx - 1][2] + slope * (angle - ANGLE2SPEED[idx - 1][0]));
+        if ((angle0 <= angle && angle <= angle1)) {
+            double mean0 = ANGLE2SPEED[idx - 1][1];
+            double mean1 = ANGLE2SPEED[idx][1];
+            double stddev0 = ANGLE2SPEED[idx - 1][2];
+            double stddev1 = ANGLE2SPEED[idx][2];
 
-            return mean;
+            mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
+            stddev = abs(stddev0 + (stddev1 - stddev0) / (angle1 - angle0) * (angle - angle0));
+            break;
         }
     }
+    ASSERT(mean != 0 && stddev != 0);
 
-    std::stringstream ss;
-    ss << "UAVNode::getSpeedFromAngle() unexpected angle passed: " << angle;
-    const char* str = ss.str().c_str();
+    if (fromMethod == 0) {
+        cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+        do {
+            speed = omnetpp::normal(network->getRNG(0), mean, stddev);
+        } while (abs(speed - mean) > 3 * stddev);
+    }
+    else if (fromMethod == 1) {
+        speed = mean;
+    }
+    else {
+        speed = boost::math::quantile(boost::math::normal(mean, stddev), quantile);
+    }
 
-    throw cRuntimeError(str);
-    return 0;
+    return speed;
 }
 
 void UAVNode::move()
@@ -814,7 +836,7 @@ float energyForCEE(CommandExecEngine* cee)
     cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
     cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
     cee->initializeCEE();
-    return cee->predictFullConsumption(0.75);
+    return cee->predictFullConsumptionQuantile();
 }
 
 /**
@@ -829,7 +851,7 @@ float estimateEnergy(UAVNode& fakeNode, double fromX, double fromY, double fromZ
     estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
     estimateCEE.setPartOfMission(false);
     estimateCEE.initializeCEE();
-    return estimateCEE.predictFullConsumption(0.75);
+    return estimateCEE.predictFullConsumptionQuantile();
 }
 
 double estimateDuration(UAVNode* fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
