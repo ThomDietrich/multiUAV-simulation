@@ -97,6 +97,7 @@ void UAVNode::handleMessage(cMessage *msg)
 
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
             EV_WARN << __func__ << "(): Node not in ExchangeCEE. Ignoring exchangeData message." << endl;
+            exchangeAfterCurrentCommand = true;
             delete msg;
             msg = nullptr;
             return;
@@ -166,6 +167,13 @@ void UAVNode::selectNextCommand()
     CommandExecEngine *scheduledCEE = cees.front();
     scheduledCEE->setFromCoordinates(getX(), getY(), getZ());
     scheduledCEE->initializeCEE();
+
+    if (exchangeAfterCurrentCommand && not scheduledCEE->isCeeType(CeeType::EXCHANGE)) {
+        throw cRuntimeError("selectNextCommand(): UAV should have switched into Exchange CEE now. Another UAV is waiting...");
+    }
+    else {
+        exchangeAfterCurrentCommand = false;
+    }
 
     bool choseClosestCNForExchange = par("choseClosestCNForExchange").boolValue();
 
@@ -257,10 +265,11 @@ void UAVNode::selectNextCommand()
         }
     }
     else {
-        float energyForSheduled = scheduledCEE->predictFullConsumption(0.75);
+        float energyForSheduled = scheduledCEE->predictFullConsumptionQuantile();
         float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
         float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
         float energyRemaining = this->battery.getRemaining();
+        bool atReplacementLocation = replacementX == x && replacementY == y && replacementZ == z && abs((simTime() - replacementTime).dbl()) < 5;
 
         if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
             EV_INFO << "Energy Management: Recharging now." << endl;
@@ -269,12 +278,15 @@ void UAVNode::selectNextCommand()
             EV_ERROR << "Energy Management: One of our precious UAVs just died :-(" << endl;
             //throw cRuntimeError("Energy Management: One of our precious UAVs just died :-(");
         }
-        else if (energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
+        else if (not atReplacementLocation && energyRemaining >= energyForSheduled + energyToCNAfterScheduled) {
             EV_INFO << "Energy Management: OK. UAV has enough energy to continue";
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
         else {
             // Start Replacement Process now
+            if (atReplacementLocation) {
+                EV_INFO << "Energy Management: replacementTime reached, starting replacement (part of hack111)" << endl;
+            }
             if (energyRemaining < energyToCNNow) {
                 EV_WARN << "Energy Management: Going to Charging Node. Attention! Energy insufficient";
                 EV_WARN << " (" << energyRemaining << " < " << energyToCNNow << " mAh)." << endl;
@@ -378,18 +390,18 @@ void UAVNode::updateState()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("updateState(): Command Engine missing.");
 
-//distance to move, based on simulation time passed since last update
+    //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-//update sublabel with maneuver and battery info
+    //update sublabel with maneuver and battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s";
     strs << " | " << commandExecEngine->getConsumptionPerSecond() << " A";
     strs << " | " << battery.getRemainingPercentage() << " %";
-//strs << " | ";
-//(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
-//strs << " s left";
+    //strs << " | ";
+    //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
+    //strs << " s left";
     sublabelNode->setText(strs.str());
     par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
 }
@@ -493,9 +505,9 @@ double UAVNode::estimateCommandsDuration()
 ReplacementData* UAVNode::endOfOperation()
 {
     float energySum = 0;
-    float energyToCNAfter = 0;
-    int nextCommandsFeasible = 0;
-    float durationOfCommands = 0;
+    int nextCommands = 0;
+    float nextCommandsDuration = 0;
+    bool maxCommandsFeasibleReached = false;
     double fromX = this->getX();
     double fromY = this->getY();
     double fromZ = this->getZ();
@@ -509,6 +521,11 @@ ReplacementData* UAVNode::endOfOperation()
     energySum += 0;
 
     bool choseClosestCNForExchange = par("choseClosestCNForExchange").boolValue();
+
+    // 0: latest opportunity heuristic
+    // 1: shortest return heuristic
+    // 2: utilization quotient heuristic
+    int replacementMethod = par("replacementMethod");
 
     if (choseClosestCNForExchange) {
 
@@ -537,26 +554,26 @@ ReplacementData* UAVNode::endOfOperation()
         float energyToCMD = 0;
         if (not cmpCoord(*closest.cmd, this->getX(), this->getY(), this->getZ())) {
             do {
-                nextCEE = cees.at(nextCommandsFeasible % cees.size());
-                nextCommandsFeasible++;
+                nextCEE = cees.at(nextCommands % cees.size());
+                nextCommands++;
                 energyToCMD += energyForCEE(nextCEE);
                 if (FLT_MAX == energyToCMD) return nullptr;
-                durationOfCommands += nextCEE->getOverallDuration();
+                nextCommandsDuration += nextCEE->getOverallDuration();
             } while (not cmpCoord(*(nextCEE->extractCommand()), *closest.cmd));
         }
         energyToCMD *= 1.2;
 
         // estimate energy for one complete mission run
-        u_int startingPosition = nextCommandsFeasible % cees.size();
+        u_int startingPosition = nextCommands % cees.size();
         float energyMission = 0;
         float durationMission = 0;
         do {
-            nextCommandsFeasible++;
-            nextCEE = cees.at(nextCommandsFeasible % cees.size());
+            nextCommands++;
+            nextCEE = cees.at(nextCommands % cees.size());
             energyMission += energyForCEE(nextCEE);
             if (FLT_MAX == energyMission) return nullptr;
             durationMission += nextCEE->getOverallDuration();
-        } while ((nextCommandsFeasible % cees.size()) != startingPosition);
+        } while ((nextCommands % cees.size()) != startingPosition);
         energyMission *= 1.2;
 
         energySum += energyToCMD + energyCMDtoCN;
@@ -570,48 +587,147 @@ ReplacementData* UAVNode::endOfOperation()
             while (energySum + energyMission < battery.getRemaining()) {
                 missionRuns++;
                 energySum += energyMission;
-                durationOfCommands += durationMission;
+                nextCommandsDuration += durationMission;
             }
             EV_INFO << __func__ << "(): " << missionRuns << " more missions possible." << endl;
         }
+        //EV_INFO << "Finished endOfOperation calculation." << endl;
+        ReplacementData *result = new ReplacementData();
+        result->nodeToReplace = this;
+        result->timeOfReplacement = simTime() + nextCommandsDuration;
+        result->x = fromX;
+        result->y = fromY;
+        result->z = fromZ;
+        return result;
     }
-    else
-        while (true) {
-            CommandExecEngine *nextCEE = cees.at(nextCommandsFeasible % cees.size());
+    else {
+        // Iterates through all feasible future commands and build table of predictions
+
+        /**
+         * vector of vectors of {0: number of future commands,
+         *                       1: predicted commands energy,
+         *                       2: predicted return energy,
+         *                       3: predicted commands duration}
+         * element 0 initialized with 0s
+         */
+        std::vector<std::vector<float>> nextCEEsMatrix;
+        nextCEEsMatrix.push_back(std::vector<float> { 0.0, 0.0, FLT_MAX, 0.0 });
+
+        // Preliminary max feasible and energy prediction
+        while (not maxCommandsFeasibleReached) {
+            CommandExecEngine *nextCEE = cees.at(nextCommands % cees.size());
 
             float energyForNextCEE = energyForCEE(nextCEE);
-            if (FLT_MAX == energyForNextCEE) return nullptr;
+            float energyToCNAfterCEE = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
 
-            // Get consumption for going back to the nearest Charging node
-            energyToCNAfter = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
+            //Special case: No end foreseeable
+            if (energyForNextCEE == FLT_MAX) return nullptr;
 
-            //EV_DEBUG << "Consumption Aggregated=" << energySum << "mAh" << endl;
-            //EV_DEBUG << commandsFeasible + 1 << " Consumption Command " << nextCEE->getCommandId() << ": " << energyForNextCEE << "mAh" << endl;
-            //EV_DEBUG << "Consumption GoToChargingNode=" << energyToCNAfter << "mAh" << endl;
-            //EV_DEBUG << "Consumption Aggregated + Command + GoToChargingNode=" << energySum + energyForNextCEE + energyToCNAfter << "mAh" << endl;
-            //EV_DEBUG << "Consumption Battery Remaining=" << battery.getRemaining() << "mAh" << endl;
-
-            if (battery.getRemaining() < energySum + energyForNextCEE + energyToCNAfter) {
-                EV_INFO << __func__ << "(): " << nextCommandsFeasible << " commands feasible." << endl;
-                break;
+            // Check if next command still feasible
+            if (energySum + energyForNextCEE + energyToCNAfterCEE < battery.getRemaining()) {
+                // prepare next while loop execution
+                nextCommands++;
+                energySum += energyForNextCEE;
+                nextCommandsDuration += nextCEE->getOverallDuration();
+                nextCEEsMatrix.push_back(std::vector<float> { (float) nextCommands, energySum, energyToCNAfterCEE, nextCommandsDuration });
             }
-            nextCommandsFeasible++;
-            energySum += energyForNextCEE;
-            durationOfCommands += nextCEE->getOverallDuration();
+            else {
+                // next command not feasible
+                maxCommandsFeasibleReached = true;
+            }
+        }
+        // At least one command has to be feasible
+        if (nextCommands == 0) return nullptr;
+        EV_INFO << __func__ << "(): " << nextCommands << " commands feasible at most." << endl;
 
-            fromX = nextCEE->getX1();
-            fromY = nextCEE->getY1();
-            fromZ = nextCEE->getZ1();
+        /**
+         * Replacement Heuristics 0..2
+         */
+
+        // Replacement planning
+        ReplacementData *result = new ReplacementData();
+        result->nodeToReplace = this;
+        CommandExecEngine *lastCEEofMission;
+
+        if (replacementMethod == 0) {
+            // 0: latest opportunity heuristic
+            int maxCommandsFeasible = (int) nextCEEsMatrix.back().at(0);
+            lastCEEofMission = cees.at((maxCommandsFeasible - 1) % cees.size());
+
+            float duration = nextCEEsMatrix.back().at(3);
+            result->timeOfReplacement = simTime() + duration;
+
+            EV_INFO << __func__ << "(): latest opportunity heuristic: " << nextCommands << " commands feasible." << endl;
+        }
+        else if (replacementMethod == 1) {
+            // 1: shortest return heuristic
+            float shortestReturnPathReturnEnergy = FLT_MAX;
+            int shortestReturnPathMissionCommands = 0;
+            float shortestReturnPathMissionDuration = 0;
+
+            for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
+                if (it->at(2) <= shortestReturnPathReturnEnergy) {
+                    shortestReturnPathReturnEnergy = it->at(2);
+                    shortestReturnPathMissionCommands = it->at(0);
+                    shortestReturnPathMissionDuration = it->at(3);
+                }
+            }
+
+            lastCEEofMission = cees.at((shortestReturnPathMissionCommands - 1) % cees.size());
+            result->timeOfReplacement = simTime() + shortestReturnPathMissionDuration;
+
+            EV_INFO << __func__ << "(): shortest return heuristic: " << shortestReturnPathMissionCommands << " commands feasible." << endl;
+        }
+        else if (replacementMethod == 2) {
+            // 2: utilization quotient heuristic
+
+            //find shortest
+            float shortestReturnPathReturnEnergy = FLT_MAX;
+            int shortestReturnPathMissionCommands = 0;
+            float shortestReturnPathMissionDuration = 0;
+
+            for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
+                if (it->at(2) <= shortestReturnPathReturnEnergy) {
+                    shortestReturnPathReturnEnergy = it->at(2);
+                    shortestReturnPathMissionCommands = it->at(0);
+                    shortestReturnPathMissionDuration = it->at(3);
+                }
+            }
+            ASSERT(shortestReturnPathMissionCommands != 0);
+
+            int bestQuotientCommands = 0;
+            float bestQuotient = 0.35; // Minimum accepted quotient as initial value
+            float bestQuotientDuration = 0;
+
+            // calculate quotients
+            for (u_int cmd = shortestReturnPathMissionCommands + 1; cmd < nextCEEsMatrix.size(); ++cmd) {
+                float additionalEnergy = nextCEEsMatrix[cmd].at(1) - shortestReturnPathReturnEnergy;
+                float quotient = nextCEEsMatrix[cmd].at(2) / (additionalEnergy + nextCEEsMatrix[cmd].at(2));
+                if (quotient < bestQuotient) {
+                    bestQuotient = quotient;
+                    bestQuotientCommands = nextCEEsMatrix[cmd].at(0);
+                    bestQuotientDuration = nextCEEsMatrix[cmd].at(3);
+                }
+            }
+
+            // if no good quotient was found, use shortest (shortest was also latest OR quotient was too bad)
+            if (bestQuotientCommands == 0) {
+                bestQuotientCommands = shortestReturnPathMissionCommands;
+                bestQuotientDuration = shortestReturnPathMissionDuration;
+                EV_INFO << __func__ << "(): utilization quotient heuristic: resorting to shortest return heuristic." << endl;
+            }
+
+            lastCEEofMission = cees.at((bestQuotientCommands - 1) % cees.size());
+            result->timeOfReplacement = simTime() + bestQuotientDuration;
+
+            EV_INFO << __func__ << "(): utilization quotient heuristic: " << bestQuotientCommands << " commands feasible." << endl;
         }
 
-    //EV_INFO << "Finished endOfOperation calculation." << endl;
-    ReplacementData *result = new ReplacementData();
-    result->nodeToReplace = this;
-    result->timeOfReplacement = simTime() + durationOfCommands;
-    result->x = fromX;
-    result->y = fromY;
-    result->z = fromZ;
-    return result;
+        result->x = lastCEEofMission->getX1();
+        result->y = lastCEEofMission->getY1();
+        result->z = lastCEEofMission->getZ1();
+        return result;
+    }
 }
 
 /*
@@ -622,7 +738,7 @@ ReplacementData* UAVNode::endOfOperation()
  */
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 {
-// Get consumption for flight to nearest charging node
+    // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
     if (nullptr == cn) throw omnetpp::cRuntimeError("No charging station available!");
     return estimateEnergy(*this, fromX, fromY, fromZ, cn->getX(), cn->getY(), cn->getZ());
@@ -638,9 +754,11 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
  */
 double UAVNode::getHoverConsumption(float duration, int fromMethod)
 {
+    if (duration == 0) return 0;
+
     double mean = HOVER_MEAN * duration / 3600;
     double var = getVarianceFromHFormula(-1, duration);
-    double stddev = sqrt(var) / 4;
+    double stddev = sqrt(var);
 
     double energy = 0;
 
@@ -648,7 +766,7 @@ double UAVNode::getHoverConsumption(float duration, int fromMethod)
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
         do {
             energy = omnetpp::normal(network->getRNG(0), mean, stddev);
-        } while (abs(energy - mean) > 3 * stddev);
+        } while (abs(energy - mean) > 3 * stddev || energy < mean / 3);
     }
     else if (fromMethod == 1) {
         energy = mean;
@@ -672,6 +790,8 @@ double UAVNode::getHoverConsumption(float duration, int fromMethod)
  */
 double UAVNode::getMovementConsumption(float angle, float duration, int fromMethod)
 {
+    if (duration < 0.001) return 0;
+
     double mean = 0;
     double stddev = 0;
     double energy = 0;
@@ -703,7 +823,7 @@ double UAVNode::getMovementConsumption(float angle, float duration, int fromMeth
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
         do {
             energy = omnetpp::normal(network->getRNG(0), mean, stddev);
-        } while (abs(energy - mean) > 3 * stddev);
+        } while (abs(energy - mean) > 3 * stddev || energy < mean / 3);
     }
     else if (fromMethod == 1) {
         energy = mean;
@@ -764,7 +884,7 @@ double UAVNode::getSpeed(double angle, int fromMethod)
 
 void UAVNode::move()
 {
-//unused.
+    //unused.
 }
 
 ClosestThings UAVNode::findClosest()

@@ -18,6 +18,9 @@ simple UAVNode extends MobileNode
         double startX @unit("m") = default(0m);          // the starting coordinates in meter
         double startY @unit("m") = default(0m);          // the starting coordinates in meter
         string trackFile;                                // a file with longitude latitude pairs
+        int replacementMethod = default(0);              // 0: latest opportunity heuristic
+                                                         // 1: shortest return heuristic
+                                                         // 2: utilization quotient heuristic
         bool choseClosestCNForExchange = default(false); // instead of draining all the battery, 
                                                          // nodes will only take commands until 
                                                          // they can be exchanged at the shortest 

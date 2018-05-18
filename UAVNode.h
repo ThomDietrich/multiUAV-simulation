@@ -56,6 +56,9 @@ public:
 
     //TODO part of hack111 to make the replacing node known to the Exchange command
     GenericNode* replacingNode = nullptr;
+    double replacementX = DBL_MAX, replacementY = DBL_MAX, replacementZ = DBL_MAX;
+    simtime_t replacementTime = 0;
+
 
 protected:
     virtual void initialize(int stage) override;
@@ -74,6 +77,8 @@ protected:
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
 
     ClosestThings findClosest();
+
+    bool exchangeAfterCurrentCommand = false;
 
     //not needed
     virtual void move();

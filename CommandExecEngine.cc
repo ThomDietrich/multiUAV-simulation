@@ -114,8 +114,8 @@ double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod)
     double dy = y1 - y0;
     double dz = z1 - z0;
     double duration = sqrt(dx * dx + dy * dy + dz * dz) / speed;
-    //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s" << endl;
     double completeConsumption = node->getMovementConsumption(climbAngle, duration, fromMethod);
+    //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s, fromMethod" << fromMethod << ", Consumption expected = " << completeConsumption << "mAh" << endl;
     if (normalized) {
         return completeConsumption / duration;
     }
@@ -161,6 +161,7 @@ void TakeoffCEE::initializeCEE()
 
 void TakeoffCEE::setNodeParameters()
 {
+    //node->yaw = yaw;
     node->pitch = pitch;
     node->climbAngle = climbAngle;
     node->speed = speed;
@@ -225,10 +226,6 @@ bool HoldPositionCEE::commandCompleted()
 
 void HoldPositionCEE::initializeCEE()
 {
-    //yaw = yaw;
-    pitch = 0;
-    climbAngle = 0;
-
     this->holdPositionTill = simTime() + command->getHoldSeconds();
 
     // draw probable value for consumption of this CEE
@@ -238,8 +235,9 @@ void HoldPositionCEE::initializeCEE()
 void HoldPositionCEE::setNodeParameters()
 {
     //node->yaw = yaw;
-    node->pitch = pitch;
-    node->climbAngle = climbAngle;
+    node->pitch = 0;
+    node->climbAngle = 0;
+    node->speed = 0;
     timeExecutionStart = simTime();
 }
 
@@ -297,14 +295,15 @@ bool ChargeCEE::commandCompleted()
 
 void ChargeCEE::initializeCEE()
 {
-    pitch = 0;
-    climbAngle = 0;
 }
 
 void ChargeCEE::setNodeParameters()
 {
-    node->pitch = pitch;
-    node->climbAngle = climbAngle;
+    // simple hack to orient each UAV randomly
+    node->yaw = (node->battery.getRemainingPercentage() / 10 * 360) % 360;
+    node->pitch = 0;
+    node->climbAngle = 0;
+    node->speed = 0;
 //    cMessage *request = new cMessage("startCharge");
 //    node->send(request, node->getOutputGateTo(command->getChargingNode()));
 	timeExecutionStart = simTime();
@@ -356,19 +355,17 @@ bool ExchangeCEE::commandCompleted()
 
 void ExchangeCEE::initializeCEE()
 {
-    //yaw = yaw;
-    pitch = 0;
-    climbAngle = 0;
-
     // draw probable value for consumption of this CEE
     consumptionPerSecond = predictNormConsumptionRandom();
 }
 
 void ExchangeCEE::setNodeParameters()
 {
-    //node->yaw = yaw;
-    node->pitch = pitch;
-    node->climbAngle = climbAngle;
+    // simple hack to orient each UAV randomly
+    node->yaw = (node->battery.getRemainingPercentage() / 10 * 360) % 360;
+    node->pitch = 0;
+    node->climbAngle = 0;
+    node->speed = 0;
     timeExecutionStart = simTime();
 }
 
@@ -478,7 +475,11 @@ void WaitCEE::initializeCEE()
 
 void WaitCEE::setNodeParameters()
 {
-
+    // simple hack to orient each UAV randomly
+    //node->yaw = (node->battery.getRemainingPercentage() / 10 * 360) % 360;
+    //node->pitch = 0;
+    //node->climbAngle = 0;
+    //node->speed = 0;
 }
 
 void WaitCEE::updateState(double stepSize)

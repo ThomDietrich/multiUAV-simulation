@@ -105,7 +105,7 @@ inline double getVarianceFromHFormula(int angleIdx, float duration)
         }
         variance = n * ANGLE2LAGS[angleIdx][0 + 1] + 2 * sum;
     }
-    variance = variance / (LAGS_SAMPLES_PER_SECOND * LAGS_SAMPLES_PER_SECOND);
+    variance = variance / pow(LAGS_SAMPLES_PER_SECOND, 3);
     return abs(variance);
 }
 

@@ -107,6 +107,10 @@ void MissionControl::handleMessage(cMessage *msg)
         // TODO: This is part of hack111...
         UAVNode *replacedNode = dynamic_cast<UAVNode *>(nodeShadow->getNode());
         replacedNode->replacingNode = replacingNode;
+        replacedNode->replacementX = replData->x;
+        replacedNode->replacementY = replData->y;
+        replacedNode->replacementZ = replData->z;
+        replacedNode->replacementTime = replData->timeOfReplacement;
 
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
