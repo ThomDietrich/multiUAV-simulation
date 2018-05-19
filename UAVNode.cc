@@ -269,7 +269,7 @@ void UAVNode::selectNextCommand()
         float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
         float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
         float energyRemaining = this->battery.getRemaining();
-        bool atReplacementLocation = replacementX == x && replacementY == y && replacementZ == z && abs((simTime() - replacementTime).dbl()) < 5;
+        bool atReplacementLocation = abs(replacementX - x) < 0.1 && abs(replacementY - y) < 0.1 && abs(replacementZ - z) < 0.1 && abs((replacementTime - simTime()).dbl()) < 5;
 
         if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
             EV_INFO << "Energy Management: Recharging now." << endl;
