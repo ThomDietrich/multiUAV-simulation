@@ -555,12 +555,13 @@ void ChargingNode::charge()
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
             continue;
         }
+        double durationSeconds = (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
-                objectsCharging[i]->getNode()->getBattery()->getCapacity(),
-                (currentTime - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl());
+                objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
         EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is currently getting charged. Currently Remaining: "
                 << objectsCharging[i]->getNode()->getBattery()->getRemaining() << " mAh. Amount: " << chargeAmount << " mAh" << endl;
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
+        objectsCharging[i]->getNode()->getCommandExecEngine()->setConsumptionPerSecond((-1) * chargeAmount / durationSeconds);
         battery.discharge(chargeAmount / this->chargeEffectivenessPercentage);
         usedPower += chargeAmount / this->chargeEffectivenessPercentage;
         chargedPower += chargeAmount;

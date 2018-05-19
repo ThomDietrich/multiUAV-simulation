@@ -27,8 +27,8 @@ simple ChargingNode extends GenericNode
         double chargeEffectivenessPercentage = default(100.0); // the effectiveness of the battery in the Charging Station (100% - effectiveness = how much energy is wasted during charging)
         bool prioritizeFastCharge = default(false);      // when true fast charged is prioritized over full charge
         double chargeCurrent @unit("A") = default(1.0A); // the charging current, assumed as constant 
-        int spotsWaiting = default(0);                   // the amount of spots a incoming node can wait on	
-        int spotsCharging = default(0);                  // the amount of spots a node is charged on
+        int spotsWaiting = default(0);                   // the amount of spots a incoming node can wait on (0 - unlimited)
+        int spotsCharging = default(0);                  // the amount of spots a node is charged on (0 - unlimited)
         // values for ChargingAlgorithm
 		double linearGradient = default(1.0);
 		double expGradient = default(0.001);

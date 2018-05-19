@@ -399,7 +399,7 @@ void UAVNode::updateState()
     //update sublabel with maneuver and battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s";
-    strs << " | " << commandExecEngine->getConsumptionPerSecond() << " A";
+    strs << " | " << (-1) * commandExecEngine->getConsumptionPerSecond() << " A";
     strs << " | " << battery.getRemainingPercentage() << " %";
     //strs << " | ";
     //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";

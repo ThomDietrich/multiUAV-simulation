@@ -47,6 +47,7 @@ protected:
     double yaw = 0, pitch = 0, climbAngle = 0, speed = 0;
 
     /// consumption for this CEE (drawn from stochastic distribution)
+    /// Negative for charging processes
     /// Normalized to mAh/s
     double consumptionPerSecond = 0;
 
@@ -241,6 +242,16 @@ public:
     double getConsumptionPerSecond()
     {
         return consumptionPerSecond;
+    }
+
+    /**
+     * Note: This method is only provided for the Charging Station and is not supposed to be used otherwise.
+     *
+     * @param a new value for normalized consumption, in [mAh/s]
+     */
+    void setConsumptionPerSecond(double newValue)
+    {
+        consumptionPerSecond = newValue;
     }
 
     /**
