@@ -3,15 +3,15 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 #ifndef CHARGEALGORITHMCCCV_H_
 #define CHARGEALGORITHMCCCV_H_
@@ -32,7 +32,7 @@ public:
         return a;
     }
 
-    void setA(double a = 0.0013)
+    void setA(double a)
     {
         this->a = a;
     }
@@ -41,18 +41,18 @@ public:
     {
         return linearGradient;
     }
-    
+
     void setLinearGradient(double linearGradient)
     {
         this->linearGradient = linearGradient;
     }
-    
+
     double getCurrent() const
     {
         return current;
     }
-    
-    void setCurrent(double current = 4)
+
+    void setCurrent(double current)
     {
         this->current = current;
     }
@@ -60,8 +60,8 @@ public:
 protected:
     double eulerConstant;
     double a = 0.0013;
-    double linearGradient = 0.2754;
-    double current = 4;
+    double linearGradient;
+    double current;
 
     double calculateLinearChargeAmount(double remaining, double capacity, double seconds);
     double calculateNonLinearChargeAmount(double capacity, double seconds);
