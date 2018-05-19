@@ -118,10 +118,11 @@ void UAVNode::handleMessage(cMessage *msg)
         }
         else {
             MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
-            clearCommands();
             missionId = receivedMissionMsg->getMissionId();
             commandsRepeat = receivedMissionMsg->getMissionRepeat();
             CommandQueue missionCommands = receivedMissionMsg->getMission();
+            EV_WARN << __func__ << "(): Mission exchange, clearing " << cees.size() << " cees, loading " << missionCommands.size() << endl;
+            clearCommands();
             loadCommands(missionCommands);
 
             // End ExchangeCEE, will trigger next command selection
@@ -269,7 +270,8 @@ void UAVNode::selectNextCommand()
         float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
         float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
         float energyRemaining = this->battery.getRemaining();
-        bool atReplacementLocation = abs(replacementX - x) < 0.1 && abs(replacementY - y) < 0.1 && abs(replacementZ - z) < 0.1 && abs((replacementTime - simTime()).dbl()) < 5;
+        bool atReplacementLocation = abs(replacementX - x) < 0.1 && abs(replacementY - y) < 0.1 && abs(replacementZ - z) < 0.1
+                && abs((replacementTime - simTime()).dbl()) < 5;
 
         if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
             EV_INFO << "Energy Management: Recharging now." << endl;
@@ -319,7 +321,7 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New command is " << commandExecEngine->getCeeTypeString() << ", remaining CEEs: " << cees.size() << endl;
+    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (ID " << commandExecEngine->getCommandId() << ")" << endl;
 }
 
 void UAVNode::collectStatistics()
@@ -613,9 +615,18 @@ ReplacementData* UAVNode::endOfOperation()
         std::vector<std::vector<float>> nextCEEsMatrix;
         nextCEEsMatrix.push_back(std::vector<float> { 0.0, 0.0, FLT_MAX, 0.0 });
 
+        double tempFromX = x;
+        double tempFromY = y;
+        double tempFromZ = z;
+
         // Preliminary max feasible and energy prediction
         while (not maxCommandsFeasibleReached) {
             CommandExecEngine *nextCEE = cees.at(nextCommands % cees.size());
+
+            nextCEE->setFromCoordinates(tempFromX, tempFromY, tempFromZ);
+            tempFromX = nextCEE->getX1();
+            tempFromY = nextCEE->getY1();
+            tempFromZ = nextCEE->getZ1();
 
             float energyForNextCEE = energyForCEE(nextCEE);
             float energyToCNAfterCEE = energyToNearestCN(nextCEE->getX1(), nextCEE->getY1(), nextCEE->getZ1());
@@ -630,6 +641,7 @@ ReplacementData* UAVNode::endOfOperation()
                 energySum += energyForNextCEE;
                 nextCommandsDuration += nextCEE->getOverallDuration();
                 nextCEEsMatrix.push_back(std::vector<float> { (float) nextCommands, energySum, energyToCNAfterCEE, nextCommandsDuration });
+                //EV_INFO << __func__ << "(): Added to list of predictions: matrix entry " << nextCEEsMatrix.size()-1 << ", command " << nextCEE->getCeeTypeString() << nextCommands << ", energy for this CEE " << energyForNextCEE << ", energyToCNAfter " << energyToCNAfterCEE << ", nextCommandsDuration " << nextCommandsDuration << endl;
             }
             else {
                 // next command not feasible
@@ -722,6 +734,8 @@ ReplacementData* UAVNode::endOfOperation()
 
             EV_INFO << __func__ << "(): utilization quotient heuristic: " << bestQuotientCommands << " commands feasible." << endl;
         }
+        else
+            throw omnetpp::cRuntimeError("Invalid replacementMethod selected.");
 
         result->x = lastCEEofMission->getX1();
         result->y = lastCEEofMission->getY1();
@@ -953,8 +967,8 @@ float energyForCEE(CommandExecEngine* cee)
     }
 
     // Get consumption for next command
-    cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
-    cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
+    //cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
+    //cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
     cee->initializeCEE();
     return cee->predictFullConsumptionQuantile();
 }

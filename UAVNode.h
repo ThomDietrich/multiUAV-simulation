@@ -59,7 +59,6 @@ public:
     double replacementX = DBL_MAX, replacementY = DBL_MAX, replacementZ = DBL_MAX;
     simtime_t replacementTime = 0;
 
-
 protected:
     virtual void initialize(int stage) override;
     virtual void handleMessage(cMessage *msg) override;

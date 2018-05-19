@@ -50,6 +50,9 @@ void WaypointCEE::initializeCEE()
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
+    if (abs(dx) < 1.e-10) dx = 0;
+    if (abs(dy) < 1.e-10) dy = 0;
+    if (abs(dz) < 1.e-10) dz = 0;
 
     //update and store yaw, climbAngle and pitch angles
     yaw = atan2(dy, dx) / M_PI * 180;
@@ -96,6 +99,7 @@ double WaypointCEE::getOverallDuration()
     double dy = y1 - y0;
     double dz = z1 - z0;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    if (distance < 1.e-10) distance = 0;
     return distance / speed;
 }
 
@@ -105,6 +109,7 @@ double WaypointCEE::getRemainingTime()
     double dy = y1 - node->y;
     double dz = z1 - node->z;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    if (distance < 1.e-10) distance = 0;
     return distance / speed;
 }
 
@@ -113,11 +118,12 @@ double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod)
     double dx = x1 - x0;
     double dy = y1 - y0;
     double dz = z1 - z0;
-    double duration = sqrt(dx * dx + dy * dy + dz * dz) / speed;
-    double completeConsumption = node->getMovementConsumption(climbAngle, duration, fromMethod);
+    double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    if (distance < 1.e-10) distance = 0;
+    double completeConsumption = node->getMovementConsumption(climbAngle, distance / speed, fromMethod);
     //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s, fromMethod" << fromMethod << ", Consumption expected = " << completeConsumption << "mAh" << endl;
     if (normalized) {
-        return completeConsumption / duration;
+        return completeConsumption / (distance / speed);
     }
     else {
         return completeConsumption;
@@ -306,7 +312,7 @@ void ChargeCEE::setNodeParameters()
     node->speed = 0;
 //    cMessage *request = new cMessage("startCharge");
 //    node->send(request, node->getOutputGateTo(command->getChargingNode()));
-	timeExecutionStart = simTime();
+    timeExecutionStart = simTime();
 }
 
 void ChargeCEE::updateState(double stepSize)
@@ -449,7 +455,6 @@ GenericNode* ExchangeCEE::getOtherNode()
 {
     return command->getOtherNode();
 }
-
 
 /**
  *  Todo: Review weather the WaitCEE should be simplyfied

@@ -204,7 +204,6 @@ void GenericNode::handleMessage(cMessage *msg)
         // Prepare next command to execute
         EV_INFO << "Command completed. Collecting statistics." << endl;
         collectStatistics();
-        EV_INFO << "Selecting next command." << endl;
         selectNextCommand();
         initializeState();
         msg->setName("update");
