@@ -28,37 +28,6 @@ Define_Module(UAVNode);
 
 #define ERROR_MARGIN 0.0625
 
-/**
- * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
- * are equal, otherwise returns <code>false</code>.
- */
-bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z);
-
-/**
- * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
- * are equal, otherwise returns <code>false</code>.
- */
-bool cmpCoord(const Command& cmd1, const Command& cmd2);
-
-/**
- * Estimates/Predicts the energy consumption for the given CEE.
- */
-float energyForCEE(CommandExecEngine* cee);
-
-/**
- * Estimates/Predicts the energy consumption for a waypoint command
- * from the given coordinate (i.e. fromX, fromY, fromZ)
- * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
- */
-float estimateEnergy(UAVNode& fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
-
-/**
- * Estimates/Predicts the time needed for a waypoint command
- * from the given coordinate (i.e. fromX, fromY, fromZ)
- * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
- */
-double estimateDuration(UAVNode* fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
-
 UAVNode::UAVNode()
 {
 }
@@ -191,7 +160,7 @@ void UAVNode::selectNextCommand()
             u_int nextCommandsFeasible = 0;
 
             // energy from closest command to closest charging station
-            float energyCMDtoCN = estimateEnergy(*this,                            // estimate energy flying
+            float energyCMDtoCN = estimateEnergy(                                  // estimate energy flying
                     closest.cmd->getX(), closest.cmd->getY(), closest.cmd->getZ(), // from closest command
                     closest.cn->getX(), closest.cn->getY(), closest.cn->getZ());   // to charging station
 
@@ -553,7 +522,7 @@ ReplacementData* UAVNode::endOfOperation()
          */
 
         // energy from closest command to closest charging station
-        float energyCMDtoCN = estimateEnergy(*this,                            // estimate energy flying
+        float energyCMDtoCN = estimateEnergy(                                  // estimate energy flying
                 closest.cmd->getX(), closest.cmd->getY(), closest.cmd->getZ(), // from closest command
                 closest.cn->getX(), closest.cn->getY(), closest.cn->getZ());   // to charging station
         energyCMDtoCN *= 1.2;
@@ -650,7 +619,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 // Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
     if (nullptr == cn) throw omnetpp::cRuntimeError("No charging station available!");
-    return estimateEnergy(*this, fromX, fromY, fromZ, cn->getX(), cn->getY(), cn->getZ());
+    return estimateEnergy(fromX, fromY, fromZ, cn->getX(), cn->getY(), cn->getZ());
 }
 
 /**
@@ -798,7 +767,7 @@ ClosestThings UAVNode::findClosest()
  * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
  * are equal, otherwise returns <code>false</code>.
  */
-bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z)
+bool UAVNode::cmpCoord(const Command& cmd, const double X, const double Y, const double Z)
 {
     return abs(cmd.getX() - X) < ERROR_MARGIN && abs(cmd.getY() - Y) < ERROR_MARGIN && abs(cmd.getZ() - Z) < ERROR_MARGIN;
 }
@@ -807,7 +776,7 @@ bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z
  * Compares the coordinates (i.e. x, y, z) and return <code>true</code> if and only if all of them
  * are equal, otherwise returns <code>false</code>.
  */
-bool cmpCoord(const Command& cmd1, const Command& cmd2)
+bool UAVNode::cmpCoord(const Command& cmd1, const Command& cmd2)
 {
     return abs(cmd1.getX() - cmd2.getX()) < ERROR_MARGIN && abs(cmd1.getY() - cmd2.getY()) < ERROR_MARGIN && abs(cmd1.getZ() - cmd2.getZ()) < ERROR_MARGIN;
 }
@@ -815,7 +784,7 @@ bool cmpCoord(const Command& cmd1, const Command& cmd2)
 /**
  * Estimates/Predicts the energy consumption for the given CEE.
  */
-float energyForCEE(CommandExecEngine* cee)
+float UAVNode::energyForCEE(CommandExecEngine* cee)
 {
     if (cee->isCeeType(CeeType::WAIT)) {
         return FLT_MAX;
@@ -842,20 +811,25 @@ float energyForCEE(CommandExecEngine* cee)
  * from the given coordinate (i.e. fromX, fromY, fromZ)
  * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
  */
-float estimateEnergy(UAVNode& fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
+float UAVNode::estimateEnergy(double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
 {
     WaypointCommand estimateCommand(toX, toY, toZ);
-    WaypointCEE estimateCEE(&fakeNode, &estimateCommand);
+    WaypointCEE estimateCEE(this, &estimateCommand);
     estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
     estimateCEE.setPartOfMission(false);
     estimateCEE.initializeCEE();
     return estimateCEE.predictFullConsumption(0.75);
 }
 
-double estimateDuration(UAVNode* fakeNode, double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
+/**
+ * Estimates/Predicts the time needed for a waypoint command
+ * from the given coordinate (i.e. fromX, fromY, fromZ)
+ * to the given coordinate (i.e. toX, toY, toZ). The fakeNode is required but not altered nor read.
+ */
+double UAVNode::estimateDuration(double fromX, double fromY, double fromZ, double toX, double toY, double toZ)
 {
     WaypointCommand estimateCommand(toX, toY, toZ);
-    WaypointCEE estimateCEE(fakeNode, &estimateCommand);
+    WaypointCEE estimateCEE(this, &estimateCommand);
     estimateCEE.setFromCoordinates(fromX, fromY, fromZ);
     estimateCEE.setPartOfMission(false);
     estimateCEE.initializeCEE();
