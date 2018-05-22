@@ -83,6 +83,14 @@ protected:
     virtual void move();
 
     void transferMissionDataTo(UAVNode* node);
+
+private:
+    bool cmpCoord(const Command& cmd, const double X, const double Y, const double Z);
+    bool cmpCoord(const Command& cmd1, const Command& cmd2);
+    float energyForCEE(CommandExecEngine* cee);
+    float estimateEnergy(double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
+    double estimateDuration(double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
+
 };
 
 #endif
