@@ -41,7 +41,8 @@ double ChargeAlgorithmCCCV::calculateChargeAmount(double remaining, double capac
 
 double ChargeAlgorithmCCCV::getFastChargePercentage(double maxCapacity)
 {
-    return (-0.0291 * current + 1) * 100;
+    //return (-0.0291 * current + 1) * 100;
+    return 81;
 }
 
 /**
