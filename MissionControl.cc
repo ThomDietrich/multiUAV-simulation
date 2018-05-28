@@ -51,7 +51,7 @@ void MissionControl::handleMessage(cMessage *msg)
             int missionId = it - missionQueue.begin();
 
             //Select free idle node
-            NodeShadow *nodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
+            NodeShadow *nodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, mission.front()->getX(), mission.front()->getY(), mission.front()->getZ());
 
             // Generate and send out start mission message
             MissionMsg *nodeStartMission = new MissionMsg("startMission");

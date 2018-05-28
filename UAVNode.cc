@@ -49,7 +49,7 @@ void UAVNode::initialize(int stage)
             // initial position
             x = par("startX");
             y = par("startY");
-            z = 2;
+            z = par("startZ");
             break;
         }
         case 1: {

@@ -155,7 +155,6 @@ public:
     }
 };
 
-
 /**
  * A comprising map of all NodeShadow objects needed by the MissionControl for node management.
  */
@@ -173,6 +172,7 @@ public:
     NodeShadow* get(int index);
     NodeShadow* get(GenericNode* node);
     NodeShadow* getFirst(NodeStatus currentStatus);
+    NodeShadow* getClosest(NodeStatus currentStatus, float x, float y, float z);
     NodeShadow* getHighestCharged();
     NodeShadow* getNodeRequestingReplacement(cMessage *msg); //TODO: Replace!
     int size() const

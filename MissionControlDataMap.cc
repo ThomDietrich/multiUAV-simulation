@@ -104,6 +104,26 @@ NodeShadow* ManagedNodeShadows::get(GenericNode* node)
 }
 
 /**
+ * Choose a free node from the managedNodes map that is closest to the given coordinates.
+ * Selection happens by comparing all available notes with the given status and their distance to the given coordinates.
+ */
+NodeShadow* ManagedNodeShadows::getClosest(NodeStatus currentStatus, float x, float y, float z)
+{
+    NodeShadow* candidate = nullptr;
+    double candidateDistance = DBL_MAX;
+    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        double distance = sqrt(pow(it->second->getNode()->getX() - x, 2) + pow(it->second->getNode()->getY() - y, 2) + pow(it->second->getNode()->getZ() - z, 2));
+        if (it->second->isStatus(currentStatus) && distance < candidateDistance) {
+            candidate = it->second;
+            candidateDistance = distance;
+        }
+    }
+//    throw cRuntimeError("getNode(): No available Nodes found. This case is not handled yet.");
+    return candidate;
+
+}
+
+/**
  * Choose a free node from the managedNodes map.
  * Selection happens by lowest module index and amongst the nodes of a certain status.
  */
@@ -132,7 +152,8 @@ NodeShadow* ManagedNodeShadows::getHighestCharged()
         }
         if (highestChargedNode == nullptr) {
             highestChargedNode = it->second;
-        } else if (highestChargedNode->getKnownBattery()->getRemainingPercentage() <= tempKnownBattery->getRemainingPercentage()) {
+        }
+        else if (highestChargedNode->getKnownBattery()->getRemainingPercentage() <= tempKnownBattery->getRemainingPercentage()) {
             highestChargedNode = it->second;
         }
     }

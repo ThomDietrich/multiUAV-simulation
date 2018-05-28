@@ -9,4 +9,7 @@
     	    <url>http://[abc].tile.openstreetmap.org/{z}/{x}/{y}.png</url>
         	<profile>spherical-mercator</profile>
     </image>
+    <elevation name="readymap_elevation" driver="tms" >
+        <url>http://readymap.org/readymap/tiles/1.0.0/9/</url>
+    </elevation>
 </map>

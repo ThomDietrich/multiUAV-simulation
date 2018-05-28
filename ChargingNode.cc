@@ -35,7 +35,7 @@ void ChargingNode::initialize(int stage)
             this->spotsCharging = par("spotsCharging");
             this->x = par("posX");
             this->y = par("posY");
-            this->z = 2;
+            this->z = par("posZ");
             this->pitch = 0;
             this->yaw = 0;
             break;
