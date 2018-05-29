@@ -114,7 +114,7 @@ void MobileNode::handleMessage(cMessage *msg)
         delete msg;
         msg = nullptr;
     }
-    else if (msg->isName("nextCommand")) {
+    else if (msg->isName("nextCommand") || msg->isName("startProvision") || msg->isName("startMission")) {
         GenericNode::handleMessage(msg);
         msg = nullptr;
 
@@ -133,6 +133,9 @@ void MobileNode::handleMessage(cMessage *msg)
 
             Command* extractedCommand = commandExecEngine->extractCommand();
             if (0 == strcmp("charge", extractedCommand->getMessageName())) {
+                // do nothing
+            }
+            else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
                 // do nothing
             }
             else if (0 == strcmp("holdPosition", extractedCommand->getMessageName())) {
@@ -208,6 +211,9 @@ void MobileNode::handleMessage(cMessage *msg)
                                 ));
                         mapNode->getModelLayerGroup()->addChild(node);
                         holdCommandNodes.push_back(node);
+                    }
+                    else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
+                        // do nothing
                     }
                     /* TODO: check implementation later on
                      else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
