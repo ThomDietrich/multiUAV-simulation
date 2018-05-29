@@ -212,6 +212,9 @@ void MobileNode::handleMessage(cMessage *msg)
                         mapNode->getModelLayerGroup()->addChild(node);
                         holdCommandNodes.push_back(node);
                     }
+                    else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
+                        // do nothing
+                    }
                     /* TODO: check implementation later on
                      else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {
 
