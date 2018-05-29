@@ -639,81 +639,82 @@ ReplacementData* UAVNode::endOfOperation()
         result->nodeToReplace = this;
         CommandExecEngine *lastCEEofMission;
 
-        if (replacementMethod == HEURISTIC_LATEST_OPPOTUNITY) {
-            // 0: latest opportunity heuristic
-            int maxCommandsFeasible = (int) nextCEEsMatrix.back().at(IDX_FUTURE_CMDS);
-            lastCEEofMission = cees.at((maxCommandsFeasible - 1) % cees.size());
+        switch (replacementMethod) {
+            case HEURISTIC_LATEST_OPPOTUNITY: {
+                int maxCommandsFeasible = (int) nextCEEsMatrix.back().at(IDX_FUTURE_CMDS);
+                lastCEEofMission = cees.at((maxCommandsFeasible - 1) % cees.size());
 
-            float duration = nextCEEsMatrix.back().at(IDX_CMD_DURATION);
-            result->timeOfReplacement = simTime() + duration;
+                float duration = nextCEEsMatrix.back().at(IDX_CMD_DURATION);
+                result->timeOfReplacement = simTime() + duration;
 
-            EV_INFO << __func__ << "(): latest opportunity heuristic: " << nextCommands << " commands feasible." << endl;
-        }
-        else if (replacementMethod == HEURISTIC_SHORTEST_RETURN) {
-            // 1: shortest return heuristic
-            float shortestReturnPathReturnEnergy = FLT_MAX;
-            int shortestReturnPathMissionCommands = 0;
-            float shortestReturnPathMissionDuration = 0;
+                EV_INFO << __func__ << "(): latest opportunity heuristic: " << nextCommands << " commands feasible." << endl;
+            }
+                break;
+            case HEURISTIC_SHORTEST_RETURN: {
+                float shortestReturnPathReturnEnergy = FLT_MAX;
+                int shortestReturnPathMissionCommands = 0;
+                float shortestReturnPathMissionDuration = 0;
 
-            for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
-                if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
-                    shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
-                    shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
-                    shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
+                for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
+                    if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
+                        shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
+                        shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
+                        shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
+                    }
                 }
+
+                lastCEEofMission = cees.at((shortestReturnPathMissionCommands - 1) % cees.size());
+                result->timeOfReplacement = simTime() + shortestReturnPathMissionDuration;
+
+                EV_INFO << __func__ << "(): shortest return heuristic: " << shortestReturnPathMissionCommands << " commands feasible." << endl;
             }
+                break;
+            case HEURISTIC_UTILIZATION_QUOTIENT: {
+                //find shortest
+                float shortestReturnPathReturnEnergy = FLT_MAX;
+                int shortestReturnPathMissionCommands = 0;
+                float shortestReturnPathMissionDuration = 0;
 
-            lastCEEofMission = cees.at((shortestReturnPathMissionCommands - 1) % cees.size());
-            result->timeOfReplacement = simTime() + shortestReturnPathMissionDuration;
-
-            EV_INFO << __func__ << "(): shortest return heuristic: " << shortestReturnPathMissionCommands << " commands feasible." << endl;
-        }
-        else if (replacementMethod == HEURISTIC_UTILIZATION_QUOTIENT) {
-            // 2: utilization quotient heuristic
-
-            //find shortest
-            float shortestReturnPathReturnEnergy = FLT_MAX;
-            int shortestReturnPathMissionCommands = 0;
-            float shortestReturnPathMissionDuration = 0;
-
-            for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
-                if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
-                    shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
-                    shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
-                    shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
+                for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
+                    if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
+                        shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
+                        shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
+                        shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
+                    }
                 }
-            }
-            ASSERT(shortestReturnPathMissionCommands != 0);
+                ASSERT(shortestReturnPathMissionCommands != 0);
 
-            int bestQuotientCommands = 0;
-            float bestQuotient = 0.35; // Minimum accepted quotient as initial value
-            float bestQuotientDuration = 0;
+                int bestQuotientCommands = 0;
+                float bestQuotient = 0.35; // Minimum accepted quotient as initial value
+                float bestQuotientDuration = 0;
 
-            // calculate quotients
-            for (u_int cmd = shortestReturnPathMissionCommands + 1; cmd < nextCEEsMatrix.size(); ++cmd) {
-                float additionalEnergy = nextCEEsMatrix[cmd].at(IDX_CMD_ENERGY) - shortestReturnPathReturnEnergy;
-                float quotient = nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY) / (additionalEnergy + nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY));
-                if (quotient < bestQuotient) {
-                    bestQuotient = quotient;
-                    bestQuotientCommands = nextCEEsMatrix[cmd].at(IDX_FUTURE_CMDS);
-                    bestQuotientDuration = nextCEEsMatrix[cmd].at(IDX_CMD_DURATION);
+                // calculate quotients
+                for (u_int cmd = shortestReturnPathMissionCommands + 1; cmd < nextCEEsMatrix.size(); ++cmd) {
+                    float additionalEnergy = nextCEEsMatrix[cmd].at(IDX_CMD_ENERGY) - shortestReturnPathReturnEnergy;
+                    float quotient = nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY) / (additionalEnergy + nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY));
+                    if (quotient < bestQuotient) {
+                        bestQuotient = quotient;
+                        bestQuotientCommands = nextCEEsMatrix[cmd].at(IDX_FUTURE_CMDS);
+                        bestQuotientDuration = nextCEEsMatrix[cmd].at(IDX_CMD_DURATION);
+                    }
                 }
+
+                // if no good quotient was found, use shortest (shortest was also latest OR quotient was too bad)
+                if (bestQuotientCommands == 0) {
+                    bestQuotientCommands = shortestReturnPathMissionCommands;
+                    bestQuotientDuration = shortestReturnPathMissionDuration;
+                    EV_INFO << __func__ << "(): utilization quotient heuristic: resorting to shortest return heuristic." << endl;
+                }
+
+                lastCEEofMission = cees.at((bestQuotientCommands - 1) % cees.size());
+                result->timeOfReplacement = simTime() + bestQuotientDuration;
+
+                EV_INFO << __func__ << "(): utilization quotient heuristic: " << bestQuotientCommands << " commands feasible." << endl;
             }
-
-            // if no good quotient was found, use shortest (shortest was also latest OR quotient was too bad)
-            if (bestQuotientCommands == 0) {
-                bestQuotientCommands = shortestReturnPathMissionCommands;
-                bestQuotientDuration = shortestReturnPathMissionDuration;
-                EV_INFO << __func__ << "(): utilization quotient heuristic: resorting to shortest return heuristic." << endl;
-            }
-
-            lastCEEofMission = cees.at((bestQuotientCommands - 1) % cees.size());
-            result->timeOfReplacement = simTime() + bestQuotientDuration;
-
-            EV_INFO << __func__ << "(): utilization quotient heuristic: " << bestQuotientCommands << " commands feasible." << endl;
+                break;
+            default:
+                throw omnetpp::cRuntimeError("Invalid replacementMethod selected.");
         }
-        else
-            throw omnetpp::cRuntimeError("Invalid replacementMethod selected.");
 
         result->x = lastCEEofMission->getX1();
         result->y = lastCEEofMission->getY1();
@@ -730,7 +731,7 @@ ReplacementData* UAVNode::endOfOperation()
  */
 float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
 {
-    // Get consumption for flight to nearest charging node
+// Get consumption for flight to nearest charging node
     ChargingNode *cn = findNearestCN(fromX, fromY, fromZ);
     if (nullptr == cn) throw omnetpp::cRuntimeError("No charging station available!");
     return estimateEnergy(fromX, fromY, fromZ, cn->getX(), cn->getY(), cn->getZ());
@@ -876,7 +877,7 @@ double UAVNode::getSpeed(double angle, int fromMethod)
 
 void UAVNode::move()
 {
-    //unused.
+//unused.
 }
 
 ClosestThings UAVNode::findClosest()
@@ -939,14 +940,14 @@ float UAVNode::energyForCEE(CommandExecEngine* cee)
         EV_WARN << __func__ << "(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
         return FLT_MAX;
     }
-    //TODO remove the following if the above works
+//TODO remove the following if the above works
     if (cee->isCeeType(CeeType::CHARGE) || cee->isCeeType(CeeType::EXCHANGE)) {
         throw cRuntimeError("endOfOperation(): charge or exchange command encountered");
     }
 
-    // Get consumption for next command
-    //cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
-    //cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
+// Get consumption for next command
+//cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
+//cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
     cee->initializeCEE();
     return cee->predictFullConsumptionQuantile();
 }
