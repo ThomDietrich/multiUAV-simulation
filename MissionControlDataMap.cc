@@ -112,7 +112,8 @@ NodeShadow* ManagedNodeShadows::getClosest(NodeStatus currentStatus, float x, fl
     NodeShadow* candidate = nullptr;
     double candidateDistance = DBL_MAX;
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
-        double distance = sqrt(pow(it->second->getNode()->getX() - x, 2) + pow(it->second->getNode()->getY() - y, 2) + pow(it->second->getNode()->getZ() - z, 2));
+        double distance = sqrt(
+                pow(it->second->getNode()->getX() - x, 2) + pow(it->second->getNode()->getY() - y, 2) + pow(it->second->getNode()->getZ() - z, 2));
         if (it->second->isStatus(currentStatus) && distance < candidateDistance) {
             candidate = it->second;
             candidateDistance = distance;
@@ -140,12 +141,25 @@ NodeShadow* ManagedNodeShadows::getFirst(NodeStatus currentStatus)
 }
 
 /**
- *
+ * Get the node with the highest charge that is available for missions.
  */
 NodeShadow* ManagedNodeShadows::getHighestCharged()
 {
     NodeShadow* highestChargedNode = nullptr;
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        switch (it->second->getStatus()) {
+            case NodeStatus::PROVISIONING:
+            case NodeStatus::MAINTENANCE:
+            case NodeStatus::RESERVED:
+            case NodeStatus::MISSION:
+            case NodeStatus::DEAD:
+                continue;
+            case NodeStatus::CHARGING:
+            case NodeStatus::IDLE:
+                break;
+            default:
+                throw cRuntimeError("Unknown NodeStatus.");
+        }
         Battery* tempKnownBattery = it->second->getKnownBattery();
         if (tempKnownBattery == nullptr) {
             continue;
