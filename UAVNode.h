@@ -25,11 +25,6 @@
 
 using namespace omnetpp;
 
-typedef struct {
-    ChargingNode* cn;
-    Command* cmd;
-} ClosestThings;
-
 const float quantile = 0.95;
 
 /**
@@ -74,8 +69,6 @@ protected:
     virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;
     virtual float energyToNearestCN(double fromX, double fromY, double fromZ) override;
-
-    ClosestThings findClosest();
 
     bool exchangeAfterCurrentCommand = false;
 
