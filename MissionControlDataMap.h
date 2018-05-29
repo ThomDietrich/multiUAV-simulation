@@ -111,8 +111,8 @@ public:
 
     bool compareReplacementMsg(cMessage* replMsg) const
     {
-        if (not hasReplacementMsg()) throw cRuntimeError("No replacementMsg available, this method should not be called here");
-        return this->replacementMsg == replMsg;
+        //if (not hasReplacementMsg()) throw cRuntimeError("No replacementMsg available, this method should not be called here");
+        return hasReplacementMsg() && this->replacementMsg == replMsg;
     }
 
     bool hasReplacingNode() const
