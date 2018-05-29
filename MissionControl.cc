@@ -98,7 +98,11 @@ void MissionControl::handleMessage(cMessage *msg)
         // Send provision mission to replacing node
         CommandQueue provMission;
         provMission.push_back(new WaypointCommand(replData->x, replData->y, replData->z));
-        provMission.push_back(new ExchangeCommand(nodeShadow->getNode(), false, false));
+        ExchangeCommand* exchangeCommand = new ExchangeCommand(nodeShadow->getNode(), false, false);
+        exchangeCommand->setX(replData->x);
+        exchangeCommand->setY(replData->y);
+        exchangeCommand->setZ(replData->z);
+        provMission.push_back(exchangeCommand);
         MissionMsg *nodeStartMission = new MissionMsg("startProvision");
         nodeStartMission->setMission(provMission);
         send(nodeStartMission, "gate$o", replacingNode->getIndex());

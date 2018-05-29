@@ -182,7 +182,12 @@ void UAVNode::selectNextCommand()
         // Generate and inject ExchangeCEE, only if not already done
         if (scheduledCEE->isPartOfMission()) {
             ExchangeCommand *exchangeCommand = new ExchangeCommand(replacingNode, true, true);
+            exchangeCommand->setX(replacementX);
+            exchangeCommand->setY(replacementY);
+            exchangeCommand->setZ(replacementZ);
             CommandExecEngine *exchangeCEE = new ExchangeCEE(this, exchangeCommand);
+            exchangeCEE->setFromCoordinates(replacementX, replacementY, replacementZ);
+            exchangeCEE->setToCoordinates(replacementX, replacementY, replacementZ);
             exchangeCEE->setPartOfMission(false);
             cees.push_front(exchangeCEE);
             EV_INFO << __func__ << "(): ExchangeCEE added to node." << endl;
