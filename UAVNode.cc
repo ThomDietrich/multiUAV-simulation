@@ -465,6 +465,15 @@ double UAVNode::estimateCommandsDuration()
     return duration;
 }
 
+#define IDX_FUTURE_CMDS 0
+#define IDX_CMD_ENERGY 1
+#define IDX_RETURN_ENERGY 2
+#define IDX_CMD_DURATION 3
+
+#define HEURISTIC_LATEST_OPPOTUNITY 0
+#define HEURISTIC_SHORTEST_RETURN 1
+#define HEURISTIC_UTILIZATION_QUOTIENT 2
+
 /**
  * Iterates over all future CEEs and predicts their consumptions.
  * The consumption plus the needed energy to go back to a charging station are then compared against the remaining battery capacity.
@@ -630,27 +639,27 @@ ReplacementData* UAVNode::endOfOperation()
         result->nodeToReplace = this;
         CommandExecEngine *lastCEEofMission;
 
-        if (replacementMethod == 0) {
+        if (replacementMethod == HEURISTIC_LATEST_OPPOTUNITY) {
             // 0: latest opportunity heuristic
-            int maxCommandsFeasible = (int) nextCEEsMatrix.back().at(0);
+            int maxCommandsFeasible = (int) nextCEEsMatrix.back().at(IDX_FUTURE_CMDS);
             lastCEEofMission = cees.at((maxCommandsFeasible - 1) % cees.size());
 
-            float duration = nextCEEsMatrix.back().at(3);
+            float duration = nextCEEsMatrix.back().at(IDX_CMD_DURATION);
             result->timeOfReplacement = simTime() + duration;
 
             EV_INFO << __func__ << "(): latest opportunity heuristic: " << nextCommands << " commands feasible." << endl;
         }
-        else if (replacementMethod == 1) {
+        else if (replacementMethod == HEURISTIC_SHORTEST_RETURN) {
             // 1: shortest return heuristic
             float shortestReturnPathReturnEnergy = FLT_MAX;
             int shortestReturnPathMissionCommands = 0;
             float shortestReturnPathMissionDuration = 0;
 
             for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
-                if (it->at(2) <= shortestReturnPathReturnEnergy) {
-                    shortestReturnPathReturnEnergy = it->at(2);
-                    shortestReturnPathMissionCommands = it->at(0);
-                    shortestReturnPathMissionDuration = it->at(3);
+                if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
+                    shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
+                    shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
+                    shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
                 }
             }
 
@@ -659,7 +668,7 @@ ReplacementData* UAVNode::endOfOperation()
 
             EV_INFO << __func__ << "(): shortest return heuristic: " << shortestReturnPathMissionCommands << " commands feasible." << endl;
         }
-        else if (replacementMethod == 2) {
+        else if (replacementMethod == HEURISTIC_UTILIZATION_QUOTIENT) {
             // 2: utilization quotient heuristic
 
             //find shortest
@@ -668,10 +677,10 @@ ReplacementData* UAVNode::endOfOperation()
             float shortestReturnPathMissionDuration = 0;
 
             for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
-                if (it->at(2) <= shortestReturnPathReturnEnergy) {
-                    shortestReturnPathReturnEnergy = it->at(2);
-                    shortestReturnPathMissionCommands = it->at(0);
-                    shortestReturnPathMissionDuration = it->at(3);
+                if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
+                    shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
+                    shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
+                    shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
                 }
             }
             ASSERT(shortestReturnPathMissionCommands != 0);
@@ -682,12 +691,12 @@ ReplacementData* UAVNode::endOfOperation()
 
             // calculate quotients
             for (u_int cmd = shortestReturnPathMissionCommands + 1; cmd < nextCEEsMatrix.size(); ++cmd) {
-                float additionalEnergy = nextCEEsMatrix[cmd].at(1) - shortestReturnPathReturnEnergy;
-                float quotient = nextCEEsMatrix[cmd].at(2) / (additionalEnergy + nextCEEsMatrix[cmd].at(2));
+                float additionalEnergy = nextCEEsMatrix[cmd].at(IDX_CMD_ENERGY) - shortestReturnPathReturnEnergy;
+                float quotient = nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY) / (additionalEnergy + nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY));
                 if (quotient < bestQuotient) {
                     bestQuotient = quotient;
-                    bestQuotientCommands = nextCEEsMatrix[cmd].at(0);
-                    bestQuotientDuration = nextCEEsMatrix[cmd].at(3);
+                    bestQuotientCommands = nextCEEsMatrix[cmd].at(IDX_FUTURE_CMDS);
+                    bestQuotientDuration = nextCEEsMatrix[cmd].at(IDX_CMD_DURATION);
                 }
             }
 
