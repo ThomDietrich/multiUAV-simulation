@@ -182,7 +182,7 @@ void GenericNode::handleMessage(cMessage *msg)
 
         // Check if further commands are available
         if (not hasCommandsInQueue()) {
-            EV_ERROR << "Command completed. Queue empty. This should not happen!" << endl;
+            EV_ERROR << commandExecEngine->extractCommand()->getMessageName() << " command completed. Queue empty. This should not happen!" << endl;
             delete msg;
             msg = nullptr;
             //TODO: The node has to do something. Insert Hovering Command?
@@ -202,7 +202,7 @@ void GenericNode::handleMessage(cMessage *msg)
         send(ccmsg, "gate$o", 0);
 
         // Prepare next command to execute
-        EV_INFO << "Command completed. Collecting statistics." << endl;
+        EV_INFO << commandExecEngine->extractCommand()->getMessageName() << " command completed. Collecting statistics." << endl;
         collectStatistics();
         selectNextCommand();
         initializeState();

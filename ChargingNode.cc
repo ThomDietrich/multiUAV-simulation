@@ -102,7 +102,8 @@ void ChargingNode::handleMessage(cMessage* msg)
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         appendToObjectsWaiting(mn, rsmsg->getTargetPercentage(), simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
         reservations++;
-        EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
+        EV_INFO << "Mobile Node " << mn->getFullName() << " is on the way to " << this->getFullName() << ". Spot reserved for: " << rsmsg->getEstimatedArrival()
+                << endl;
 
         if (not active) {
             msg->setName("update");
@@ -456,7 +457,7 @@ void ChargingNode::fillChargingSpots()
 
     // loop through empty charging spots and fill them with waiting objects
     while (spotsCharging > objectsCharging.size() && availableNodes > 0) {
-        EV_INFO << "MobileNode ID(" << (*nextWaitingObject)->getNode()->getId() << ") is added to charging spot." << endl;
+        EV_INFO << "MobileNode " << (*nextWaitingObject)->getNode()->getFullName() << " is added to charging spot." << endl;
         (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
         // set the point in time when the next event needs to be executed
         double secondsToNextEvent = calculateSecondsToNextEvent((*nextWaitingObject)->getNode(), prioritizeFastCharge);
@@ -477,14 +478,14 @@ void ChargingNode::clearChargingSpots()
 
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
-            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - not physically present anymore."
+            EV_INFO << "MobileNode " << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - not physically present anymore."
                     << endl;
             objectsCharging.erase(objectsCharging.begin() + i);
             continue;
         }
         if (objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() > objectsCharging[i]->getTargetCapacityPercentage()
                 || objectsCharging[i]->getNode()->getBattery()->isFull()) {
-            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - charged to target: "
+            EV_INFO << "MobileNode " << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - charged to target: "
                     << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "/" << objectsCharging[i]->getTargetCapacityPercentage() << "%"
                     << endl;
             // Send wait message to node
@@ -536,8 +537,8 @@ void ChargingNode::rearrangeChargingSpots()
             double secondsToNextEvent = calculateSecondsToNextEvent((*objectChargingIt)->getNode(), prioritizeFastCharge);
             (*objectChargingIt)->setPointInTimeWhenDone(simTime() + secondsToNextEvent);
 
-            EV_INFO << "MobileNode ID(" << (*nextWaitingObject)->getNode()->getId() << ") charge spot exchanged with ID("
-                    << (*objectChargingIt)->getNode()->getId() << ") waiting spot." << endl;
+            EV_INFO << "MobileNode " << (*nextWaitingObject)->getNode()->getFullName() << " charge spot exchanged with ID("
+                    << (*objectChargingIt)->getNode()->getFullName() << ") waiting spot." << endl;
 
             nextWaitingObject = getNextWaitingObjectIterator(prioritizeFastCharge);
         }
@@ -557,7 +558,7 @@ void ChargingNode::charge()
         double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
-        EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is currently getting charged. Currently Remaining: "
+        EV_INFO << "MobileNode " << objectsCharging[i]->getNode()->getFullName() << " is currently getting charged. Currently Remaining: "
                 << objectsCharging[i]->getNode()->getBattery()->getRemaining() << " mAh. Amount: " << chargeAmount << " mAh (" << durationSeconds << "s * "
                 << (chargeAmount / durationSeconds) << "mAh/s), fast charge percentage:"
                 << chargeAlgorithm->getFastChargePercentage(objectsCharging[i]->getNode()->getBattery()->getCapacity()) << endl;
