@@ -22,7 +22,7 @@
 
 class ChargeAlgorithmCCCV : public IChargeAlgorithm {
 public:
-    ChargeAlgorithmCCCV(double linearGradient, double current);
+    ChargeAlgorithmCCCV(double linearGradient, double current, int cccvShiftPercentage);
     double calculateChargeAmount(double remaining, double capacity, double seconds);
     double calculateChargeTime(double remaining, double capacity, double targetPercentage);
     double getFastChargePercentage(double maxCapacity);
@@ -62,14 +62,15 @@ protected:
     double a = 0.0013;
     double linearGradient;
     double current;
+    int fastChargePercentage = 80;
 
     double calculateLinearChargeAmount(double remaining, double capacity, double seconds);
-    double calculateNonLinearChargeAmount(double capacity, double seconds);
+    double calculateNonLinearChargeAmount(double remaining, double capacity, double seconds);
     double calculateLinearSeconds(double remaining, double capacity, double targetPercentage);
     double calculateNonLinearSeconds(double remaining, double capacity, double targetPercentage);
     double calculateNonLinearSeconds(double remaining, double capacity);
     double calculateNonLinearStart(double capacity);
-    double calculateNonLinearGradient(double current, double capacity, double a);
+    double calculateNonLinearGradient(double capacity);
 };
 
 #endif /* CHARGEALGORITHMCCCV_H_ */

@@ -19,6 +19,7 @@
 #include <omnetpp.h>
 #include "Battery.h"
 #include "ChargeAlgorithmCCCV.h"
+#include "ChargeAlgorithmCCCVCurrent.h"
 #include "ChargingNodeSpotElement.h"
 #include "Command.h"
 #include "CommandExecEngine.h"

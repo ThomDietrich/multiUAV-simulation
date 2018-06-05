@@ -51,7 +51,9 @@ void ChargingNode::initialize(int stage)
             //Initialize chargeAlgorithm
             double linearGradient = double(par("linearGradient"));
             double chargeCurrent = double(par("chargeCurrent"));
-            this->chargeAlgorithm = new ChargeAlgorithmCCCV(linearGradient, chargeCurrent);
+            double nonLinearPhaseStartPercentage = double(par("nonLinearPhaseStartPercentage"));
+            //this->chargeAlgorithm = new ChargeAlgorithmCCCV(linearGradient, chargeCurrent, nonLinearPhaseStartPercentage);
+            this->chargeAlgorithm = new ChargeAlgorithmCCCVCurrent(chargeCurrent, nonLinearPhaseStartPercentage);
 
             this->labelNode->setText(getFullName());
             this->sublabelNode->setText("");
@@ -557,12 +559,11 @@ void ChargingNode::charge()
         double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
-        EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is currently getting charged. Currently Remaining: "
-                << objectsCharging[i]->getNode()->getBattery()->getRemaining() << " mAh. Amount: " << chargeAmount << " mAh (" << durationSeconds << "s * "
-                << (chargeAmount / durationSeconds) << "mAh/s), fast charge percentage:"
-                << chargeAlgorithm->getFastChargePercentage(objectsCharging[i]->getNode()->getBattery()->getCapacity()) << endl;
+        double chargeMeanCurrent = chargeAmount * 3600 / durationSeconds / 1000;
+        EV_INFO << objectsCharging[i]->getNode()->getFullName() << " charging: " << durationSeconds << "s * " << chargeMeanCurrent << "mA = " << chargeAmount
+                << "mAh (now " << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "%)" << endl;
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
-        objectsCharging[i]->getNode()->getCommandExecEngine()->setConsumptionPerSecond((-1) * chargeAmount / durationSeconds);
+        objectsCharging[i]->getNode()->getCommandExecEngine()->setConsumptionPerSecond((-1) * chargeMeanCurrent);
         battery.discharge(chargeAmount / this->chargeEffectivenessPercentage);
         usedPower += chargeAmount / this->chargeEffectivenessPercentage;
         chargedPower += chargeAmount;
