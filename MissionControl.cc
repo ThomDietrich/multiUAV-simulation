@@ -127,6 +127,12 @@ void MissionControl::handleMessage(cMessage *msg)
         if (mnmsg->getNodeFound()) {
             NodeShadow* nodeShadow = managedNodeShadows.get(mnmsg->getMobileNodeIndex());
             nodeShadow->setKnownBattery(new Battery(mnmsg->getCapacity(), mnmsg->getRemaining()));
+            if (nodeShadow->getStatus() != NodeStatus::RESERVED) {
+                if (mnmsg->getCapacity() > mnmsg->getRemaining())
+                    nodeShadow->setStatus(NodeStatus::CHARGING);
+                else
+                    nodeShadow->setStatus(NodeStatus::IDLE);
+            }
         }
     }
     else {
@@ -167,6 +173,9 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
         if (!replacingNodeShadow) {
             replacingNodeShadow = managedNodeShadows.getHighestCharged();
+        }
+        if (!replacingNodeShadow) {
+            throw cRuntimeError("No nodes available for mission.");
         }
         // Assign as replacing node to this node
         replacingNodeShadow->setStatus(NodeStatus::RESERVED);

@@ -18,11 +18,12 @@
 /**
  * Constructor, calculates the eulerConstant, which provides the system precision
  */
-ChargeAlgorithmCCCV::ChargeAlgorithmCCCV(double linearGradient, double current)
+ChargeAlgorithmCCCV::ChargeAlgorithmCCCV(double linearGradient, double current, int cccvShiftPercentage)
 {
     this->eulerConstant = std::exp(1.0);
     this->linearGradient = linearGradient;
-    this->current = current / linearGradient;
+    this->current = current;
+    this->fastChargePercentage = cccvShiftPercentage;
 }
 
 /**
@@ -36,13 +37,13 @@ double ChargeAlgorithmCCCV::calculateChargeAmount(double remaining, double capac
         return amountLin;
     }
     double secondsNonLin = seconds - secondsLin + fmax(0.0, calculateNonLinearSeconds(remaining + amountLin, capacity));
-    return calculateNonLinearChargeAmount(capacity, secondsNonLin) - remaining - amountLin;
+    return calculateNonLinearChargeAmount(remaining, capacity, secondsNonLin) - amountLin;
 }
 
 double ChargeAlgorithmCCCV::getFastChargePercentage(double maxCapacity)
 {
     //return (-0.0291 * current + 1) * 100;
-    return 81;
+    return fastChargePercentage;
 }
 
 /**
@@ -76,11 +77,20 @@ double ChargeAlgorithmCCCV::calculateLinearSeconds(double remaining, double capa
 
 /*
  * higher remaining -> lower chargeAmount
+ * https://de.wikipedia.org/wiki/Beschr%C3%A4nktes_Wachstum#Explizite_Darstellung_(Wachstumsfunktion)
+ *
  * @return chargeAmount whole chargeprocess in phase 2. only applyable when at least a part of the process happens in phase 2!
  */
-double ChargeAlgorithmCCCV::calculateNonLinearChargeAmount(double capacity, double seconds)
+double ChargeAlgorithmCCCV::calculateNonLinearChargeAmount(double remaining, double capacity, double seconds)
 {
-    return capacity * (a + 1) - (capacity * (a + 1) - calculateNonLinearStart(capacity)) * pow(eulerConstant, ((-calculateNonLinearGradient(current, capacity, a)) * seconds));
+    double S = capacity * (1 + a);
+    double B0 = calculateNonLinearStart(capacity);
+    double k = calculateNonLinearGradient(capacity);
+    //
+    double B_of_t = S - (S - B0) * pow(eulerConstant, ((-1) * k * seconds));
+
+    //HACK factor for 8.0 A: 1.2
+    return (B_of_t - remaining) * 1.2;
 }
 
 /*
@@ -97,7 +107,7 @@ double ChargeAlgorithmCCCV::calculateNonLinearSeconds(double targetAmount, doubl
 {
     double zaehler = capacity * (a + 1) - targetAmount;
     double nenner = capacity * (a + 1) - calculateNonLinearStart(capacity);
-    return fmax(0.0, log(zaehler / nenner) / (-calculateNonLinearGradient(current, capacity, a)));
+    return fmax(0.0, log(zaehler / nenner) / (-calculateNonLinearGradient(capacity)));
 }
 
 /*
@@ -111,8 +121,8 @@ double ChargeAlgorithmCCCV::calculateNonLinearStart(double capacity)
 /*
  * @return non-linear gradient (phase 2) (k)
  */
-double ChargeAlgorithmCCCV::calculateNonLinearGradient(double current, double capacity, double a)
+double ChargeAlgorithmCCCV::calculateNonLinearGradient(double capacity)
 {
-    return (linearGradient * current) / (capacity * (a + 0.0291 * current));
+    return linearGradient * current / (capacity * (a + 0.0291 * current));
 }
 
