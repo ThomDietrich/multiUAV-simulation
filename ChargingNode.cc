@@ -559,7 +559,7 @@ void ChargingNode::charge()
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
         EV_INFO << "MobileNode " << objectsCharging[i]->getNode()->getFullName() << " is currently getting charged. Currently Remaining: "
-                << objectsCharging[i]->getNode()->getBattery()->getRemaining() << " mAh. Amount: " << chargeAmount << " mAh (" << durationSeconds << "s * "
+                << objectsCharging[i]->getNode()->getBattery()->getRemaining() << " mAh ("<< objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "%). Amount: " << chargeAmount << " mAh (" << durationSeconds << "s * "
                 << (chargeAmount / durationSeconds) << "mAh/s), fast charge percentage:"
                 << chargeAlgorithm->getFastChargePercentage(objectsCharging[i]->getNode()->getBattery()->getCapacity()) << endl;
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);

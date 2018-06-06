@@ -216,7 +216,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacementMsg(replacementMsg);
         scheduleAt(timeOfProvisioning, replacementMsg);
         EV_INFO << __func__ << "(): " << (reprovision ? "Updating provision time." : "Provisioning node.");
-        EV_INFO << " Node " << nodeShadow->getNodeIndex() << " will be replaced by node " << nodeShadow->getReplacingNodeIndex() << ".";
+        EV_INFO << " Node " << nodeShadow->getNode()->getFullName() << " will be replaced by node " << nodeShadow->getReplacingNode()->getFullName() << ".";
         EV_INFO << " Provisioning in " << (timeOfProvisioning - simTime()) << " seconds";
         EV_INFO << endl;
     }
