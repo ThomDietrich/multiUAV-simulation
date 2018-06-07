@@ -65,13 +65,13 @@ protected:
 
     double utilizationEnergyMission = 0;
     double utilizationEnergyMaintenance = 0;
+    double utilizationEnergyOverdraw = 0;
 
 public:
     MobileNode();
     virtual ~MobileNode();
     Battery* getBattery();
     static osg::Vec4f hsv2rgb(double h, double s, double v);
-    double utilizationEnergyOverdraw = 0;
 
 protected:
     virtual void initialize(int stage) override;
