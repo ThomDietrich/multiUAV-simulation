@@ -22,7 +22,7 @@
  * This battery should be used if energy consumption and recharging should be ignored.
  */
 Battery::Battery() :
-        capacity(0), remaining(0), infinite(true)
+        capacity(0), remaining(0), infinite(true), overdraw(0)
 {
 }
 
@@ -34,7 +34,7 @@ Battery::Battery() :
  * @param capacity the size of the battery in mAh (e.g. 2200)
  */
 Battery::Battery(float capacity) :
-        capacity(capacity), remaining(capacity)
+        capacity(capacity), remaining(capacity), overdraw(0)
 {
     this->infinite = (capacity == 0) ? true : false;
 }
@@ -46,7 +46,7 @@ Battery::Battery(float capacity) :
  * @param remaining the remaining energy in the battery at creation (e.g. 1500)
  */
 Battery::Battery(float capacity, float remaining) :
-        capacity(capacity), remaining(remaining)
+        capacity(capacity), remaining(remaining), overdraw(0)
 {
     this->infinite = (capacity == 0) ? true : false;
     if (remaining > capacity) EV_WARN << "Battery initialized with remaining > capacity" << endl;
@@ -81,12 +81,13 @@ bool Battery::charge(float amount)
  */
 bool Battery::discharge(float amount)
 {
+    overdraw = 0;
     if (infinite) return true;
     remaining -= amount;
     if (remaining < 0) {
+        overdraw -= remaining;
+        EV_WARN << "Battery storage exhausted over limit by " << -remaining << endl;
         remaining = 0;
-        EV_WARN << "Battery storage exhausted over limit 0" << endl;
-        throw cRuntimeError("Battery storage exhausted over limit 0");
         return false;
     }
     return true;
@@ -116,6 +117,14 @@ float Battery::getRemaining()
 {
     if (infinite) return FLT_MAX;
     return remaining;
+}
+
+/**
+ * @return remaining energy, in [mAh]
+ */
+float Battery::getOverdraw()
+{
+    return overdraw;
 }
 
 /**

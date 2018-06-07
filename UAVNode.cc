@@ -278,6 +278,7 @@ void UAVNode::updateState()
     //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
+    utilizationEnergyOverdraw += battery.getOverdraw();
 
     //update sublabel with maneuver and battery info
     std::ostringstream strs;

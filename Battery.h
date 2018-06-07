@@ -30,7 +30,12 @@ protected:
 
     /** if 'true', the battery is always full and never empty */
     bool infinite;
+
+    /** Amount of energy consumed after battery remaining runs out (lower that 0mAh) since the last discharge. */
+    float overdraw;
+
 public:
+
     Battery();
     Battery(float capacity);
     Battery(float capacity, float remaining);
@@ -39,6 +44,7 @@ public:
     bool discharge(float amount);
     float getCapacity();
     float getMissing();
+    float getOverdraw();
     float getRemaining();
     int getRemainingPercentage();
     bool isEmpty();
