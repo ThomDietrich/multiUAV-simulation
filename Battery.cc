@@ -64,6 +64,10 @@ Battery::~Battery()
  */
 bool Battery::charge(float amount)
 {
+    if (overdraw > 0) {
+        EV_WARN << "Battery storage was over-exhausted during the last flight by " << overdraw << "mAh" << endl;
+        overdraw = 0;
+    }
     if (infinite) return true;
     remaining += amount;
     if (remaining > capacity) {
@@ -81,12 +85,10 @@ bool Battery::charge(float amount)
  */
 bool Battery::discharge(float amount)
 {
-    overdraw = 0;
     if (infinite) return true;
     remaining -= amount;
     if (remaining < 0) {
-        overdraw -= remaining;
-        EV_WARN << "Battery storage exhausted over limit by " << -remaining << endl;
+        overdraw += abs(remaining);
         remaining = 0;
         return false;
     }
@@ -120,7 +122,7 @@ float Battery::getRemaining()
 }
 
 /**
- * @return remaining energy, in [mAh]
+ * @return over-charged energy, in [mAh]
  */
 float Battery::getOverdraw()
 {
