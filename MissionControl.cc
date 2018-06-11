@@ -170,8 +170,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         // ToDo: Add highest capacity from config
         this->requestChargedNodesInformation(5400);
         // Get first free IDLE node
-//        NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
-        NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
+        NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
         if (!replacingNodeShadow) {
             replacingNodeShadow = managedNodeShadows.getHighestCharged();
         }
