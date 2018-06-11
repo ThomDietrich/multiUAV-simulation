@@ -217,10 +217,12 @@ void UAVNode::collectStatistics()
     if (commandExecEngine->isPartOfMission()) {
         utilizationSecMission += thisCeeDuration;
         utilizationEnergyMission += thisCeeEnergy;
+        utilizationEnergyOverdrawMission += battery.getAndResetOverdraw();
     }
     else {
         utilizationSecMaintenance += thisCeeDuration;
         utilizationEnergyMaintenance += thisCeeEnergy;
+        utilizationEnergyOverdrawMaintenance += battery.getAndResetOverdraw();
     }
 }
 

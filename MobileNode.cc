@@ -82,6 +82,8 @@ void MobileNode::initialize(int stage)
             WATCH(utilizationSecIdle);
             WATCH(utilizationEnergyMission);
             WATCH(utilizationEnergyMaintenance);
+            WATCH(utilizationEnergyOverdrawMission);
+            WATCH(utilizationEnergyOverdrawMaintenance);
             break;
     }
 }
