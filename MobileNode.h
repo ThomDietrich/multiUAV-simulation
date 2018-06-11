@@ -65,7 +65,9 @@ protected:
 
     double utilizationEnergyMission = 0;
     double utilizationEnergyMaintenance = 0;
-    double utilizationEnergyOverdraw = 0;
+
+    double utilizationEnergyOverdrawMission = 0;
+    double utilizationEnergyOverdrawMaintenance = 0;
 
 public:
     MobileNode();

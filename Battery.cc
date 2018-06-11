@@ -3,15 +3,15 @@
 // it under the terms of the GNU Lesser General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see http://www.gnu.org/licenses/.
-// 
+//
 
 #include "Battery.h"
 #include <float.h>
@@ -64,11 +64,8 @@ Battery::~Battery()
  */
 bool Battery::charge(float amount)
 {
-    if (overdraw > 0) {
-        EV_WARN << "Battery storage was over-exhausted during the last flight by " << overdraw << "mAh" << endl;
-        overdraw = 0;
-    }
     if (infinite) return true;
+
     remaining += amount;
     if (remaining > capacity) {
         remaining = capacity;
@@ -88,7 +85,7 @@ bool Battery::discharge(float amount)
     if (infinite) return true;
     remaining -= amount;
     if (remaining < 0) {
-        overdraw += abs(remaining);
+        overdraw += remaining * (-1);
         remaining = 0;
         return false;
     }
@@ -122,14 +119,6 @@ float Battery::getRemaining()
 }
 
 /**
- * @return over-charged energy, in [mAh]
- */
-float Battery::getOverdraw()
-{
-    return overdraw;
-}
-
-/**
  * @return remaining energy, in percentage
  */
 int Battery::getRemainingPercentage()
@@ -154,4 +143,17 @@ bool Battery::isFull()
 {
     if (infinite) return true;
     return (remaining >= capacity);
+}
+
+/**
+ * @return over-charged energy and set counter back to zero, in [mAh]
+ */
+float Battery::getAndResetOverdraw()
+{
+    if (overdraw > 0) {
+        EV_WARN << "Battery storage was over-exhausted during the last flight by " << overdraw << "mAh" << endl;
+    }
+    float amount = overdraw;
+    overdraw = 0;
+    return amount;
 }
