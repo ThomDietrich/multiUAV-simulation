@@ -131,7 +131,8 @@ void UAVNode::transferMissionDataTo(UAVNode* node)
 void UAVNode::selectNextCommand()
 {
     if (cees.size() == 0) {
-        throw cRuntimeError("selectNextCommand(): UAV has no commands in CEEs queue left.");
+        std::string error_msg = "selectNextCommand(): " + std::string(this->getFullName()) + " has no commands in CEEs queue left.";
+        throw cRuntimeError(error_msg.c_str());
     }
 
     CommandExecEngine *scheduledCEE = cees.front();
@@ -139,7 +140,9 @@ void UAVNode::selectNextCommand()
     scheduledCEE->initializeCEE();
 
     if (exchangeAfterCurrentCommand && not scheduledCEE->isCeeType(CeeType::EXCHANGE)) {
-        throw cRuntimeError("selectNextCommand(): UAV should have switched into Exchange CEE now. Another UAV is waiting...");
+        std::string error_msg = "selectNextCommand(): " + std::string(this->getFullName())
+                + " should have switched into Exchange CEE now. Another UAV is waiting...";
+        throw cRuntimeError(error_msg.c_str());
     }
     else {
         exchangeAfterCurrentCommand = false;
@@ -150,7 +153,7 @@ void UAVNode::selectNextCommand()
     float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
     float energyRemaining = this->battery.getRemaining();
     bool atReplacementLocation = abs(replacementX - x) < ERROR_MARGIN && abs(replacementY - y) < ERROR_MARGIN && abs(replacementZ - z) < ERROR_MARGIN
-                    && abs((replacementTime - simTime()).dbl()) < 5;
+            && abs((replacementTime - simTime()).dbl()) < 5;
 
     if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
         EV_INFO << "Energy Management: Recharging now." << endl;
@@ -177,7 +180,10 @@ void UAVNode::selectNextCommand()
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
-        if (replacingNode == nullptr) throw cRuntimeError("selfScheduleExchange(): replacingNode should be known by now (part of hack111).");
+        if (replacingNode == nullptr) {
+            std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName()) + " should be known by now (part of hack111).";
+            throw cRuntimeError(error_msg.c_str());
+        }
 
         // Generate and inject ExchangeCEE, only if not already done
         if (scheduledCEE->isPartOfMission()) {
@@ -337,6 +343,13 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
             cee = new TakeoffCEE(this, cmd);
         }
         else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
+            // only if HoldPositionCommand is first command of mission and UAVNode is not already there
+            if (index == 0 && not cmpCoord(*cmd, getX(), getY(), getZ())) {
+                WaypointCommand* extraCommand = new WaypointCommand(cmd->getX(), cmd->getY(), cmd->getZ());
+                CommandExecEngine* extraCee = new WaypointCEE(this, extraCommand);
+                extraCee->setPartOfMission(false);
+                cees.push_back(extraCee);
+            }
             cee = new HoldPositionCEE(this, cmd);
         }
         else if (ChargeCommand *cmd = dynamic_cast<ChargeCommand *>(command)) {

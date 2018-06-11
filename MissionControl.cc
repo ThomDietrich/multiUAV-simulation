@@ -170,6 +170,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         // ToDo: Add highest capacity from config
         this->requestChargedNodesInformation(5400);
         // Get first free IDLE node
+//        NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
         NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
         if (!replacingNodeShadow) {
             replacingNodeShadow = managedNodeShadows.getHighestCharged();
@@ -187,19 +188,16 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     }
 
     simtime_t timeOfProvisioning;
-    {
-        //Retrieve provisioning time
-        //TODO unclear: nodes in NodeShadow are of GenericNode but only MobileNode knows movement
-        UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeShadow->getReplacingNode());
-        CommandQueue commands;
-        commands.push_back(new WaypointCommand(nodeShadow->getReplacementData()->x, nodeShadow->getReplacementData()->y, nodeShadow->getReplacementData()->z));
-        simtime_t timeOfReplacement = nodeShadow->getReplacementTime();
-        replacingUavNode->clearCommands();
-        replacingUavNode->loadCommands(commands);
-        double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
-        timeOfProvisioning = timeOfReplacement - timeForProvisioning;
-        replacingUavNode->clearCommands();
-    }
+    //Retrieve provisioning time
+    UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeShadow->getReplacingNode());
+    CommandQueue commands;
+    commands.push_back(new WaypointCommand(nodeShadow->getReplacementData()->x, nodeShadow->getReplacementData()->y, nodeShadow->getReplacementData()->z));
+    simtime_t timeOfReplacement = nodeShadow->getReplacementTime();
+    replacingUavNode->clearCommands();
+    replacingUavNode->loadCommands(commands);
+    double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
+    timeOfProvisioning = timeOfReplacement - timeForProvisioning;
+    replacingUavNode->clearCommands();
 
     cMessage *replacementMsg = new cMessage("provisionReplacement");
 
@@ -221,7 +219,25 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         EV_INFO << endl;
     }
     else {
-        EV_WARN << "Prediction time is in the past. This needs to be dealt with... somehow" << endl;
+        // this happens if the replacingNode cannot reach replacement location "in time"
+
+        // cancel old message
+        if (nodeShadow->hasReplacementMsg()) {
+            if (nodeShadow->getReplacementMsg()->isSelfMessage()) {
+                cancelEvent(nodeShadow->getReplacementMsg());
+                delete nodeShadow->getReplacementMsg();
+            }
+        }
+        nodeShadow->setReplacementMsg(replacementMsg);
+        timeOfProvisioning = simTime() + timeForProvisioning;
+
+        // schedule new one
+        scheduleAt(simTime(), replacementMsg);
+
+        EV_WARN << "Prediction time is in the past. Updating provision time.";
+        EV_WARN << " Node " << nodeShadow->getNode()->getFullName() << " will be replaced by node " << nodeShadow->getReplacingNode()->getFullName() << ".";
+        EV_WARN << " Provisioning in " << timeOfProvisioning << " seconds";
+        EV_WARN << endl;
     }
 }
 
@@ -267,7 +283,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             case 17: { // LOITER_UNLIM
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LOITER_UNLIM");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Command not implemented yet: LOITER_UNLIM");
                 break;
             }
             case 19: { // LOITER_TIME
@@ -275,11 +291,11 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             case 20: { // RETURN_TO_LAUNCH
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: RETURN_TO_LAUNCH");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Command not implemented yet: RETURN_TO_LAUNCH");
                 break;
             }
             case 21: { // LAND
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LAND");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Command not implemented yet: LAND");
                 break;
             }
             case 22: { // TAKEOFF
@@ -287,7 +303,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
                 break;
             }
             default: {
-                throw cRuntimeError("readWaypointsFromFile(): Unexpected file content.");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Unexpected file content.");
                 break;
             }
         }
