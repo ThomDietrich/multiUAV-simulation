@@ -116,6 +116,7 @@ void MissionControl::handleMessage(cMessage *msg)
         replacedNode->replacementZ = replData->z;
         replacedNode->replacementTime = replData->timeOfReplacement;
 
+        nodeShadow->setReplacementMsg(nullptr);
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
         EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getFullName();
@@ -184,8 +185,8 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacementData(new ReplacementData(replData));
         nodeShadow->setReplacingNode(replacingNodeShadow->getNode());
 
-        EV_INFO << __func__ << "(): No ReplacingNode for node " << nodeShadow->getNodeIndex() << ",";
-        EV_INFO << " node " << nodeShadow->getReplacingNodeIndex() << " reserved for replacement" << endl;
+        EV_INFO << __func__ << "(): " << nodeShadow->getNode()->getFullName() << ":";
+        EV_INFO << " node " << nodeShadow->getReplacingNode()->getFullName() << " reserved for replacement" << endl;
     }
 
     simtime_t timeOfProvisioning;
