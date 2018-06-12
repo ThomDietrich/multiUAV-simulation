@@ -67,7 +67,7 @@ void MobileNode::initialize(int stage)
 
             if (commandPreviewEnabled) {
                 waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->color() = commandPreviewColor;
-                waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->width() = 5.0f;
+                waypointStyle.getOrCreate<osgEarth::LineSymbol>()->stroke()->width() = 25.0f;
                 auto geoSRS = mapNode->getMapSRS();
                 waypointsNode = new FeatureNode(mapNode.get(), new Feature(new LineString(), geoSRS));
                 mapNode->getModelLayerGroup()->addChild(waypointsNode);

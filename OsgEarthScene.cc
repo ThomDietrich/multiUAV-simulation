@@ -45,28 +45,28 @@ void OsgEarthScene::initialize()
 {
     scene = osgDB::readNodeFile(par("scene"));
     if (!scene) throw cRuntimeError("Could not read scene file \"%s\"", par("scene").stringValue());
-    
+
     playgroundLat = getSystemModule()->par("playgroundLatitude");
     playgroundLon = getSystemModule()->par("playgroundLongitude");
     playgroundHeight = getSystemModule()->par("playgroundHeight");
     playgroundWidth = getSystemModule()->par("playgroundWidth");
     double centerLongitude = toLongitude(playgroundWidth / 2);
     double centerLatitude = toLatitude(playgroundHeight / 2);
-    
+
     cOsgCanvas *builtinOsgCanvas = getParentModule()->getOsgCanvas();
-    
+
     auto mapNode = MapNode::findMapNode(scene);
     ASSERT(mapNode != nullptr);
-    
+
     // set up viewer
     const SpatialReference *geoSRS = mapNode->getMapSRS()->getGeographicSRS();
     builtinOsgCanvas->setViewerStyle(cOsgCanvas::STYLE_EARTH);
     // and move the initial view right above it
-    builtinOsgCanvas->setEarthViewpoint(osgEarth::Viewpoint("home", centerLongitude, centerLatitude, 50, 0, -22, playgroundHeight * 2));
+    builtinOsgCanvas->setEarthViewpoint(osgEarth::Viewpoint("home", centerLongitude, centerLatitude, 90, 0, -90, playgroundHeight * 3));
     // fine tune the ZLimits (clipping) to better fit this scenario
-    builtinOsgCanvas->setZLimits(1, 100000);
+    builtinOsgCanvas->setZLimits(1, 800000);
     builtinOsgCanvas->setScene(scene);
-    
+
     // set up an annotation to show the playground area
     Style rectStyle;
     rectStyle.getOrCreate<PolygonSymbol>()->fill()->color() = Color(Color::Black, 0.05);
