@@ -330,7 +330,7 @@ double UAVNode::nextNeededUpdate()
 void UAVNode::loadCommands(CommandQueue commands, bool isMission)
 {
     if (not cees.empty()) {
-        EV_WARN << __func__ << "()" << "Replacing non-empty CEE queue." << endl;
+        EV_WARN << __func__ << "()" << " Replacing non-empty CEE queue." << endl;
         cees.clear();
     }
 
