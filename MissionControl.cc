@@ -85,9 +85,9 @@ void MissionControl::handleMessage(cMessage *msg)
         NodeShadow* nodeShadow = managedNodeShadows.getNodeRequestingReplacement(msg);
         GenericNode *replacingNode = nodeShadow->getReplacingNode();
         ReplacementData *replData = nodeShadow->getReplacementData();
-        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
+        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNode()->getFullName() << endl;
 
-        // When the replacing node ist charging currently send a message to stop the process
+        // When the replacing node is charging currently send a message to stop the process
         if (replacingNode->getCommandExecEngine()) {
             if (replacingNode->getCommandExecEngine()->getCeeType() == CeeType::CHARGE) {
                 cMessage *exitMessage = new cMessage("mobileNodeExit");
@@ -118,8 +118,9 @@ void MissionControl::handleMessage(cMessage *msg)
 
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
-        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex();
-        EV_INFO << " (replacing node " << nodeShadow->getNodeIndex() << ")" << endl;
+        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getFullName();
+        EV_INFO << " (replacing node " << nodeShadow->getNode()->getFullName() << ")" << endl;
+        EV_DEBUG << "Node replacement at (" << replData->x << ", " << replData->y << ", " << replData->z << ")" << endl;
     }
     else if (msg->isName("mobileNodeResponse")) {
         // write requested mobileNode information in corresponding nodeShadow's
@@ -160,7 +161,8 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         GenericNode* replNode = nodeShadow->getReplacingNode();
 
         if (managedNodeShadows.get(replNode)->isStatusProvisioning()) {
-            EV_WARN << __func__ << "(): Replacing Node is already on its way. No re-calculation needed. " << endl;
+            EV_WARN << __func__ << "(): ReplacingNode " << replNode->getFullName() << " is already on its way to " << nodeShadow->getNode()->getFullName()
+                    << ". No re-calculation needed. " << endl;
             return;
         }
         nodeShadow->setReplacementData(new ReplacementData(replData));
@@ -170,7 +172,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         // ToDo: Add highest capacity from config
         this->requestChargedNodesInformation(5400);
         // Get first free IDLE node
-        NodeShadow* replacingNodeShadow = managedNodeShadows.getFirst(NodeStatus::IDLE);
+        NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
         if (!replacingNodeShadow) {
             replacingNodeShadow = managedNodeShadows.getHighestCharged();
         }
@@ -187,19 +189,16 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     }
 
     simtime_t timeOfProvisioning;
-    {
-        //Retrieve provisioning time
-        //TODO unclear: nodes in NodeShadow are of GenericNode but only MobileNode knows movement
-        UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeShadow->getReplacingNode());
-        CommandQueue commands;
-        commands.push_back(new WaypointCommand(nodeShadow->getReplacementData()->x, nodeShadow->getReplacementData()->y, nodeShadow->getReplacementData()->z));
-        simtime_t timeOfReplacement = nodeShadow->getReplacementTime();
-        replacingUavNode->clearCommands();
-        replacingUavNode->loadCommands(commands);
-        double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
-        timeOfProvisioning = timeOfReplacement - timeForProvisioning;
-        replacingUavNode->clearCommands();
-    }
+    //Retrieve provisioning time
+    UAVNode* replacingUavNode = check_and_cast<UAVNode *>(nodeShadow->getReplacingNode());
+    CommandQueue commands;
+    commands.push_back(new WaypointCommand(nodeShadow->getReplacementData()->x, nodeShadow->getReplacementData()->y, nodeShadow->getReplacementData()->z));
+    simtime_t timeOfReplacement = nodeShadow->getReplacementTime();
+    replacingUavNode->clearCommands();
+    replacingUavNode->loadCommands(commands);
+    double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
+    timeOfProvisioning = timeOfReplacement - timeForProvisioning;
+    replacingUavNode->clearCommands();
 
     cMessage *replacementMsg = new cMessage("provisionReplacement");
 
@@ -221,7 +220,25 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         EV_INFO << endl;
     }
     else {
-        EV_WARN << "Prediction time is in the past. This needs to be dealt with... somehow" << endl;
+        // this happens if the replacingNode cannot reach replacement location "in time"
+
+        // cancel old message
+        if (nodeShadow->hasReplacementMsg()) {
+            if (nodeShadow->getReplacementMsg()->isSelfMessage()) {
+                cancelEvent(nodeShadow->getReplacementMsg());
+                delete nodeShadow->getReplacementMsg();
+            }
+        }
+        nodeShadow->setReplacementMsg(replacementMsg);
+        timeOfProvisioning = simTime() + timeForProvisioning;
+
+        // schedule new one
+        scheduleAt(simTime(), replacementMsg);
+
+        EV_WARN << "Prediction time is in the past. Updating provision time.";
+        EV_WARN << " Node " << nodeShadow->getNode()->getFullName() << " will be replaced by node " << nodeShadow->getReplacingNode()->getFullName() << ".";
+        EV_WARN << " Provisioning in " << timeOfProvisioning << " seconds";
+        EV_WARN << endl;
     }
 }
 
@@ -264,30 +281,35 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
         switch (commandType) {
             case 16: { // WAYPOINT
                 commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
+                EV_DEBUG << "WaypointCommand(" << OsgEarthScene::getInstance()->toX(lon) << ", " << OsgEarthScene::getInstance()->toY(lat) << ", " << alt << ")"
+                        << endl;
                 break;
             }
             case 17: { // LOITER_UNLIM
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LOITER_UNLIM");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Command not implemented yet: LOITER_UNLIM");
                 break;
             }
             case 19: { // LOITER_TIME
                 commands.push_back(new HoldPositionCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt, p1));
+                EV_DEBUG << "HoldPositionCommand(" << OsgEarthScene::getInstance()->toX(lon) << ", " << OsgEarthScene::getInstance()->toY(lat) << ", " << alt
+                        << ", " << p1 << ")" << endl;
                 break;
             }
             case 20: { // RETURN_TO_LAUNCH
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: RETURN_TO_LAUNCH");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Command not implemented yet: RETURN_TO_LAUNCH");
                 break;
             }
             case 21: { // LAND
-                throw cRuntimeError("readWaypointsFromFile(): Command not implemented yet: LAND");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Command not implemented yet: LAND");
                 break;
             }
             case 22: { // TAKEOFF
                 commands.push_back(new TakeoffCommand(alt));
+                EV_DEBUG << "TakeoffCommand(" << alt << ")" << endl;
                 break;
             }
             default: {
-                throw cRuntimeError("readWaypointsFromFile(): Unexpected file content.");
+                throw cRuntimeError("loadCommandsFromWaypointsFile(): Unexpected file content.");
                 break;
             }
         }
