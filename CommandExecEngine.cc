@@ -221,7 +221,7 @@ HoldPositionCEE::HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *comman
     this->command = command;
     this->setType(CeeType::HOLDPOSITION);
     setFromCoordinates(node->x, node->y, node->z);
-    setToCoordinates(node->x, node->y, node->z);
+    setToCoordinates(command->getX(), command->getY(), command->getZ());
 }
 
 bool HoldPositionCEE::commandCompleted()

@@ -85,9 +85,9 @@ void MissionControl::handleMessage(cMessage *msg)
         NodeShadow* nodeShadow = managedNodeShadows.getNodeRequestingReplacement(msg);
         GenericNode *replacingNode = nodeShadow->getReplacingNode();
         ReplacementData *replData = nodeShadow->getReplacementData();
-        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNodeIndex() << endl;
+        EV_INFO << "provisionReplacement message received for node " << nodeShadow->getNode()->getFullName() << endl;
 
-        // When the replacing node ist charging currently send a message to stop the process
+        // When the replacing node is charging currently send a message to stop the process
         if (replacingNode->getCommandExecEngine()) {
             if (replacingNode->getCommandExecEngine()->getCeeType() == CeeType::CHARGE) {
                 cMessage *exitMessage = new cMessage("mobileNodeExit");
@@ -118,8 +118,9 @@ void MissionControl::handleMessage(cMessage *msg)
 
         managedNodeShadows.setStatus(replacingNode, NodeStatus::PROVISIONING);
 
-        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getIndex();
-        EV_INFO << " (replacing node " << nodeShadow->getNodeIndex() << ")" << endl;
+        EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getFullName();
+        EV_INFO << " (replacing node " << nodeShadow->getNode()->getFullName() << ")" << endl;
+        EV_DEBUG << "Node replacement at (" << replData->x << ", " << replData->y << ", " << replData->z << ")" << endl;
     }
     else if (msg->isName("mobileNodeResponse")) {
         // write requested mobileNode information in corresponding nodeShadow's
@@ -160,7 +161,8 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         GenericNode* replNode = nodeShadow->getReplacingNode();
 
         if (managedNodeShadows.get(replNode)->isStatusProvisioning()) {
-            EV_WARN << __func__ << "(): Replacing Node is already on its way. No re-calculation needed. " << endl;
+            EV_WARN << __func__ << "(): ReplacingNode " << replNode->getFullName() << " is already on its way to " << nodeShadow->getNode()->getFullName()
+                    << ". No re-calculation needed. " << endl;
             return;
         }
         nodeShadow->setReplacementData(new ReplacementData(replData));
@@ -279,6 +281,8 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
         switch (commandType) {
             case 16: { // WAYPOINT
                 commands.push_back(new WaypointCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt));
+                EV_DEBUG << "WaypointCommand(" << OsgEarthScene::getInstance()->toX(lon) << ", " << OsgEarthScene::getInstance()->toY(lat) << ", " << alt << ")"
+                        << endl;
                 break;
             }
             case 17: { // LOITER_UNLIM
@@ -287,6 +291,8 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
             }
             case 19: { // LOITER_TIME
                 commands.push_back(new HoldPositionCommand(OsgEarthScene::getInstance()->toX(lon), OsgEarthScene::getInstance()->toY(lat), alt, p1));
+                EV_DEBUG << "HoldPositionCommand(" << OsgEarthScene::getInstance()->toX(lon) << ", " << OsgEarthScene::getInstance()->toY(lat) << ", " << alt
+                        << ", " << p1 << ")" << endl;
                 break;
             }
             case 20: { // RETURN_TO_LAUNCH
@@ -299,6 +305,7 @@ CommandQueue MissionControl::loadCommandsFromWaypointsFile(const char* fileName)
             }
             case 22: { // TAKEOFF
                 commands.push_back(new TakeoffCommand(alt));
+                EV_DEBUG << "TakeoffCommand(" << alt << ")" << endl;
                 break;
             }
             default: {

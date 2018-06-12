@@ -210,7 +210,7 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (ID " << commandExecEngine->getCommandId() << ")" << endl;
+    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (ID " << commandExecEngine->getCommandId() << " at (" << commandExecEngine->getX1() << ", " << commandExecEngine->getY1() << ", " << commandExecEngine->getZ1() << "))" << endl;
 }
 
 void UAVNode::collectStatistics()
@@ -344,7 +344,7 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
         }
         else if (HoldPositionCommand *cmd = dynamic_cast<HoldPositionCommand *>(command)) {
             // only if HoldPositionCommand is first command of mission and UAVNode is not already there
-            if (index == 0 && not cmpCoord(*cmd, getX(), getY(), getZ())) {
+            if (isMission && index == 0 && not cmpCoord(*cmd, getX(), getY(), getZ())) {
                 WaypointCommand* extraCommand = new WaypointCommand(cmd->getX(), cmd->getY(), cmd->getZ());
                 CommandExecEngine* extraCee = new WaypointCEE(this, extraCommand);
                 extraCee->setPartOfMission(false);
