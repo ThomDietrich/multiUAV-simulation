@@ -84,13 +84,18 @@ void UAVNode::handleMessage(cMessage *msg)
         // Handle received mission data
         if (exchangeCEE->commandCompleted()) {
             EV_WARN << __func__ << "(): Mission exchange already completed." << endl;
+            replacingNode = nullptr;
+            replacementX = DBL_MAX;
+            replacementY = DBL_MAX;
+            replacementZ = DBL_MAX;
+            replacementTime = 0;
         }
         else {
             MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
             missionId = receivedMissionMsg->getMissionId();
             commandsRepeat = receivedMissionMsg->getMissionRepeat();
             CommandQueue missionCommands = receivedMissionMsg->getMission();
-            EV_WARN << __func__ << "(): Mission exchange, clearing " << cees.size() << " cees, loading " << missionCommands.size() << endl;
+            EV_WARN << __func__ << "(): Mission " << missionId << " exchange, clearing " << cees.size() << " cees, loading " << missionCommands.size() << endl;
             clearCommands();
             loadCommands(missionCommands);
 

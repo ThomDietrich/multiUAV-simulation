@@ -458,7 +458,7 @@ void ChargingNode::fillChargingSpots()
 
     // loop through empty charging spots and fill them with waiting objects
     while (spotsCharging > objectsCharging.size() && availableNodes > 0) {
-        EV_INFO << "MobileNode ID(" << (*nextWaitingObject)->getNode()->getId() << ") is added to charging spot." << endl;
+        EV_INFO << (*nextWaitingObject)->getNode()->getFullName() << " is added to charging spot." << endl;
         (*nextWaitingObject)->setPointInTimeWhenChargingStarted(simTime());
         // set the point in time when the next event needs to be executed
         double secondsToNextEvent = calculateSecondsToNextEvent((*nextWaitingObject)->getNode(), prioritizeFastCharge);
@@ -479,14 +479,14 @@ void ChargingNode::clearChargingSpots()
 
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
-            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - not physically present anymore."
+            EV_INFO << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - not physically present anymore."
                     << endl;
             objectsCharging.erase(objectsCharging.begin() + i);
             continue;
         }
         if (objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() > objectsCharging[i]->getTargetCapacityPercentage()
                 || objectsCharging[i]->getNode()->getBattery()->isFull()) {
-            EV_INFO << "MobileNode ID(" << objectsCharging[i]->getNode()->getId() << ") is removed from charging spot - charged to target: "
+            EV_INFO << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - charged to target: "
                     << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "/" << objectsCharging[i]->getTargetCapacityPercentage() << "%"
                     << endl;
             // Send wait message to node

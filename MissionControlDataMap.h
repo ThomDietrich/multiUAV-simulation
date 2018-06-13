@@ -62,6 +62,28 @@ public:
         return status;
     }
 
+    const char* getStatusString() const
+    {
+        switch (status) {
+            case NodeStatus::DEAD:
+                return "DEAD";
+            case NodeStatus::IDLE:
+                return "IDLE";
+            case NodeStatus::MAINTENANCE:
+                return "MAINTENANCE";
+            case NodeStatus::MISSION:
+                return "MISSION";
+            case NodeStatus::PROVISIONING:
+                return "PROVISIONING";
+            case NodeStatus::RESERVED:
+                return "RESERVED";
+            case NodeStatus::CHARGING:
+                return "CHARGING";
+            default:
+                return "UNKNOWN!!!";
+        }
+    }
+
     bool hasReplacementData() const
     {
         return (this->replacementData != nullptr);
@@ -151,6 +173,8 @@ public:
     
     void setKnownBattery(Battery* knownBattery = nullptr)
     {
+        if(this->knownBattery != nullptr)
+            delete this->knownBattery;
         this->knownBattery = knownBattery;
     }
 };

@@ -441,6 +441,7 @@ void ExchangeCEE::performExitActions()
         // Generate ChargeCEE
         ChargeCommand *chargeCommand = new ChargeCommand(cn);
         CommandExecEngine *chargeCEE = new ChargeCEE(node, chargeCommand);
+        chargeCEE->setToCoordinates(cn->getX(), cn->getY(), cn->getZ());
         chargeCEE->setPartOfMission(false);
 
         // Add WaypointCEE and ChargeCEE to the CEEs queue
