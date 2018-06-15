@@ -23,11 +23,13 @@ NodeShadow::NodeShadow(GenericNode* node)
 
 NodeShadow::~NodeShadow()
 {
-    // TODO Auto-generated destructor stub
+    delete knownBattery;
 }
 
 void NodeShadow::setReplacementData(ReplacementData* replacementData)
 {
+    if(this->replacementData != nullptr)
+        delete this->replacementData;
     this->replacementData = replacementData;
 }
 

@@ -135,6 +135,12 @@ void MissionControl::handleMessage(cMessage *msg)
                 else
                     nodeShadow->setStatus(NodeStatus::IDLE);
             }
+            EV_DEBUG << "mobileNodeResponse:" << nodeShadow->getNode()->getFullName() << ": status:" << nodeShadow->getStatusString() << endl;
+        }
+        else {
+            std::string message = "No mobile node found for message: ";
+            message += mnmsg->getFullName();
+            EV_DEBUG << message << endl;
         }
     }
     else {
@@ -176,6 +182,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
         if (!replacingNodeShadow) {
             replacingNodeShadow = managedNodeShadows.getHighestCharged();
+            EV_WARN << "no idle node available, retreat to highest charged" << endl;
         }
         if (!replacingNodeShadow) {
             throw cRuntimeError("No nodes available for mission.");
@@ -238,7 +245,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
 
         EV_WARN << "Prediction time is in the past. Updating provision time.";
         EV_WARN << " Node " << nodeShadow->getNode()->getFullName() << " will be replaced by node " << nodeShadow->getReplacingNode()->getFullName() << ".";
-        EV_WARN << " Provisioning in " << timeOfProvisioning << " seconds";
+        EV_WARN << " Provisioning at " << timeOfProvisioning << " seconds";
         EV_WARN << endl;
     }
 }
