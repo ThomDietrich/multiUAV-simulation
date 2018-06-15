@@ -175,6 +175,11 @@ void GenericNode::handleMessage(cMessage *msg)
             msg->setName("nextCommand");
             stepSize = 0;
         }
+        else {
+            // update-to-update time must not be 0
+            // TODO if this occurs again: check for errors in nextNeededUpdate()
+            ASSERT(stepSize != 0);
+        }
     }
     else if (msg->isName("nextCommand")) {
 
