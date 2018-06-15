@@ -49,9 +49,9 @@ void ChargingNode::initialize(int stage)
             prioritizeFastCharge = par("prioritizeFastCharge").boolValue();
 
             //Initialize chargeAlgorithm
-            double linearGradient = double(par("linearGradient"));
             double chargeCurrent = double(par("chargeCurrent"));
             double nonLinearPhaseStartPercentage = double(par("nonLinearPhaseStartPercentage"));
+            //double linearGradient = double(par("linearGradient"));
             //this->chargeAlgorithm = new ChargeAlgorithmCCCV(linearGradient, chargeCurrent, nonLinearPhaseStartPercentage);
             this->chargeAlgorithm = new ChargeAlgorithmCCCVCurrent(chargeCurrent, nonLinearPhaseStartPercentage);
 
@@ -475,8 +475,6 @@ void ChargingNode::fillChargingSpots()
  */
 void ChargingNode::clearChargingSpots()
 {
-    std::deque<ChargingNodeSpotElement*>::iterator objectChargingIt = objectsCharging.begin();
-
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
             EV_INFO << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - not physically present anymore."
@@ -575,8 +573,7 @@ void ChargingNode::charge()
  */
 double ChargingNode::getEstimatedWaitingSeconds()
 {
-    // initialize an Array with the size of chargingSpots with 0's
-    double waitingTimes[objectsCharging.size()] = { 0.0 };
+    std::vector<double> waitingTimes(objectsCharging.size(), 0.0);
 
     for (unsigned int c = 0; c < objectsCharging.size(); c++) {
         // set array values to the remaining seconds needed for currently charged objects
@@ -584,9 +581,9 @@ double ChargingNode::getEstimatedWaitingSeconds()
     }
     for (unsigned int w = 0; w < objectsWaiting.size(); w++) {
         // add the estimated charge duration of the next waiting object to "spot" with the smallest duration
-        *std::min_element(waitingTimes, waitingTimes + objectsCharging.size()) += objectsWaiting[w]->getEstimatedChargeDuration();
+        *std::min_element(waitingTimes.begin(), waitingTimes.end()) += objectsWaiting[w]->getEstimatedChargeDuration();
     }
-    return *std::min_element(waitingTimes, waitingTimes + objectsCharging.size());
+    return *std::min_element(waitingTimes.begin(), waitingTimes.end());
 }
 
 #endif // WITH_OSG

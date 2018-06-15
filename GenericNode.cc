@@ -24,6 +24,7 @@
 #include <osgEarthAnnotation/LabelNode>
 #include <osgEarthSymbology/Geometry>
 #include <osgEarthFeatures/Feature>
+#include "omnetpp/osgutil.h"
 
 using namespace omnetpp;
 
@@ -80,7 +81,7 @@ void GenericNode::initialize(int stage)
                 modelNode->getOrCreateStateSet()->setAttribute(material, osg::StateAttribute::OFF | osg::StateAttribute::OVERRIDE);
             }
 
-            auto objectNode = new cObjectOsgNode(this); // make the node selectable in Qtenv
+            auto objectNode = new omnetpp::cObjectOsgNode(this);  // make the node selectable in Qtenv
             objectNode->addChild(modelNode);
             locatorNode->addChild(objectNode);
 

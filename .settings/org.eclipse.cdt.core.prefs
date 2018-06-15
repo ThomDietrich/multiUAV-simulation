@@ -1,4 +1,12 @@
 eclipse.preferences.version=1
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/CWD/delimiter=;
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/CWD/operation=replace
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/CWD/value=${ProjDirPath}
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/PWD/delimiter=;
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/PWD/operation=replace
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/PWD/value=${ProjDirPath}
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/append=true
+environment/project/org.omnetpp.cdt.gnu.config.release.1117020921/appendContributed=true
 org.eclipse.cdt.core.formatter.alignment_for_arguments_in_method_invocation=16
 org.eclipse.cdt.core.formatter.alignment_for_assignment=16
 org.eclipse.cdt.core.formatter.alignment_for_base_clause_in_type_declaration=0

@@ -314,7 +314,7 @@ public:
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
-    WaypointCommand* extractCommand()
+    WaypointCommand* extractCommand() override
     {
         return command;
     }
@@ -341,7 +341,7 @@ public:
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
-    TakeoffCommand* extractCommand()
+    TakeoffCommand* extractCommand() override
     {
         return command;
     }
@@ -368,7 +368,7 @@ public:
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
-    HoldPositionCommand* extractCommand()
+    HoldPositionCommand* extractCommand() override
     {
         return command;
     }
@@ -392,7 +392,7 @@ public:
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
-    ChargeCommand* extractCommand()
+    ChargeCommand* extractCommand() override
     {
         return command;
     }
@@ -427,7 +427,7 @@ public:
 
     bool dataTransferPerformed = false;
 
-    ExchangeCommand* extractCommand()
+    ExchangeCommand* extractCommand() override
     {
         return command;
     }
@@ -459,7 +459,7 @@ public:
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
-    WaitCommand* extractCommand()
+    WaitCommand* extractCommand() override
     {
         return command;
     }

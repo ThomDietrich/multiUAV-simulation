@@ -18,7 +18,9 @@
 
 #include <omnetpp.h>
 
+#include <osg/PositionAttitudeTransform>
 #include <osgEarth/MapNode>
+#include <osgEarth/GeoTransform>
 #include <osgEarthAnnotation/CircleNode>
 #include <osgEarthAnnotation/FeatureNode>
 #include <osgEarthAnnotation/LabelNode>

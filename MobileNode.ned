@@ -31,6 +31,6 @@ simple MobileNode extends GenericNode
         bool commandPreviewEnabled = default(true);        // decides whether or not to display command preview
 
         //energy consumption
-        double batteryCapacity @unit("mAh") = default(2200mAh);  // the battery capacity (in mAh, "0" for infinite energy storage)
-        double batteryRemaining @unit("mAh") = default(2200mAh); // the battery capacity remaining on simulation start (in mAh, must be equal or less than batteryCapacity)
+        int batteryCapacity @unit("mAh") = default(2200mAh);  // the battery capacity (in mAh, "0" for infinite energy storage)
+        int batteryRemaining @unit("mAh") = default(2200mAh); // the battery capacity remaining on simulation start (in mAh, must be equal or less than batteryCapacity)
 }

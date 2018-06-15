@@ -33,6 +33,7 @@ OBJS = \
     $O/Battery.o \
     $O/ChannelController.o \
     $O/ChargeAlgorithmCCCV.o \
+    $O/ChargeAlgorithmCCCVCurrent.o \
     $O/ChargingNode.o \
     $O/ChargingNodeSpotElement.o \
     $O/Command.o \

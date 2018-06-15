@@ -20,6 +20,7 @@
 #include <string>
 #include <omnetpp.h>
 #include "MobileNode.h"
+#include "msgs/MissionMsg_m.h"
 #include <boost/math/distributions/normal.hpp>
 #include "UAVSoloEmpiricData.h"
 
