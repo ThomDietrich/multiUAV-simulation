@@ -58,19 +58,11 @@ void OsgEarthScene::initialize()
     auto mapNode = MapNode::findMapNode(scene);
     ASSERT(mapNode != nullptr);
 
-    /// OMNeT++ 5.1.1
     // set up viewer
-    const SpatialReference *geoSRS = mapNode->getMapSRS();
+    const SpatialReference *geoSRS = mapNode->getMapSRS()->getGeographicSRS();
     builtinOsgCanvas->setViewerStyle(cOsgCanvas::STYLE_EARTH);
     // and move the initial view right above it
-    //builtinOsgCanvas->setEarthViewpoint(cOsgCanvas::EarthViewpoint(centerLongitude, centerLatitude, 50, 0, -22, playgroundHeight * 2));
-    builtinOsgCanvas->setEarthViewpoint(Viewpoint("home", centerLongitude, centerLatitude, 50, 0, -22, playgroundHeight * 2));
-    /// OMNeT++ 5.4
-    // set up viewer
-    //const SpatialReference *geoSRS = mapNode->getMapSRS()->getGeographicSRS();
-    //builtinOsgCanvas->setViewerStyle(cOsgCanvas::STYLE_EARTH);
-    // and move the initial view right above it
-    //builtinOsgCanvas->setEarthViewpoint(cOsgCanvas::EarthViewpoint(centerLongitude, centerLatitude, 50, 0, -22, playgroundHeight * 2));
+    builtinOsgCanvas->setEarthViewpoint(cOsgCanvas::EarthViewpoint(centerLongitude, centerLatitude, 50, 0, -22, playgroundHeight * 2));
 
     // fine tune the ZLimits (clipping) to better fit this scenario
     builtinOsgCanvas->setZLimits(1, 100000);
