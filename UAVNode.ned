@@ -18,6 +18,7 @@ simple UAVNode extends MobileNode
         double startX @unit("m") = default(0m);          // the starting coordinates in meter
         double startY @unit("m") = default(0m);          // the starting coordinates in meter
         double startZ @unit("m") = default(2m);          // the starting coordinates in meter
+        double predictionQuantile = default(0.95);       // the quantile [0..1] for normal dist quantile calculation
         int replacementMethod = default(0);              // 0: latest opportunity heuristic
                                                          // 1: shortest return heuristic
                                                          // 2: utilization quotient heuristic

@@ -50,6 +50,7 @@ void UAVNode::initialize(int stage)
             x = par("startX");
             y = par("startY");
             z = par("startZ");
+            quantile = par("predictionQuantile").doubleValue();
             break;
         }
         case 1: {
@@ -596,15 +597,15 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
  * @param fromMethod 0: random  1: mean  2: predictionQuantile
  * @return The current used by the UAV, in [mAh]
  */
-double UAVNode::getHoverConsumption(float duration, int fromMethod)
+float UAVNode::getHoverConsumption(float duration, int fromMethod, float quantile)
 {
     if (duration == 0) return 0;
 
-    double mean = HOVER_MEAN * duration / 3600;
-    double var = getVarianceFromHFormula(-1, duration);
-    double stddev = sqrt(var);
+    float mean = HOVER_MEAN * duration / 3600;
+    float var = getVarianceFromHFormula(-1, duration);
+    float stddev = sqrt(var);
 
-    double energy = 0;
+    float energy = 0;
 
     if (fromMethod == 0) {
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
@@ -632,31 +633,31 @@ double UAVNode::getHoverConsumption(float duration, int fromMethod)
  * @param fromMethod 0: random  1: mean  2: predictionQuantile
  * @return The energy used by the UAV in [mAh]
  */
-double UAVNode::getMovementConsumption(float angle, float duration, int fromMethod)
+float UAVNode::getMovementConsumption(float angle, float duration, int fromMethod, float quantile)
 {
     if (duration < 0.001) return 0;
 
-    double mean = 0;
-    double stddev = 0;
-    double energy = 0;
+    float mean = 0;
+    float stddev = 0;
+    float energy = 0;
 
     ASSERT(angle >= -90.0 && angle <= +90.0);
 
     for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
-        double angle0 = ANGLE2POWER[idx - 1][0];
-        double angle1 = ANGLE2POWER[idx][0];
+        float angle0 = ANGLE2POWER[idx - 1][0];
+        float angle1 = ANGLE2POWER[idx][0];
 
         if ((angle0 <= angle && angle <= angle1)) {
-            double mean0 = ANGLE2POWER[idx - 1][1];
-            double mean1 = ANGLE2POWER[idx][1];
+            float mean0 = ANGLE2POWER[idx - 1][1];
+            float mean1 = ANGLE2POWER[idx][1];
 
             mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
             mean = mean * duration / 3600;
 
-            double var0 = getVarianceFromHFormula(idx - 1, duration);
-            double var1 = getVarianceFromHFormula(idx, duration);
+            float var0 = getVarianceFromHFormula(idx - 1, duration);
+            float var1 = getVarianceFromHFormula(idx, duration);
 
-            double var = var0 + (var1 - var0) / (angle1 - angle0) * (angle - angle0);
+            float var = var0 + (var1 - var0) / (angle1 - angle0) * (angle - angle0);
             stddev = sqrt(var);
             break;
         }
@@ -685,23 +686,23 @@ double UAVNode::getMovementConsumption(float angle, float duration, int fromMeth
  * @param the ascent/decline angle, range: -90..+90°
  * @return the speed of the UAV in [m/s]
  */
-double UAVNode::getSpeed(double angle, int fromMethod)
+float UAVNode::getSpeed(float angle, int fromMethod, float quantile)
 {
-    double mean = 0;
-    double stddev = 0;
-    double speed = 0;
+    float mean = 0;
+    float stddev = 0;
+    float speed = 0;
 
     ASSERT(angle >= -90.0 && angle <= +90.0);
 
     for (u_int idx = 1; idx < NUM_ANGLES; idx++) {
-        double angle0 = ANGLE2SPEED[idx - 1][0];
-        double angle1 = ANGLE2SPEED[idx][0];
+        float angle0 = ANGLE2SPEED[idx - 1][0];
+        float angle1 = ANGLE2SPEED[idx][0];
 
         if ((angle0 <= angle && angle <= angle1)) {
-            double mean0 = ANGLE2SPEED[idx - 1][1];
-            double mean1 = ANGLE2SPEED[idx][1];
-            double stddev0 = ANGLE2SPEED[idx - 1][2];
-            double stddev1 = ANGLE2SPEED[idx][2];
+            float mean0 = ANGLE2SPEED[idx - 1][1];
+            float mean1 = ANGLE2SPEED[idx][1];
+            float stddev0 = ANGLE2SPEED[idx - 1][2];
+            float stddev1 = ANGLE2SPEED[idx][2];
 
             mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
             stddev = abs(stddev0 + (stddev1 - stddev0) / (angle1 - angle0) * (angle - angle0));

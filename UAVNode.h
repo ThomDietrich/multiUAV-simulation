@@ -26,7 +26,6 @@
 
 using namespace omnetpp;
 
-const float quantile = 0.95;
 
 /**
  * A mobile node that follows a predefined track.
@@ -46,9 +45,9 @@ public:
     virtual ~UAVNode();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual double estimateCommandsDuration();
-    static double getHoverConsumption(float duration, int fromMethod = 0);
-    static double getMovementConsumption(float angle, float duration, int fromMethod = 0);
-    static double getSpeed(double angle, int fromMethod = 1);
+    static float getHoverConsumption(float duration, int fromMethod = 0, float quantile = 0.95);
+    static float getMovementConsumption(float angle, float duration, int fromMethod = 0, float quantile = 0.95);
+    static float getSpeed(float angle, int fromMethod = 1, float quantile = 0.95);
 
     //TODO part of hack111 to make the replacing node known to the Exchange command
     GenericNode* replacingNode = nullptr;
@@ -84,7 +83,7 @@ private:
     float energyForCEE(CommandExecEngine* cee);
     float estimateEnergy(double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
     double estimateDuration(double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
-
+    float quantile = 0.95;
 };
 
 #endif

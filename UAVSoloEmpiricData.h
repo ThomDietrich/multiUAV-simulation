@@ -20,7 +20,7 @@ static const u_int NUM_ANGLES = 11;
 
 static const float VOLTAGE = 14.8;
 
-static const double ANGLE2SPEED[NUM_ANGLES][3] = {
+static const float ANGLE2SPEED[NUM_ANGLES][3] = {
     // angle [°], mean speed [m/s], stddev
     { -90.0, 1.836668, 0.031363919 }, //
     { -75.6, 1.842679, 0.022660066 }, //
@@ -35,7 +35,7 @@ static const double ANGLE2SPEED[NUM_ANGLES][3] = {
     { +90.0, 2.718687, 0.030244684 }  //
 };
 
-static const double ANGLE2POWER[NUM_ANGLES][2] = {
+static const float ANGLE2POWER[NUM_ANGLES][2] = {
     // angle [°], mean power [W]
     { -90.0, 248.72 }, //
     { -75.6, 263.72 }, //
@@ -52,7 +52,7 @@ static const double ANGLE2POWER[NUM_ANGLES][2] = {
 
 static const u_int NUM_ANGLELAGS = 30;
 
-static const double ANGLE2LAGS[NUM_ANGLES][NUM_ANGLELAGS + 1] = {
+static const float ANGLE2LAGS[NUM_ANGLES][NUM_ANGLELAGS + 1] = {
     // angle [°], lag pacf values 1..30
     { -90.0,  0.602870, -0.099348,  0.326906,  0.043453,  0.116452,  0.029241,  0.030929,  0.030780,  0.034543, -0.001088,  0.006448,  0.021622, -0.009272,  0.025219,  0.021189,  0.033977,  0.016235,  0.038448,  0.019304, -0.000470,  0.048786,  0.001455, -0.040031,  0.038297,  0.015086,  0.000000,  0.000000,  0.000000,  0.000000,  0.000000 }, //
     { -75.6,  0.543535, -0.193648,  0.425100,  0.019627,  0.083271,  0.034254,  0.051246,  0.013434,  0.058274,  0.031759, -0.048089,  0.029717, -0.005071, -0.046914, -0.014648,  0.030528, -0.062127, -0.016262,  0.009044,  0.022704,  0.075686,  0.088229,  0.023119, -0.053067,  0.057553,  0.025576, -0.046556, -0.026023,  0.019708,  0.000000 }, //
@@ -71,7 +71,7 @@ static const float HOVER_MEAN = 262.7; // mean power [W]
 
 static const u_int NUM_HOVERLAGS = 14;
 
-static const double HOVER_LAGS[NUM_HOVERLAGS + 1] = {
+static const float HOVER_LAGS[NUM_HOVERLAGS + 1] = {
     // empty (0), lag pacf values 1..14
     0, 0.682, -0.058, 0.233, 0.076, 0.096, -0.028, -0.060, 0.036, 0.067, 0.057, 0.017, 0.014, -0.009, 0.085
 };
@@ -84,9 +84,9 @@ static const int LAGS_SAMPLES_PER_SECOND = 10;
  * ACF variance inference method by Prof Hotz
  * Compare chapter 4.4. of thesis
  */
-inline double getVarianceFromHFormula(int angleIdx, float duration)
+inline float getVarianceFromHFormula(int angleIdx, float duration)
 {
-    double variance = 0;
+    float variance = 0;
     float sum = 0;
     u_int n = (u_int) (duration * LAGS_SAMPLES_PER_SECOND);
 
