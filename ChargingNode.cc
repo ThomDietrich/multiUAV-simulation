@@ -104,7 +104,7 @@ void ChargingNode::handleMessage(cMessage* msg)
         MobileNode *mn = check_and_cast<MobileNode*>(msg->getSenderModule());
         appendToObjectsWaiting(mn, rsmsg->getTargetPercentage(), simTime(), rsmsg->getEstimatedArrival(), rsmsg->getConsumptionTillArrival());
         reservations++;
-        EV_INFO << "Mobile Node is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
+        EV_INFO << "MobileNode " << mn->getFullName() << " is on the way to CS. Spot reserved for: " << rsmsg->getEstimatedArrival() << endl;
 
         if (not active) {
             msg->setName("update");
@@ -354,7 +354,7 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, double targetP
     }
 
     objectsWaiting.push_back(element);
-    EV_INFO << "MobileNode got appended to a waiting spot." << endl;
+    EV_INFO << "MobileNode "<< mobileNode->getFullName() <<" got appended to a waiting spot." << endl;
 }
 
 /*
@@ -385,13 +385,13 @@ std::deque<ChargingNodeSpotElement*>::iterator ChargingNode::getNextWaitingObjec
     while (objectWaitingIt != objectsWaiting.end()) {
         if (not isPhysicallyPresent((*objectWaitingIt)->getNode())) {
             objectWaitingIt++;
-            break;
+            continue;
         }
         if (fastCharge
                 && static_cast<double>((*objectWaitingIt)->getNode()->getBattery()->getRemainingPercentage())
                 > chargeAlgorithm->getFastChargePercentage((*objectWaitingIt)->getNode()->getBattery()->getCapacity())) {
             objectWaitingIt++;
-            break;
+            continue;
         }
         if (next == objectsWaiting.end()
                 || ((*objectWaitingIt)->getReservationTime() < (*next)->getReservationTime() && (*objectWaitingIt)->getEstimatedArrival() <= simTime())) {
@@ -573,6 +573,9 @@ void ChargingNode::charge()
  */
 double ChargingNode::getEstimatedWaitingSeconds()
 {
+    if(objectsCharging.empty())
+        return 0;
+
     std::vector<double> waitingTimes(objectsCharging.size(), 0.0);
 
     for (unsigned int c = 0; c < objectsCharging.size(); c++) {

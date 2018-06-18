@@ -91,7 +91,10 @@ public:
 
     ReplacementData* getReplacementData() const
     {
-        if (not hasReplacementData()) throw cRuntimeError("No replacementData available, this method should not be called here");
+        if (not hasReplacementData())  {
+            std::string error_msg = std::string(node->getFullName()) + ": no replacementData available, NodeShadow::getReplacementData() should not be called.";
+            throw cRuntimeError(error_msg.c_str());
+        }
         return replacementData;
     }
 
@@ -127,7 +130,10 @@ public:
 
     cMessage* getReplacementMsg() const
     {
-        if (not hasReplacementMsg()) throw cRuntimeError("No replacementMsg available, this method should not be called here");
+        if (not hasReplacementMsg())  {
+            std::string error_msg = std::string(node->getFullName()) + ": no replacementMsg available, NodeShadow::getReplacementMsg() should not be called.";
+            throw cRuntimeError(error_msg.c_str());
+        }
         return replacementMsg;
     }
 
@@ -144,19 +150,28 @@ public:
 
     GenericNode* getReplacingNode() const
     {
-        if (not hasReplacingNode()) throw cRuntimeError("No replacingNode available, this method should not be called here");
+        if (not hasReplacingNode()) {
+            std::string error_msg = std::string(node->getFullName()) + ": no replacingNode available, NodeShadow::getReplacingNode() should not be called.";
+            throw cRuntimeError(error_msg.c_str());
+        }
         return this->replacementData->replacingNode;
     }
 
     int getReplacingNodeIndex() const
     {
-        if (not hasReplacingNode()) throw cRuntimeError("No replacingNode available, this method should not be called here");
+        if (not hasReplacingNode()) {
+            std::string error_msg = std::string(node->getFullName()) + ": no replacingNode available, NodeShadow::getReplacingNodeIndex() should not be called.";
+            throw cRuntimeError(error_msg.c_str());
+        }
         return this->replacementData->replacingNode->getIndex();
     }
 
     simtime_t getReplacementTime() const
     {
-        if (not hasReplacementData()) throw cRuntimeError("No replacementData available, this method should not be called here");
+        if (not hasReplacementData()) {
+            std::string error_msg = std::string(node->getFullName()) + ": no replacementData available, NodeShadow::getReplacementTime() should not be called.";
+            throw cRuntimeError(error_msg.c_str());
+        }
         return this->replacementData->timeOfReplacement;
     }
 
@@ -173,8 +188,7 @@ public:
     
     void setKnownBattery(Battery* knownBattery = nullptr)
     {
-        if(this->knownBattery != nullptr)
-            delete this->knownBattery;
+        if (this->knownBattery != nullptr) delete this->knownBattery;
         this->knownBattery = knownBattery;
     }
 };
