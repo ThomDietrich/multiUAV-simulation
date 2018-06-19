@@ -36,9 +36,9 @@ Results for Gabelbach szenario will be placed in subdirectory `.\results`. Depen
 - \*.elog: Eventlog
 - \*.out: everything written to the ouput console
 - \*.sca: scalar results that include the final results inclduing the six main figures:
- - utilizationEnergyOverdrawMaintenance
- - utilizationEnergyOverdrawMission
- - utilizationEnergyMaintenance
- - utilizationEnergyMission
- - utilizationSecMaintenance
- - utilizationSecMission
+  - utilizationEnergyOverdrawMaintenance
+  - utilizationEnergyOverdrawMission
+  - utilizationEnergyMaintenance
+  - utilizationEnergyMission
+  - utilizationSecMaintenance
+  - utilizationSecMission
