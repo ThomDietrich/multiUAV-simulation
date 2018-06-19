@@ -32,10 +32,10 @@ All launches are preconfigured to run the Gabelbach scenario.
 
 ### Results
 
-Results for Gabelbach szenario will be placed in subdirectory `.\results`. Depending on your launch configuration, you will find a different amount of output files. However, for each successfully finished simulation run, there should be following files:
+Results for Gabelbach scenario will be placed in subdirectory `.\results`. Depending on your launch configuration, you will find a different amount of output files. However, for each successfully finished simulation run, there should be following files:
 - \*.elog: Eventlog
 - \*.out: everything written to the ouput console
-- \*.sca: scalar results that include the final results inclduing the six main figures:
+- \*.sca: scalar results that include the final results including the six main figures:
   - utilizationEnergyOverdrawMaintenance
   - utilizationEnergyOverdrawMission
   - utilizationEnergyMaintenance
