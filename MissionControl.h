@@ -27,6 +27,7 @@
 #include "GenericNode.h"
 #include "msgs/MissionMsg_m.h"
 #include "msgs/CmdCompletedMsg_m.h"
+#include "msgs/ExchangeCompletedMsg_m.h"
 #include "msgs/MobileNodeRequest_m.h"
 #include "msgs/MobileNodeResponse_m.h"
 #include "MissionControlDataMap.h"

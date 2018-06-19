@@ -95,11 +95,17 @@ void UAVNode::handleMessage(cMessage *msg)
         // Handle received mission data
         if (exchangeCEE->commandCompleted()) {
             EV_WARN << __func__ << "(): Mission exchange already completed." << endl;
-            replacingNode = nullptr;
-            replacementX = DBL_MAX;
-            replacementY = DBL_MAX;
-            replacementZ = DBL_MAX;
-            replacementTime = 0;
+            if (exchangeCEE->extractCommand()->isRechargeRequested()) {
+                ExchangeCompletedMsg* exchangeCompletedMsg = new ExchangeCompletedMsg("exchangeCompleted");
+                exchangeCompletedMsg->setReplacedNodeIndex(this->getIndex());
+                exchangeCompletedMsg->setReplacingNodeIndex(replacingNode->getIndex());
+                replacingNode = nullptr;
+                replacementX = DBL_MAX;
+                replacementY = DBL_MAX;
+                replacementZ = DBL_MAX;
+                replacementTime = 0;
+                send(exchangeCompletedMsg, "gate$o", 0);
+            }
         }
         else {
             MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
@@ -197,10 +203,10 @@ void UAVNode::selectNextCommand()
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
-        if (replacingNode == nullptr) {
+        if (replacingNode == nullptr && scheduledCEE->isPartOfMission()) {
             std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName()) + " should be known by now (part of hack111).";
-//            throw cRuntimeError(error_msg.c_str());
-            EV_ERROR << __func__ << "():" << error_msg << endl;
+            throw cRuntimeError(error_msg.c_str());
+//            EV_ERROR << __func__ << "():" << error_msg << endl;
         }
 
         // Generate and inject ExchangeCEE, only if not already done

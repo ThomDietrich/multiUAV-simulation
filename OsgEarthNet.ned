@@ -56,10 +56,10 @@ network OsgEarthNet
             uav[j].gate++ <--> Channel <--> uav[k].gate++
             	if j!=k;
         }
+		for n=0..numCSs-1 {
+            missionControl.gate++ <--> Channel <--> cs[n].gate++;
+        }        
         for l=0..numUAVs-1, for m=0..numCSs-1 {
             uav[l].gate++ <--> Channel <--> cs[m].gate++;
-        }
-        for n=0..numCSs-1 {
-            missionControl.gate++ <--> Channel <--> cs[n].gate++;
         }
 }

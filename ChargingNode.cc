@@ -339,6 +339,13 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, double targetP
         return;
     }
 
+    MobileNodeResponse *answerMsg = new MobileNodeResponse("mobileNodeResponse");
+    answerMsg->setNodeFound(true);
+    answerMsg->setMobileNodeIndex(mobileNode->getIndex());
+    answerMsg->setCapacity(mobileNode->getBattery()->getCapacity());
+    answerMsg->setRemaining(mobileNode->getBattery()->getRemaining());
+    send(answerMsg, "gate$o", 0);
+
     // generate a new waiting element with estimated charge and waiting times
     // substract consumption which will occur between reservation and the charging process
     double chargeTime = chargeAlgorithm->calculateChargeTime(mobileNode->getBattery()->getRemaining() - consumption, mobileNode->getBattery()->getCapacity(),
