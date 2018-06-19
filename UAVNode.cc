@@ -59,6 +59,16 @@ void UAVNode::initialize(int stage)
     }
 }
 
+void UAVNode::finish()
+{
+    recordScalar("utilizationEnergyOverdrawMaintenance", utilizationEnergyOverdrawMaintenance);
+    recordScalar("utilizationEnergyOverdrawMission", utilizationEnergyOverdrawMission);
+    recordScalar("utilizationEnergyMaintenance", utilizationEnergyMaintenance);
+    recordScalar("utilizationEnergyMission", utilizationEnergyMission);
+    recordScalar("utilizationSecMaintenance", utilizationSecMaintenance);
+    recordScalar("utilizationSecMission", utilizationSecMission);
+}
+
 void UAVNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
@@ -148,7 +158,8 @@ void UAVNode::selectNextCommand()
     if (exchangeAfterCurrentCommand && not scheduledCEE->isCeeType(CeeType::EXCHANGE)) {
         std::string error_msg = "selectNextCommand(): " + std::string(this->getFullName())
                 + " should have switched into Exchange CEE now. Another UAV is waiting...";
-        throw cRuntimeError(error_msg.c_str());
+//        throw cRuntimeError(error_msg.c_str());
+        EV_ERROR << __func__ << "():" << error_msg << endl;
     }
     else {
         exchangeAfterCurrentCommand = false;
@@ -188,7 +199,8 @@ void UAVNode::selectNextCommand()
 
         if (replacingNode == nullptr) {
             std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName()) + " should be known by now (part of hack111).";
-            throw cRuntimeError(error_msg.c_str());
+//            throw cRuntimeError(error_msg.c_str());
+            EV_ERROR << __func__ << "():" << error_msg << endl;
         }
 
         // Generate and inject ExchangeCEE, only if not already done
@@ -216,7 +228,8 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (ID " << commandExecEngine->getCommandId() << " at (" << commandExecEngine->getX1() << ", " << commandExecEngine->getY1() << ", " << commandExecEngine->getZ1() << "))" << endl;
+    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (ID " << commandExecEngine->getCommandId() << " at ("
+            << commandExecEngine->getX1() << ", " << commandExecEngine->getY1() << ", " << commandExecEngine->getZ1() << "))" << endl;
 }
 
 void UAVNode::collectStatistics()

@@ -408,6 +408,12 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
+    if(not command->isOtherNodeKnown())
+    {
+        EV_ERROR << __func__ << "(): No other node for " << node->getFullName() << "'s exchange command." << endl;
+        return;
+    }
+
     EV_INFO << __func__ << "(): Ready for exchange, sending data to other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
 
     // Send an exchangeData message to the other node taking part in the exchange
