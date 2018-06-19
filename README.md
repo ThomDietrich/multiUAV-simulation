@@ -25,7 +25,7 @@ Example Result: `C:\omnetpp-5.1.1\include-boost\boost\version.hpp`
 In subdirectory `.\run_config` you can find predefined run and debug configuration ready to go with OMNeT++ IDE.
 
 All launches are preconfigured to run the Gabelbach scenario.
-* multiUAV-simulation cmdenv.launch ==> launches all runs without user interface (i.e. QTenv), that inclu*des interating over all replacement modes and repeat for 10 times
+* multiUAV-simulation cmdenv.launch ==> launches all runs without user interface (i.e. QTenv), that includes interating over all replacement modes and repeat for 10 times
 * multiUAV-simulation cmdenv (0).launch ==> launches without user interface Run 0, i.e. replacement mode 0 and no repetition
 * multiUAV-simulation debug.launch ==> launches the simulation with user interface, with debug information (should be run as debug) and Run 0
 * multiUAV-simulation release.launch ==> launches the simulation with user interface in release state and Run 0
