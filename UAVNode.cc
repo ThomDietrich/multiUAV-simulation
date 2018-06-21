@@ -96,11 +96,17 @@ void UAVNode::handleMessage(cMessage *msg)
         // Handle received mission data
         if (exchangeCEE->commandCompleted()) {
             EV_WARN << __func__ << "(): Mission exchange already completed." << endl;
-            replacingNode = nullptr;
-            replacementX = DBL_MAX;
-            replacementY = DBL_MAX;
-            replacementZ = DBL_MAX;
-            replacementTime = 0;
+            if (exchangeCEE->extractCommand()->isRechargeRequested()) {
+                ExchangeCompletedMsg* exchangeCompletedMsg = new ExchangeCompletedMsg("exchangeCompleted");
+                exchangeCompletedMsg->setReplacedNodeIndex(this->getIndex());
+                exchangeCompletedMsg->setReplacingNodeIndex(replacingNode->getIndex());
+                replacingNode = nullptr;
+                replacementX = DBL_MAX;
+                replacementY = DBL_MAX;
+                replacementZ = DBL_MAX;
+                replacementTime = 0;
+                send(exchangeCompletedMsg, "gate$o", 0);
+            }
         }
         else {
             MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);

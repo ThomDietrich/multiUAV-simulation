@@ -354,7 +354,7 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, double targetP
     }
 
     objectsWaiting.push_back(element);
-    EV_INFO << "MobileNode "<< mobileNode->getFullName() <<" got appended to a waiting spot." << endl;
+    EV_INFO << "MobileNode " << mobileNode->getFullName() << " got appended to a waiting spot." << endl;
 }
 
 /*
@@ -389,7 +389,7 @@ std::deque<ChargingNodeSpotElement*>::iterator ChargingNode::getNextWaitingObjec
         }
         if (fastCharge
                 && static_cast<double>((*objectWaitingIt)->getNode()->getBattery()->getRemainingPercentage())
-                > chargeAlgorithm->getFastChargePercentage((*objectWaitingIt)->getNode()->getBattery()->getCapacity())) {
+                        > chargeAlgorithm->getFastChargePercentage((*objectWaitingIt)->getNode()->getBattery()->getCapacity())) {
             objectWaitingIt++;
             continue;
         }
@@ -477,8 +477,7 @@ void ChargingNode::clearChargingSpots()
 {
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
-            EV_INFO << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - not physically present anymore."
-                    << endl;
+            EV_INFO << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - not physically present anymore." << endl;
             objectsCharging.erase(objectsCharging.begin() + i);
             continue;
         }
@@ -561,6 +560,16 @@ void ChargingNode::charge()
         EV_INFO << objectsCharging[i]->getNode()->getFullName() << " charging: " << durationSeconds << "s * " << chargeMeanCurrent << "mA = " << chargeAmount
                 << "mAh (now " << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "%)" << endl;
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
+
+        MobileNode* mobileNode = objectsCharging[i]->getNode();
+
+        MobileNodeResponse *answerMsg = new MobileNodeResponse("mobileNodeResponse");
+        answerMsg->setNodeFound(true);
+        answerMsg->setMobileNodeIndex(mobileNode->getIndex());
+        answerMsg->setCapacity(mobileNode->getBattery()->getCapacity());
+        answerMsg->setRemaining(mobileNode->getBattery()->getRemaining());
+        send(answerMsg, "gate$o", 0);
+
         objectsCharging[i]->getNode()->getCommandExecEngine()->setConsumptionPerSecond((-1) * chargeMeanCurrent);
         battery.discharge(chargeAmount / this->chargeEffectivenessPercentage);
         usedPower += chargeAmount / this->chargeEffectivenessPercentage;
@@ -573,8 +582,7 @@ void ChargingNode::charge()
  */
 double ChargingNode::getEstimatedWaitingSeconds()
 {
-    if(objectsCharging.empty())
-        return 0;
+    if (objectsCharging.empty()) return 0;
 
     std::vector<double> waitingTimes(objectsCharging.size(), 0.0);
 

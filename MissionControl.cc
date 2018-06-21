@@ -85,12 +85,19 @@ void MissionControl::handleMessage(cMessage *msg)
 
         //TODO: too simple. Should e.g. not happen for ReplacingNode
         if (nodeShadow->isStatusProvisioning()) {
-            EV_INFO << "Node " << nodeShadow->getNodeIndex() << " switching over to nodeStatus MISSION" << endl;
+            EV_INFO << "Node " << nodeShadow->getNode()->getFullName() << " switching over to nodeStatus MISSION" << endl;
             nodeShadow->setStatus(NodeStatus::MISSION);
         }
         if (ccmsg->getReplacementDataAvailable()) {
             handleReplacementMessage(ccmsg->getReplacementData());
         }
+    }
+    else if (msg->isName("exchangeCompleted")) {
+        ExchangeCompletedMsg* ecmsg = check_and_cast<ExchangeCompletedMsg*>(msg);
+        NodeShadow* nodeShadow = managedNodeShadows.get(ecmsg->getReplacedNodeIndex());
+        if (nodeShadow->hasReplacementData()) nodeShadow->setReplacingNode(nullptr);
+        nodeShadow->setStatus(NodeStatus::MAINTENANCE);
+        EV_INFO << "Node " << nodeShadow->getNode()->getFullName() << " switching over to nodeStatus MAINTENANCE" << endl;
     }
     else if (msg->isName("provisionReplacement")) {
         // Identify node requesting replacement
@@ -147,7 +154,7 @@ void MissionControl::handleMessage(cMessage *msg)
                 else
                     nodeShadow->setStatus(NodeStatus::IDLE);
             }
-            EV_DEBUG << "mobileNodeResponse:" << nodeShadow->getNode()->getFullName() << ": status:" << nodeShadow->getStatusString() << endl;
+            EV_INFO << "mobileNodeResponse:" << nodeShadow->getNode()->getFullName() << ": status:" << nodeShadow->getStatusString() << endl;
         }
         else {
             std::string message = "No mobile node found for message: ";
