@@ -26,7 +26,7 @@ using namespace omnetpp;
 
 Define_Module(UAVNode);
 
-#define ERROR_MARGIN 0.0625
+#define ERROR_MARGIN 0.1875
 
 UAVNode::UAVNode()
 {
@@ -73,7 +73,22 @@ void UAVNode::finish()
 void UAVNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
-    if (msg->isName("exchangeData")) {
+
+    if (msg->isName("initIdle")) {
+        missionId = -2;
+        cees.clear();
+        CommandExecEngine *cee = new IdleCEE(this, new IdleCommand());
+        cee->setCommandId(-2);
+        cee->setPartOfMission(false);
+        cees.push_back(cee);
+        selectNextCommand();
+        initializeState();
+        EV_INFO << "UAV initialized as idle node." << endl;
+        delete msg;
+        msg = nullptr;
+        return;
+    }
+    else if (msg->isName("exchangeData")) {
         EV_INFO << __func__ << "(): exchangeData message received" << endl;
 
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
@@ -176,10 +191,13 @@ void UAVNode::selectNextCommand()
     float energyToCNNow = energyToNearestCN(getX(), getY(), getZ());
     float energyToCNAfterScheduled = energyToNearestCN(scheduledCEE->getX1(), scheduledCEE->getY1(), scheduledCEE->getZ1());
     float energyRemaining = this->battery.getRemaining();
-    bool atReplacementLocation = abs(replacementX - x) < ERROR_MARGIN && abs(replacementY - y) < ERROR_MARGIN && abs(replacementZ - z) < ERROR_MARGIN
-            && abs((replacementTime - simTime()).dbl()) < 5;
+    bool atReplacementLocation = (abs(replacementX - x) + abs(replacementY - y) + abs(replacementZ - z)) < ERROR_MARGIN
+            && abs((replacementTime - simTime()).dbl()) < 10 * ERROR_MARGIN;
 
-    if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
+    if (scheduledCEE->getCeeType() == CeeType::IDLE) {
+        EV_INFO << "Energy Management: Idle CEE, nothing to do here." << endl;
+    }
+    else if (scheduledCEE->getCeeType() == CeeType::CHARGE) {
         EV_INFO << "Energy Management: Recharging now." << endl;
     }
     else if (battery.isEmpty()) {
@@ -235,13 +253,17 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (MissionID " << missionId << ", commandID " << commandExecEngine->getCommandId() << " to ("
-            << commandExecEngine->getX1() << ", " << commandExecEngine->getY1() << ", " << commandExecEngine->getZ1() << "))" << endl;
+    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (MissionID " << missionId << ", commandID "
+            << commandExecEngine->getCommandId() << " to (" << commandExecEngine->getX1() << ", " << commandExecEngine->getY1() << ", "
+            << commandExecEngine->getZ1() << "))" << endl;
 }
 
 void UAVNode::collectStatistics()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("collectStatistics(): Command Engine missing.");
+
+    // Only collect if executed CEEs available
+    if (not commandExecEngine->isActive()) return;
 
     double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
     double thisCeeEnergy = commandExecEngine->getConsumptionPerSecond() * thisCeeDuration;
@@ -765,7 +787,7 @@ void UAVNode::move()
  */
 bool UAVNode::cmpCoord(const Command& cmd, const double X, const double Y, const double Z)
 {
-    return abs(cmd.getX() - X) < ERROR_MARGIN && abs(cmd.getY() - Y) < ERROR_MARGIN && abs(cmd.getZ() - Z) < ERROR_MARGIN;
+    return (abs(cmd.getX() - X) + abs(cmd.getY() - Y) + abs(cmd.getZ() - Z)) < ERROR_MARGIN;
 }
 
 /**
@@ -774,7 +796,7 @@ bool UAVNode::cmpCoord(const Command& cmd, const double X, const double Y, const
  */
 bool UAVNode::cmpCoord(const Command& cmd1, const Command& cmd2)
 {
-    return abs(cmd1.getX() - cmd2.getX()) < ERROR_MARGIN && abs(cmd1.getY() - cmd2.getY()) < ERROR_MARGIN && abs(cmd1.getZ() - cmd2.getZ()) < ERROR_MARGIN;
+    return (abs(cmd1.getX() - cmd2.getX()) + abs(cmd1.getY() - cmd2.getY()) + abs(cmd1.getZ() - cmd2.getZ())) < ERROR_MARGIN;
 }
 
 /**

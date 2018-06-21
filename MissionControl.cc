@@ -41,14 +41,8 @@ void MissionControl::initialize()
         NodeShadow *nodeShadow = new NodeShadow(check_and_cast<GenericNode *>(module));
         managedNodeShadows.add(nodeShadow);
 
-        // Generate and send out IdleCommand message
-        CommandQueue mission{};
-        mission.push_back(new IdleCommand());
-        MissionMsg *idleMission = new MissionMsg("startMission");
-        idleMission->setMissionId(-2);
-        idleMission->setMission(mission);
-        idleMission->setMissionRepeat(true);
-        send(idleMission, "gate$o", module->getIndex());
+        // Initialize all nodes as Idle
+        send(new cMessage("initIdle"), "gate$o", module->getIndex());
 
     }
     cMessage *start = new cMessage("startScheduling");

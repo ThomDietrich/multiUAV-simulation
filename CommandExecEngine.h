@@ -149,6 +149,14 @@ public:
     virtual void updateState(double stepSize) = 0;
 
     /**
+     *
+     */
+    bool isActive()
+    {
+        return timeExecutionStart != 0;
+    }
+
+    /**
      * Not all commands have a predefined or deterministic ending time that can be calculated.
      * This function has to be called before getDuration() or getRemainingTime().
      * @return true if duration/deadline is known

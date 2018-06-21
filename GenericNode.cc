@@ -148,6 +148,7 @@ void GenericNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
     if (msg->isName("startProvision")) {
+        collectStatistics();
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission(), false);
         selectNextCommand();
@@ -157,6 +158,7 @@ void GenericNode::handleMessage(cMessage *msg)
         stepSize = 0;
     }
     else if (msg->isName("startMission")) {
+        collectStatistics();
         activeInField = true;
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());

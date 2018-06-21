@@ -494,6 +494,7 @@ void IdleCEE::setNodeParameters()
     //node->pitch = 0;
     //node->climbAngle = 0;
     //node->speed = 0;
+    timeExecutionStart = simTime();
 }
 
 void IdleCEE::updateState(double stepSize)

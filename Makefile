@@ -48,6 +48,7 @@ OBJS = \
     $O/ReplacementData.o \
     $O/UAVNode.o \
     $O/msgs/CmdCompletedMsg_m.o \
+    $O/msgs/ExchangeCompletedMsg_m.o \
     $O/msgs/ForecastPointInTimeRequest_m.o \
     $O/msgs/ForecastResponse_m.o \
     $O/msgs/ForecastTargetRequest_m.o \
@@ -59,6 +60,7 @@ OBJS = \
 # Message files
 MSGFILES = \
     msgs/CmdCompletedMsg.msg \
+    msgs/ExchangeCompletedMsg.msg \
     msgs/ForecastPointInTimeRequest.msg \
     msgs/ForecastResponse.msg \
     msgs/ForecastTargetRequest.msg \
