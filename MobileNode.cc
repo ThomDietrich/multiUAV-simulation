@@ -136,7 +136,10 @@ void MobileNode::handleMessage(cMessage *msg)
             waypoints.push_back(osg::Vec3d(getLongitude(), getLatitude(), getAltitude()));
 
             Command* extractedCommand = commandExecEngine->extractCommand();
-            if (0 == strcmp("charge", extractedCommand->getMessageName())) {
+            if (0 == strcmp("idle", extractedCommand->getMessageName())) {
+                // do nothing
+            }
+            else if (0 == strcmp("charge", extractedCommand->getMessageName())) {
                 // do nothing
             }
             else if (0 == strcmp("exchange", extractedCommand->getMessageName())) {

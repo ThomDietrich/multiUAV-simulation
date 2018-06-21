@@ -266,7 +266,7 @@ void UAVNode::collectStatistics()
     if (not commandExecEngine->isActive()) return;
 
     double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
-    double thisCeeEnergy = commandExecEngine->getConsumptionPerSecond() * thisCeeDuration;
+    double thisCeeEnergy = fabs(commandExecEngine->getConsumptionPerSecond() * thisCeeDuration);
 
     if (commandExecEngine->isCeeType(CeeType::IDLE)) {
         ASSERT(thisCeeEnergy != 0);

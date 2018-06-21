@@ -3,13 +3,13 @@ last-configname=multiUAV-Movement-Offline
 last-runnumber=0
 
 [RunModeProfiles]
-run-playback-speed=1
+run-playback-speed=100
 run-min-playback-speed=0.01
 run-max-playback-speed=100
-run-min-animation-speed=nan
-run-max-animation-speed=nan
-fast-playback-speed=1000
+run-min-animation-speed=1000
+run-max-animation-speed=1000
+fast-playback-speed=100
 fast-min-playback-speed=1
 fast-max-playback-speed=1e+6
-fast-min-animation-speed=nan
-fast-max-animation-speed=nan
+fast-min-animation-speed=100
+fast-max-animation-speed=100

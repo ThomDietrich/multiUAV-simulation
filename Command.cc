@@ -154,5 +154,5 @@ bool ExchangeCommand::isRechargeRequested()
  */
 IdleCommand::IdleCommand()
 {
-    this->setMessageName("wait");
+    this->setMessageName("idle");
 }
