@@ -38,9 +38,11 @@ double ChargeAlgorithmCCCVCurrent::calculateChargeAmount(double remaining, doubl
     else {
         double ccStageCharge = capacity / 100 * cccvShiftPercentage;
         double cvStageCharge = capacity - ccStageCharge;
-        double cvStageProgressSeconds = getCVTime(capacity) / cvStageCharge * (remaining - ccStageCharge);
+        double cvStageTime = getCVTime(capacity);
+        double cvStageProgressSeconds = cvStageTime / cvStageCharge * (remaining - ccStageCharge);
 
-        stageCurrent = current - current / getCVTime(capacity) * (cvStageProgressSeconds + seconds / 2);
+        double currentDropOffsetFactor = 0.95;
+        stageCurrent = current - current / cvStageTime * ((cvStageProgressSeconds + seconds / 2) * currentDropOffsetFactor);
     }
     double amount = stageCurrent * 1000 * seconds / 3600;
     return amount;
