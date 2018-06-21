@@ -32,6 +32,10 @@ void MissionControl::initialize()
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     for (SubmoduleIterator it(network); !it.end(); ++it) {
         cModule *module = *it;
+//        if (module->isName("cs")) {
+//            send(new cMessage("update"), "gate$o", module->getIndex());
+//            continue;
+//        }
         if (not module->isName("uav")) {
             continue;
         }
@@ -42,7 +46,7 @@ void MissionControl::initialize()
         managedNodeShadows.add(nodeShadow);
 
         // Generate and send out IdleCommand message
-        CommandQueue mission{};
+        CommandQueue mission { };
         mission.push_back(new IdleCommand());
         MissionMsg *idleMission = new MissionMsg("startMission");
         idleMission->setMissionId(-2);
@@ -95,7 +99,8 @@ void MissionControl::handleMessage(cMessage *msg)
     else if (msg->isName("exchangeCompleted")) {
         ExchangeCompletedMsg* ecmsg = check_and_cast<ExchangeCompletedMsg*>(msg);
         NodeShadow* nodeShadow = managedNodeShadows.get(ecmsg->getReplacedNodeIndex());
-        if (nodeShadow->hasReplacementData()) nodeShadow->setReplacingNode(nullptr);
+        nodeShadow->clearReplacementMsg();
+        nodeShadow->clearReplacementData();
         nodeShadow->setStatus(NodeStatus::MAINTENANCE);
         EV_INFO << "Node " << nodeShadow->getNode()->getFullName() << " switching over to nodeStatus MAINTENANCE" << endl;
     }
@@ -141,6 +146,27 @@ void MissionControl::handleMessage(cMessage *msg)
         EV_INFO << __func__ << "(): Mission PROVISION assigned to node " << replacingNode->getFullName();
         EV_INFO << " (replacing node " << nodeShadow->getNode()->getFullName() << ")" << endl;
         EV_DEBUG << "Node replacement at (" << replData->x << ", " << replData->y << ", " << replData->z << ")" << endl;
+    }
+    else if (msg->isName("chargingUpdate")) {
+        UpdateChargingMsg* ucmsg = check_and_cast<UpdateChargingMsg*>(msg);
+        std::vector<std::string> nodes;
+        std::vector<std::string> info;
+        const char* nodeString = ucmsg->getUpdate();
+        if (std::strlen(nodeString) > 0) {
+            boost::split(nodes, nodeString, boost::algorithm::is_any_of(";"), boost::token_compress_on);
+            //XXX
+            for (auto it = nodes.cbegin(); it != nodes.cend() && (std::strlen(it->c_str()) > 0); it++) {
+                boost::split(info, *it, boost::algorithm::is_any_of(","), boost::token_compress_on);
+                NodeShadow* shadow = managedNodeShadows.get(std::stoi(info.at(0)));
+                shadow->setKnownBattery(new Battery(std::stof(info.at(2)), std::stof(info.at(1))));
+                if (shadow->getKnownBattery()->getRemainingPercentage() == 100)
+                    shadow->setStatus(NodeStatus::IDLE);
+                else
+                    shadow->setStatus(NodeStatus::CHARGING);
+                EV_TRACE << "shadow node update:" << shadow->getNode()->getFullName() << ": status:" << shadow->getStatusString() << " battery:"
+                        << shadow->getKnownBattery()->getRemainingPercentage() << "%" << endl;
+            }
+        }
     }
     else if (msg->isName("mobileNodeResponse")) {
         // write requested mobileNode information in corresponding nodeShadow's
@@ -195,8 +221,6 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         nodeShadow->setReplacingNode(replNode);
     }
     else {
-        // ToDo: Add highest capacity from config
-        this->requestChargedNodesInformation(5400);
         // Get first free IDLE node
         NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
         if (!replacingNodeShadow) {
@@ -353,9 +377,10 @@ void MissionControl::requestChargedNodesInformation(double remainingBattery)
         if (not module->isName("cs")) {
             continue;
         }
-        MobileNodeRequest *mnRequest = new MobileNodeRequest("mobileNodeRequest");
-        mnRequest->setRemaining(remainingBattery);
-        send(mnRequest, getOutputGateTo(module));
+//        MobileNodeRequest *mnRequest = new MobileNodeRequest("mobileNodeRequest");
+//        mnRequest->setRemaining(remainingBattery);
+        cMessage* msg = new cMessage("update");
+        send(msg, getOutputGateTo(module));
     }
 }
 

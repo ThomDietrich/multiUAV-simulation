@@ -182,6 +182,22 @@ void ChargingNode::updateState()
     }
     fillChargingSpots();
     rearrangeChargingSpots();
+
+    UpdateChargingMsg* updateMsg = new UpdateChargingMsg("chargingUpdate");
+    std::string update("");
+
+    for (auto it = objectsCharging.cbegin(); it != objectsCharging.cend(); ++it) {
+        MobileNode* node = (*it)->getNode();
+        Battery* battery = node->getBattery();
+        update.append(std::to_string(node->getIndex()));
+        update.append(",");
+        update.append(std::to_string(battery->getRemaining()));
+        update.append(",");
+        update.append(std::to_string(battery->getCapacity()));
+        update.append(";");
+    }
+    updateMsg->setUpdate(update.c_str());
+    send(updateMsg, "gate$o", 0);
 }
 
 bool ChargingNode::commandCompleted()
@@ -560,16 +576,6 @@ void ChargingNode::charge()
         EV_INFO << objectsCharging[i]->getNode()->getFullName() << " charging: " << durationSeconds << "s * " << chargeMeanCurrent << "mA = " << chargeAmount
                 << "mAh (now " << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "%)" << endl;
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
-
-        MobileNode* mobileNode = objectsCharging[i]->getNode();
-
-        MobileNodeResponse *answerMsg = new MobileNodeResponse("mobileNodeResponse");
-        answerMsg->setNodeFound(true);
-        answerMsg->setMobileNodeIndex(mobileNode->getIndex());
-        answerMsg->setCapacity(mobileNode->getBattery()->getCapacity());
-        answerMsg->setRemaining(mobileNode->getBattery()->getRemaining());
-        send(answerMsg, "gate$o", 0);
-
         objectsCharging[i]->getNode()->getCommandExecEngine()->setConsumptionPerSecond((-1) * chargeMeanCurrent);
         battery.discharge(chargeAmount / this->chargeEffectivenessPercentage);
         usedPower += chargeAmount / this->chargeEffectivenessPercentage;

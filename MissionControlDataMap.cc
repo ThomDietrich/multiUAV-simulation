@@ -28,8 +28,7 @@ NodeShadow::~NodeShadow()
 
 void NodeShadow::setReplacementData(ReplacementData* replacementData)
 {
-    if(this->replacementData != nullptr)
-        delete this->replacementData;
+    if (this->replacementData != nullptr) delete this->replacementData;
     this->replacementData = replacementData;
 }
 
@@ -52,6 +51,17 @@ void NodeShadow::setReplacingNode(GenericNode* replacingNode)
 void NodeShadow::clearReplacementMsg()
 {
     this->replacementMsg = nullptr;
+}
+
+void NodeShadow::clearReplacementData()
+{
+    if (hasReplacementData()) delete this->replacementData;
+    this->replacementData = nullptr;
+}
+
+void NodeShadow::clearReplacementNode()
+{
+    if (hasReplacementData()) this->replacementData->replacingNode;
 }
 
 /**
