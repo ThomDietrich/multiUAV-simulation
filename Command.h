@@ -136,9 +136,9 @@ public:
 /**
  * The vehicle will wait at the current location until further notice.
  */
-class WaitCommand : public Command {
+class IdleCommand : public Command {
 public:
-    WaitCommand();
+    IdleCommand();
 };
 
 #endif /* COMMAND_H_ */

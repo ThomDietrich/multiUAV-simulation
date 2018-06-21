@@ -25,7 +25,7 @@ using namespace omnetpp;
 class MobileNode;
 
 enum class CeeType {
-    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE, EXCHANGE, WAIT
+    WAYPOINT, TAKEOFF, HOLDPOSITION, CHARGE, EXCHANGE, IDLE
 };
 
 /**
@@ -444,12 +444,12 @@ public:
 /**
  * Wait Command Execution Engine
  */
-class WaitCEE : public CommandExecEngine {
+class IdleCEE : public CommandExecEngine {
 protected:
     MobileNode *node;
-    WaitCommand *command;
+    IdleCommand *command;
 public:
-    WaitCEE(MobileNode *boundNode, WaitCommand *command);
+    IdleCEE(MobileNode *boundNode, IdleCommand *command);
     bool commandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
@@ -459,7 +459,7 @@ public:
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
     char* getCeeTypeString() override;
 
-    WaitCommand* extractCommand() override
+    IdleCommand* extractCommand() override
     {
         return command;
     }

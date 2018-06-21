@@ -467,25 +467,27 @@ GenericNode* ExchangeCEE::getOtherNode()
  *  Todo: Review weather the WaitCEE should be simplyfied
  *  Currently there is no drawn comsumption during waiting
  */
-WaitCEE::WaitCEE(MobileNode *boundNode, WaitCommand *command)
+IdleCEE::IdleCEE(MobileNode *boundNode, IdleCommand *command)
 {
     this->node = boundNode;
     this->command = command;
-    this->setType(CeeType::WAIT);
+    this->setType(CeeType::IDLE);
+    this->setFromCoordinates(node->getX(), node->getY(), node->getZ());
+    this->setToCoordinates(node->getX(), node->getY(), node->getZ());
 }
 
-bool WaitCEE::commandCompleted()
+bool IdleCEE::commandCompleted()
 {
     return false;
 }
 
-void WaitCEE::initializeCEE()
+void IdleCEE::initializeCEE()
 {
     // draw probable value for consumption of this CEE
     consumptionPerSecond = predictNormConsumptionRandom();
 }
 
-void WaitCEE::setNodeParameters()
+void IdleCEE::setNodeParameters()
 {
     // simple hack to orient each UAV randomly
     //node->yaw = (node->battery.getRemainingPercentage() / 10 * 360) % 360;
@@ -494,29 +496,29 @@ void WaitCEE::setNodeParameters()
     //node->speed = 0;
 }
 
-void WaitCEE::updateState(double stepSize)
+void IdleCEE::updateState(double stepSize)
 {
     node->getBattery()->discharge(consumptionPerSecond * stepSize);
 }
 
-double WaitCEE::getOverallDuration()
+double IdleCEE::getOverallDuration()
 {
-    throw cRuntimeError("WaitCEE has no determined ending time");
+    throw cRuntimeError("IdleCEE has no determined ending time");
     return 1;
 }
 
-double WaitCEE::getRemainingTime()
+double IdleCEE::getRemainingTime()
 {
-    throw cRuntimeError("WaitCEE has no determined ending time");
+    throw cRuntimeError("IdleCEE has no determined ending time");
     return 1;
 }
 
-double WaitCEE::getProbableConsumption(bool normalized, int fromMethod)
+double IdleCEE::getProbableConsumption(bool normalized, int fromMethod)
 {
     return 0;
 }
 
-char* WaitCEE::getCeeTypeString()
+char* IdleCEE::getCeeTypeString()
 {
-    return (char*) "Wait";
+    return (char*) "Idle";
 }
