@@ -109,8 +109,8 @@ void MobileNode::handleMessage(cMessage *msg)
         EV_INFO << __func__ << "(): wait message received" << endl;
 
         // Prepare Wait Command and WaitCEE for finished node
-        WaitCommand *command = new WaitCommand();
-        WaitCEE *cee = new WaitCEE(this, command);
+        IdleCommand *command = new IdleCommand();
+        IdleCEE *cee = new IdleCEE(this, command);
         cee->setFromCoordinates(x, y, z);
         cee->setToCoordinates(x, y, z);
         cees.push_front(cee);

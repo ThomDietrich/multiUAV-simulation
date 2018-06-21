@@ -206,7 +206,7 @@ double ChargingNode::nextNeededUpdate()
         }
     }
 
-    // get next (furure) arrival time for reservations
+    // get next (future) arrival time for reservations
     for (unsigned int i = 0; i < objectsWaiting.size(); i++) {
         if ((objectsWaiting[i]->getEstimatedArrival() < nextEvent && objectsWaiting[i]->getEstimatedArrival() >= simTime()) || nextEvent == -1) {
             nextEvent = objectsWaiting[i]->getPointInTimeWhenDone().dbl() - currentTime.dbl();

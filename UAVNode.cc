@@ -67,6 +67,7 @@ void UAVNode::finish()
     recordScalar("utilizationEnergyMission", utilizationEnergyMission);
     recordScalar("utilizationSecMaintenance", utilizationSecMaintenance);
     recordScalar("utilizationSecMission", utilizationSecMission);
+    recordScalar("utilizationSecIdle", utilizationSecIdle);
 }
 
 void UAVNode::handleMessage(cMessage *msg)
@@ -198,9 +199,9 @@ void UAVNode::selectNextCommand()
         }
 
         if (replacingNode == nullptr) {
-            std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName()) + " should be known by now (part of hack111).";
-//            throw cRuntimeError(error_msg.c_str());
-            EV_ERROR << __func__ << "():" << error_msg << endl;
+            std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName())
+                    + " should be known by now (part of hack111). Battery critical (" + std::to_string(battery.getRemainingPercentage()) + "%)?";
+            throw cRuntimeError(error_msg.c_str());
         }
 
         // Generate and inject ExchangeCEE, only if not already done
@@ -228,7 +229,7 @@ void UAVNode::selectNextCommand()
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
-    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (ID " << commandExecEngine->getCommandId() << " at ("
+    EV_INFO << "New command loaded is " << commandExecEngine->getCeeTypeString() << " (MissionID " << missionId << ", commandID " << commandExecEngine->getCommandId() << " to ("
             << commandExecEngine->getX1() << ", " << commandExecEngine->getY1() << ", " << commandExecEngine->getZ1() << "))" << endl;
 }
 
@@ -239,7 +240,11 @@ void UAVNode::collectStatistics()
     double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
     double thisCeeEnergy = commandExecEngine->getConsumptionPerSecond() * thisCeeDuration;
 
-    if (commandExecEngine->isPartOfMission()) {
+    if (commandExecEngine->isCeeType(CeeType::IDLE)) {
+        ASSERT(thisCeeEnergy != 0);
+        utilizationSecIdle += thisCeeDuration;
+    }
+    else if (commandExecEngine->isPartOfMission()) {
         utilizationSecMission += thisCeeDuration;
         utilizationEnergyMission += thisCeeEnergy;
         utilizationEnergyOverdrawMission += battery.getAndResetOverdraw();
@@ -281,8 +286,8 @@ void UAVNode::initializeState()
         case CeeType::EXCHANGE:
             text += " EX";
             break;
-        case CeeType::WAIT:
-            text += " WA";
+        case CeeType::IDLE:
+            text += " ID";
             break;
         default:
             throw cRuntimeError("initializeState(): CEE type not handled for label.");
@@ -378,6 +383,9 @@ void UAVNode::loadCommands(CommandQueue commands, bool isMission)
         }
         else if (ExchangeCommand *cmd = dynamic_cast<ExchangeCommand *>(command)) {
             cee = new ExchangeCEE(this, cmd);
+        }
+        else if (IdleCommand *cmd = dynamic_cast<IdleCommand *>(command)) {
+            cee = new IdleCEE(this, cmd);
         }
         else {
             throw cRuntimeError("UAVNode::loadCommands(): invalid cast or unexpected command type.");
@@ -768,7 +776,7 @@ bool UAVNode::cmpCoord(const Command& cmd1, const Command& cmd2)
  */
 float UAVNode::energyForCEE(CommandExecEngine* cee)
 {
-    if (cee->isCeeType(CeeType::WAIT)) {
+    if (cee->isCeeType(CeeType::IDLE)) {
         return FLT_MAX;
     }
 
