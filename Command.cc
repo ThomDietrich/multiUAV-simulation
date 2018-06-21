@@ -152,7 +152,7 @@ bool ExchangeCommand::isRechargeRequested()
  *
  * @param seconds
  */
-WaitCommand::WaitCommand()
+IdleCommand::IdleCommand()
 {
     this->setMessageName("wait");
 }
