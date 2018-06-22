@@ -54,6 +54,9 @@ protected:
     /// CEEs can be part of a mission or special inserted commands, e.g. for maintenance
     bool partOfMission = true;
 
+    /// if set to false, this cee will be executed without a check for a replacement node
+    bool replacementNeeded = true;
+
     simtime_t timeExecutionStart = 0;
 
 public:
@@ -147,6 +150,22 @@ public:
      * @param stepSize simulation time step in seconds
      */
     virtual void updateState(double stepSize) = 0;
+
+    /**
+     * No replacement node is requested for this CEE.
+     */
+    virtual void setNoReplacementNeeded()
+    {
+        replacementNeeded = false;
+    }
+
+    /**
+     * Returns whether or not a replacement node has to be requested for this CEE.
+     */
+    virtual bool isReplacementNeeded()
+    {
+        return replacementNeeded;
+    }
 
     /**
      *

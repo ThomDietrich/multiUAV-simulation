@@ -88,10 +88,37 @@ void MissionControl::handleMessage(cMessage *msg)
     }
     else if (msg->isName("exchangeCompleted")) {
         ExchangeCompletedMsg* ecmsg = check_and_cast<ExchangeCompletedMsg*>(msg);
-        NodeShadow* nodeShadow = managedNodeShadows.get(ecmsg->getReplacedNodeIndex());
-        if (nodeShadow->hasReplacementData()) nodeShadow->setReplacingNode(nullptr);
-        nodeShadow->setStatus(NodeStatus::MAINTENANCE);
-        EV_INFO << "Node " << nodeShadow->getNode()->getFullName() << " switching over to nodeStatus MAINTENANCE" << endl;
+        NodeShadow* nodeReplaced = managedNodeShadows.get(ecmsg->getReplacedNodeIndex());
+        nodeReplaced->clearReplacementMsg();
+        nodeReplaced->clearReplacementData();
+        nodeReplaced->setStatus(NodeStatus::MAINTENANCE);
+        EV_INFO << "Node " << nodeReplaced->getNode()->getFullName() << " switching over to nodeStatus MAINTENANCE" << endl;
+
+        NodeShadow* nodeReplacing = managedNodeShadows.get(ecmsg->getReplacingNodeIndex());
+        nodeReplacing->setStatus(NodeStatus::MISSION);
+        EV_INFO << "Node " << nodeReplacing->getNode()->getFullName() << " switching over to nodeStatus MISSION" << endl;
+    }
+    else if (msg->isName("chargingUpdate")) {
+        UpdateChargingMsg* ucmsg = check_and_cast<UpdateChargingMsg*>(msg);
+        std::vector<std::string> nodes;
+        std::vector<std::string> info;
+        const char* nodeString = ucmsg->getUpdate();
+        if (std::strlen(nodeString) > 0) {
+            boost::split(nodes, nodeString, boost::algorithm::is_any_of(";"), boost::token_compress_on);
+            for (auto it = nodes.cbegin(); it != nodes.cend() && (std::strlen(it->c_str()) > 0); it++) {
+                boost::split(info, *it, boost::algorithm::is_any_of(","), boost::token_compress_on);
+                NodeShadow* shadow = managedNodeShadows.get(std::stoi(info.at(0)));
+                shadow->setKnownBattery(new Battery(std::stof(info.at(2)), std::stof(info.at(1))));
+                if (not shadow->isStatusReserved()) {
+                    if (shadow->getKnownBattery()->getRemainingPercentage() > 99)
+                        shadow->setStatus(NodeStatus::IDLE);
+                    else
+                        shadow->setStatus(NodeStatus::CHARGING);
+                    EV_TRACE << "shadow node update:" << shadow->getNode()->getFullName() << ": status:" << shadow->getStatusString() << " battery:"
+                            << shadow->getKnownBattery()->getRemainingPercentage() << "%" << endl;
+                }
+            }
+        }
     }
     else if (msg->isName("provisionReplacement")) {
         // Identify node requesting replacement
@@ -142,7 +169,7 @@ void MissionControl::handleMessage(cMessage *msg)
         if (mnmsg->getNodeFound()) {
             NodeShadow* nodeShadow = managedNodeShadows.get(mnmsg->getMobileNodeIndex());
             nodeShadow->setKnownBattery(new Battery(mnmsg->getCapacity(), mnmsg->getRemaining()));
-            if (nodeShadow->getStatus() != NodeStatus::RESERVED) {
+            if (not nodeShadow->isStatusReserved() && not nodeShadow->isStatusMission() && not nodeShadow->isStatusProvisioning()) {
                 if (mnmsg->getCapacity() > mnmsg->getRemaining())
                     nodeShadow->setStatus(NodeStatus::CHARGING);
                 else

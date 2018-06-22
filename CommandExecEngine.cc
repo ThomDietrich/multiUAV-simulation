@@ -408,8 +408,7 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
-    if(not command->isOtherNodeKnown())
-    {
+    if (not command->isOtherNodeKnown()) {
         EV_ERROR << __func__ << "(): No other node for " << node->getFullName() << "'s exchange command." << endl;
         return;
     }
@@ -431,6 +430,7 @@ void ExchangeCEE::performExitActions()
         WaypointCommand *goToChargingNodeCommand = new WaypointCommand(cn->getX(), cn->getY(), cn->getZ());
         WaypointCEE *goToChargingNodeCEE = new WaypointCEE(node, goToChargingNodeCommand);
         goToChargingNodeCEE->setPartOfMission(false);
+        goToChargingNodeCEE->setNoReplacementNeeded();
 
         // Get the duration for the flight to ChargingNode
         // To get the information the CEE needs to be initialized
@@ -449,6 +449,7 @@ void ExchangeCEE::performExitActions()
         CommandExecEngine *chargeCEE = new ChargeCEE(node, chargeCommand);
         chargeCEE->setToCoordinates(cn->getX(), cn->getY(), cn->getZ());
         chargeCEE->setPartOfMission(false);
+        chargeCEE->setNoReplacementNeeded();
 
         // Add WaypointCEE and ChargeCEE to the CEEs queue
         node->cees.push_front(chargeCEE);

@@ -29,6 +29,7 @@
 #include "msgs/ForecastPointInTimeRequest_m.h"
 #include "msgs/ForecastTargetRequest_m.h"
 #include "msgs/ForecastResponse_m.h"
+#include "msgs/UpdateChargingMsg_m.h"
 #include "msgs/MobileNodeRequest_m.h"
 #include "msgs/MobileNodeResponse_m.h"
 #include "msgs/ReserveSpotMsg_m.h"

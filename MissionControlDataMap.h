@@ -176,6 +176,8 @@ public:
     }
 
     void clearReplacementMsg();
+    void clearReplacementData();
+    void clearReplacementNode();
     void setStatus(NodeStatus status);
     void setReplacementData(ReplacementData* replacementData);
     void setReplacementMsg(cMessage* replacementMsg);

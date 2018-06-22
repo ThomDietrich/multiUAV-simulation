@@ -115,6 +115,7 @@ void UAVNode::handleMessage(cMessage *msg)
                 ExchangeCompletedMsg* exchangeCompletedMsg = new ExchangeCompletedMsg("exchangeCompleted");
                 exchangeCompletedMsg->setReplacedNodeIndex(this->getIndex());
                 exchangeCompletedMsg->setReplacingNodeIndex(replacingNode->getIndex());
+                EV_INFO << "Send exchange completed replacedNode: " << this->getFullName() << " replacingNode: " << replacingNode->getFullName() << endl;
                 replacingNode = nullptr;
                 replacementX = DBL_MAX;
                 replacementY = DBL_MAX;
@@ -222,7 +223,7 @@ void UAVNode::selectNextCommand()
             EV_INFO << " (" << std::setprecision(1) << std::fixed << this->battery.getRemainingPercentage() << "%)." << endl;
         }
 
-        if (replacingNode == nullptr) {
+        if (replacingNode == nullptr && scheduledCEE->isReplacementNeeded()) {
             std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName())
                     + " should be known by now (part of hack111). Battery critical (" + std::to_string(battery.getRemainingPercentage()) + "%)?";
             throw cRuntimeError(error_msg.c_str());
@@ -269,7 +270,7 @@ void UAVNode::collectStatistics()
     double thisCeeEnergy = fabs(commandExecEngine->getConsumptionPerSecond() * thisCeeDuration);
 
     if (commandExecEngine->isCeeType(CeeType::IDLE)) {
-        ASSERT(thisCeeEnergy != 0);
+        ASSERT(thisCeeEnergy == 0);
         utilizationSecIdle += thisCeeDuration;
     }
     else if (commandExecEngine->isPartOfMission()) {
