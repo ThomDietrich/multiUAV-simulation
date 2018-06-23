@@ -579,7 +579,7 @@ void ChargingNode::charge()
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
         double chargeMeanCurrent = chargeAmount * 3600 / durationSeconds / 1000;
-        EV_INFO << objectsCharging[i]->getNode()->getFullName() << " charging: " << durationSeconds << "s * " << chargeMeanCurrent << "mA = " << chargeAmount
+        EV_INFO << objectsCharging[i]->getNode()->getFullName() << " charging: " << durationSeconds << "s * " << chargeMeanCurrent << "A = " << chargeAmount
                 << "mAh (now " << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "%)" << endl;
         objectsCharging[i]->getNode()->getBattery()->charge(chargeAmount);
         objectsCharging[i]->getNode()->getCommandExecEngine()->setConsumptionPerSecond((-1) * chargeMeanCurrent);
