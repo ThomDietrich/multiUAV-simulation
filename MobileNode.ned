@@ -24,11 +24,12 @@ simple MobileNode extends GenericNode
         @display("i=block/broadcast");
 
         // decorations and annotations
-        int trailLength = default(0);                      // the length of the trail in time steps showing the past movement of the node. 0 disables the trail        
-        string trailColor = default("#000000ff");          // the color of the trail indicator in hex RRGGBBAA format
-        int commandCount = default(3);                     // the length of the waypoint movement in time steps showing the planned movement of the node. 0 shows all
-        string commandPreviewColor = default("#00000055"); // the color of the command preview in hex RRGGBBAA format
-        bool commandPreviewEnabled = default(true);        // decides whether or not to display command preview
+        int trailLength = default(0);                         // the length of the trail in time steps showing the past movement of the node. 0 disables the trail        
+        string trailColor = default("#000000ff");             // the color of the trail indicator in hex RRGGBBAA format
+        int commandPreviewCommandCount = default(3);          // the length of the waypoint movement in time steps showing the planned movement of the node. 0 shows all
+        bool commandPreviewEnabled = default(true);           // decides whether or not to display command preview
+        string commandPreviewMissionColor = default("#00000055"); // the color of the command preview in hex RRGGBBAA format
+        string commandPreviewMaintenanceColor = default("#FFFFFF88"); // the color of the command preview in hex RRGGBBAA format
 
         //energy consumption
         int batteryCapacity @unit("mAh") = default(2200mAh);  // the battery capacity (in mAh, "0" for infinite energy storage)

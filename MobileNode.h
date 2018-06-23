@@ -45,15 +45,17 @@ protected:
     osgEarth::Style trailStyle;
     std::string trailColor;
 
-    // movement (planned waypoints)
+    // Path/Commands Preview
     bool commandPreviewEnabled;
-    unsigned int commandCount;
-    osgEarth::Color commandPreviewColor;
-    // for waypoint visualization
+    unsigned int commandPreviewCommandCount;
+    osgEarth::Color commandPreviewMissionColor;
+    osgEarth::Color commandPreviewMaintenanceColor;
     osg::ref_ptr<osgEarth::Annotation::FeatureNode> waypointsNode = nullptr;
     osgEarth::Vec3dVector waypoints;
     osgEarth::Style waypointStyle;
-    // for holdPosition visualization
+    osg::ref_ptr<osgEarth::Annotation::FeatureNode> waypointsMaintNode = nullptr;
+    osgEarth::Vec3dVector waypointsMaint;
+    osgEarth::Style waypointMaintStyle;
     std::vector <osg::ref_ptr<osgEarth::Util::ObjectLocatorNode>> holdCommandNodes;
 
     double speed; //speed (3D) in [m/s]
@@ -84,6 +86,7 @@ protected:
 
 private:
     void inline evaluateBatteryCharge();
+    void drawCommandPreview();
 };
 
 #endif
