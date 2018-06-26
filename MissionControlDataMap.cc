@@ -14,6 +14,7 @@
 //
 
 #include "MissionControlDataMap.h"
+#include <omnetpp.h>
 
 NodeShadow::NodeShadow(GenericNode* node)
 {
@@ -28,8 +29,7 @@ NodeShadow::~NodeShadow()
 
 void NodeShadow::setReplacementData(ReplacementData* replacementData)
 {
-    if(this->replacementData != nullptr)
-        delete this->replacementData;
+    if (this->replacementData != nullptr) delete this->replacementData;
     this->replacementData = replacementData;
 }
 
@@ -40,7 +40,91 @@ void NodeShadow::setReplacementMsg(cMessage* replacementMsg)
 
 void NodeShadow::setStatus(NodeStatus status)
 {
-    this->status = status;
+    if (this->status != status) {
+        switch (this->status) {
+            case NodeStatus::DEAD:
+                EV_WARN << "No status change from DEAD possible!!!";
+                break;
+            case NodeStatus::IDLE:
+                if (NodeStatus::RESERVED == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_WARN << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::RESERVED:
+                if (NodeStatus::PROVISIONING == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::PROVISIONING:
+                if (NodeStatus::MISSION == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::MISSION:
+                if (NodeStatus::MAINTENANCE == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::MAINTENANCE:
+                if (NodeStatus::CHARGING == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::CHARGING:
+                if (NodeStatus::IDLE == status || NodeStatus::RESERVED == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            default:
+                throw cRuntimeError("Unknown node status");
+        }
+    }
 }
 
 void NodeShadow::setReplacingNode(GenericNode* replacingNode)
@@ -110,7 +194,7 @@ NodeShadow* ManagedNodeShadows::get(int index)
     return managedNodes.at(index);
 }
 
-NodeShadow* ManagedNodeShadows::get(GenericNode* node)
+NodeShadow * ManagedNodeShadows::get(GenericNode * node)
 {
     int index = node->getIndex();
     return get(index);
@@ -156,7 +240,7 @@ NodeShadow* ManagedNodeShadows::getFirst(NodeStatus currentStatus)
 /**
  * Get the node with the highest charge that is available for missions.
  */
-NodeShadow* ManagedNodeShadows::getHighestCharged()
+NodeShadow * ManagedNodeShadows::getHighestCharged()
 {
     NodeShadow* highestChargedNode = nullptr;
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
@@ -187,7 +271,7 @@ NodeShadow* ManagedNodeShadows::getHighestCharged()
     return highestChargedNode;
 }
 
-NodeShadow* ManagedNodeShadows::getNodeRequestingReplacement(cMessage* msg)
+NodeShadow * ManagedNodeShadows::getNodeRequestingReplacement(cMessage * msg)
 {
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
         if (it->second->compareReplacementMsg(msg)) {
