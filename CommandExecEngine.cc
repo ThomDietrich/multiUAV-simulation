@@ -35,10 +35,10 @@ WaypointCEE::WaypointCEE(UAVNode *boundNode, WaypointCommand *command)
     setToCoordinates(command->getX(), command->getY(), command->getZ());
 }
 
-bool WaypointCEE::commandCompleted()
+bool WaypointCEE::isCommandCompleted()
 {
     double distanceSum = fabs(x1 - node->x) + fabs(y1 - node->y) + fabs(z1 - node->z);
-    return (distanceSum < 1.e-10);
+    return commandCompleted || (distanceSum < 1.e-10);
 }
 
 void WaypointCEE::initializeCEE()
@@ -147,7 +147,7 @@ TakeoffCEE::TakeoffCEE(UAVNode *boundNode, TakeoffCommand *command)
     setToCoordinates(node->x, node->y, command->getZ());
 }
 
-bool TakeoffCEE::commandCompleted()
+bool TakeoffCEE::isCommandCompleted()
 {
     double distanceSum = fabs(z1 - node->z);
     return (distanceSum < 1.e-10);
@@ -224,10 +224,10 @@ HoldPositionCEE::HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *comman
     setToCoordinates(command->getX(), command->getY(), command->getZ());
 }
 
-bool HoldPositionCEE::commandCompleted()
+bool HoldPositionCEE::isCommandCompleted()
 {
     if (simTime() > this->holdPositionTill) throw cRuntimeError("Unexpected situation: HoldPosition lasted longer than intended.");
-    return (simTime() == this->holdPositionTill) ? true : false;
+    return commandCompleted || (simTime() == this->holdPositionTill) ? true : false;
 }
 
 void HoldPositionCEE::initializeCEE()
@@ -294,9 +294,9 @@ ChargeCEE::ChargeCEE(UAVNode *boundNode, ChargeCommand *command)
     this->setToCoordinates(node->x, node->y, node->z);
 }
 
-bool ChargeCEE::commandCompleted()
+bool ChargeCEE::isCommandCompleted()
 {
-    return (node->battery.isFull());
+    return commandCompleted || (node->battery.isFull());
 }
 
 void ChargeCEE::initializeCEE()
@@ -354,9 +354,9 @@ ExchangeCEE::ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command)
     setToCoordinates(node->x, node->y, node->z);
 }
 
-bool ExchangeCEE::commandCompleted()
+bool ExchangeCEE::isCommandCompleted()
 {
-    return exchangeCompleted;
+    return commandCompleted;
 }
 
 void ExchangeCEE::initializeCEE()
@@ -408,16 +408,19 @@ char* ExchangeCEE::getCeeTypeString()
 
 void ExchangeCEE::performEntryActions()
 {
-    if (not command->isOtherNodeKnown()) {
-        EV_ERROR << __func__ << "(): No other node for " << node->getFullName() << "'s exchange command." << endl;
-        return;
+    if (this->command->isRechargeRequested()) {
+        if (not command->isOtherNodeKnown()) {
+            EV_ERROR << __func__ << "(): No other node for " << node->getFullName() << "'s exchange command." << endl;
+            return;
+        }
+
+        EV_INFO << __func__ << "(): Ready for exchange, sending data to other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
+
+        // Send an exchangeData message to the other node taking part in the exchange
+        UAVNode *otherNode = check_and_cast<UAVNode *>(command->getOtherNode());
+        node->transferMissionDataTo(otherNode);
     }
 
-    EV_INFO << __func__ << "(): Ready for exchange, sending data to other Node (" << command->getOtherNode()->getFullName() << ")" << endl;
-
-    // Send an exchangeData message to the other node taking part in the exchange
-    UAVNode *otherNode = check_and_cast<UAVNode *>(command->getOtherNode());
-    node->transferMissionDataTo(otherNode);
 }
 
 void ExchangeCEE::performExitActions()
@@ -477,9 +480,9 @@ IdleCEE::IdleCEE(MobileNode *boundNode, IdleCommand *command)
     this->setToCoordinates(node->getX(), node->getY(), node->getZ());
 }
 
-bool IdleCEE::commandCompleted()
+bool IdleCEE::isCommandCompleted()
 {
-    return false;
+    return commandCompleted;
 }
 
 void IdleCEE::initializeCEE()

@@ -51,6 +51,8 @@ protected:
     /// Normalized to mAh/s
     double consumptionPerSecond = 0;
 
+    bool commandCompleted = false;
+
     /// CEEs can be part of a mission or special inserted commands, e.g. for maintenance
     bool partOfMission = true;
 
@@ -129,7 +131,12 @@ public:
      * Check whether or not the current CEE has reached its completion.
      * Depending on the command compares the current position and state of the node with the abort criterion of the command.
      */
-    virtual bool commandCompleted() = 0;
+    virtual bool isCommandCompleted() = 0;
+
+    void setCommandCompleted()
+    {
+        this->commandCompleted = true;
+    }
 
     /**
      * Initialize the CEE itself.
@@ -332,7 +339,7 @@ protected:
     WaypointCommand *command;
 public:
     WaypointCEE(UAVNode *boundNode, WaypointCommand *command);
-    bool commandCompleted() override;
+    bool isCommandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
@@ -359,7 +366,7 @@ protected:
     TakeoffCommand *command;
 public:
     TakeoffCEE(UAVNode *boundNode, TakeoffCommand *command);
-    bool commandCompleted() override;
+    bool isCommandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
@@ -386,7 +393,7 @@ protected:
     simtime_t holdPositionTill;
 public:
     HoldPositionCEE(UAVNode *boundNode, HoldPositionCommand *command);
-    bool commandCompleted() override;
+    bool isCommandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
@@ -410,7 +417,7 @@ protected:
     ChargeCommand *command;
 public:
     ChargeCEE(UAVNode *boundNode, ChargeCommand *command);
-    bool commandCompleted() override;
+    bool isCommandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
@@ -436,10 +443,9 @@ class ExchangeCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     ExchangeCommand *command;
-    bool exchangeCompleted = false;
 public:
     ExchangeCEE(UAVNode *boundNode, ExchangeCommand *command);
-    bool commandCompleted() override;
+    bool isCommandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
@@ -462,10 +468,6 @@ public:
     {
         return false;
     }
-    void setExchangeCompleted()
-    {
-        exchangeCompleted = true;
-    }
 };
 
 /**
@@ -477,7 +479,7 @@ protected:
     IdleCommand *command;
 public:
     IdleCEE(MobileNode *boundNode, IdleCommand *command);
-    bool commandCompleted() override;
+    bool isCommandCompleted() override;
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;

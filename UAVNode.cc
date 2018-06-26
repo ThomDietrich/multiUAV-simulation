@@ -94,6 +94,11 @@ void UAVNode::handleMessage(cMessage *msg)
         if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
             EV_WARN << __func__ << "(): Node not in ExchangeCEE. Ignoring exchangeData message." << endl;
             exchangeAfterCurrentCommand = true;
+            MissionMsg * receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
+            receivedMission_valid = true;
+            receivedMission_missionId = receivedMissionMsg->getMissionId();
+            receivedMission_commandsRepeat = receivedMissionMsg->getMissionRepeat();
+            receivedMission_missionCommands = receivedMissionMsg->getMission();
             delete msg;
             msg = nullptr;
             return;
@@ -101,42 +106,48 @@ void UAVNode::handleMessage(cMessage *msg)
 
         ExchangeCEE *exchangeCEE = check_and_cast<ExchangeCEE *>(commandExecEngine);
 
-        // Send out mission data
-        if (not exchangeCEE->dataTransferPerformed) {
-            UAVNode *node = check_and_cast<UAVNode *>(exchangeCEE->getOtherNode());
-            transferMissionDataTo(node);
-            exchangeCEE->dataTransferPerformed = true;
+        MissionMsg * receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
+        missionId = receivedMissionMsg->getMissionId();
+        commandsRepeat = receivedMissionMsg->getMissionRepeat();
+        CommandQueue missionCommands = receivedMissionMsg->getMission();
+        EV_INFO << __func__ << "(): Mission " << missionId << " exchange, clearing " << cees.size() << " cees, loading " << missionCommands.size() << endl;
+        clearCommands();
+        loadCommands(missionCommands);
+
+        // End ExchangeCEE, will trigger next command selection
+        exchangeCEE->setCommandCompleted();
+
+        cMessage* ackMsg = new cMessage("exchangeAck");
+        EV_INFO << "Send exchangeAck to: " << exchangeCEE->getOtherNode()->getFullName() << endl;
+        send(ackMsg, getOutputGateTo(exchangeCEE->getOtherNode()));
+
+        delete msg;
+        msg = nullptr;
+
+    }
+    else if (msg->isName("exchangeAck")) {
+        EV_INFO << __func__ << "(): exchangeAck message received" << endl;
+
+        if (commandExecEngine->getCeeType() != CeeType::EXCHANGE) {
+            throw cRuntimeError("This is not possible!");
         }
 
-        // Handle received mission data
-        if (exchangeCEE->commandCompleted()) {
-            EV_WARN << __func__ << "(): Mission exchange already completed." << endl;
-            if (exchangeCEE->extractCommand()->isRechargeRequested()) {
-                ExchangeCompletedMsg* exchangeCompletedMsg = new ExchangeCompletedMsg("exchangeCompleted");
-                exchangeCompletedMsg->setReplacedNodeIndex(this->getIndex());
-                exchangeCompletedMsg->setReplacingNodeIndex(replacingNode->getIndex());
-                EV_INFO << "Send exchange completed replacedNode: " << this->getFullName() << " replacingNode: " << replacingNode->getFullName() << endl;
-                replacingNode = nullptr;
-                replacementX = DBL_MAX;
-                replacementY = DBL_MAX;
-                replacementZ = DBL_MAX;
-                replacementTime = 0;
-                send(exchangeCompletedMsg, "gate$o", 0);
-            }
-        }
-        else {
-            MissionMsg *receivedMissionMsg = check_and_cast<MissionMsg *>(msg);
-            missionId = receivedMissionMsg->getMissionId();
-            commandsRepeat = receivedMissionMsg->getMissionRepeat();
-            CommandQueue missionCommands = receivedMissionMsg->getMission();
-            EV_WARN << __func__ << "(): Mission " << missionId << " exchange, clearing " << cees.size() << " cees, loading " << missionCommands.size() << endl;
+        ExchangeCEE *exchangeCEE = check_and_cast<ExchangeCEE *>(commandExecEngine);
+
+        if (not exchangeCEE->isCommandCompleted()) {
+            ExchangeCompletedMsg* exchangeCompletedMsg = new ExchangeCompletedMsg("exchangeCompleted");
+            exchangeCompletedMsg->setReplacedNodeIndex(this->getIndex());
+            exchangeCompletedMsg->setReplacingNodeIndex(replacingNode->getIndex());
+            EV_INFO << "Send exchange completed replacedNode: " << this->getFullName() << " replacingNode: " << replacingNode->getFullName() << endl;
+            replacingNode = nullptr;
+            replacementX = DBL_MAX;
+            replacementY = DBL_MAX;
+            replacementZ = DBL_MAX;
+            replacementTime = 0;
+            send(exchangeCompletedMsg, "gate$o", 0);
             clearCommands();
-            loadCommands(missionCommands);
-
-            // End ExchangeCEE, will trigger next command selection
-            exchangeCEE->setExchangeCompleted();
+            exchangeCEE->setCommandCompleted();
         }
-
         delete msg;
         msg = nullptr;
     }
@@ -244,13 +255,13 @@ void UAVNode::selectNextCommand()
         }
     }
 
-    // Activate next CEE
+// Activate next CEE
     commandExecEngine = cees.front();
     commandExecEngine->setFromCoordinates(getX(), getY(), getZ());
     commandExecEngine->initializeCEE();
     cees.pop_front();
 
-    // Reinject command (if no non-mission command)
+// Reinject command (if no non-mission command)
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
@@ -263,7 +274,7 @@ void UAVNode::collectStatistics()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("collectStatistics(): Command Engine missing.");
 
-    // Only collect if executed CEEs available
+// Only collect if executed CEEs available
     if (not commandExecEngine->isActive()) return;
 
     double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
@@ -336,18 +347,39 @@ void UAVNode::updateState()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("updateState(): Command Engine missing.");
 
-    //distance to move, based on simulation time passed since last update
+    if (commandExecEngine->isCeeType(CeeType::EXCHANGE) && receivedMission_valid) {
+
+        ExchangeCEE *exchangeCEE = check_and_cast<ExchangeCEE *>(commandExecEngine);
+
+        missionId = receivedMission_missionId;
+        commandsRepeat = receivedMission_commandsRepeat;
+        CommandQueue missionCommands = receivedMission_missionCommands;
+        EV_INFO << __func__ << "(): Mission " << missionId << " exchange, clearing " << cees.size() << " cees, loading " << missionCommands.size() << endl;
+        clearCommands();
+        loadCommands(missionCommands);
+
+        // End ExchangeCEE, will trigger next command selection
+        exchangeCEE->setCommandCompleted();
+
+        cMessage* ackMsg = new cMessage("exchangeAck");
+        EV_INFO << "Send exchangeAck to: " << exchangeCEE->getOtherNode()->getFullName() << endl;
+        send(ackMsg, getOutputGateTo(exchangeCEE->getOtherNode()));
+
+        receivedMission_valid = false;
+    }
+
+//distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-    //update sublabel with maneuver and battery info
+//update sublabel with maneuver and battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s";
     strs << " | " << (-1) * commandExecEngine->getConsumptionPerSecond() << " A";
     strs << " | " << battery.getRemainingPercentage() << " %";
-    //strs << " | ";
-    //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
-    //strs << " s left";
+//strs << " | ";
+//(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
+//strs << " s left";
     sublabelNode->setText(strs.str());
     par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
 }
@@ -359,7 +391,7 @@ void UAVNode::updateState()
 bool UAVNode::commandCompleted()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("commandCompleted(): Command Engine missing.");
-    return commandExecEngine->commandCompleted();
+    return commandExecEngine->isCommandCompleted();
 }
 
 /**
@@ -479,12 +511,12 @@ ReplacementData* UAVNode::endOfOperation()
         return nullptr;
     }
 
-    // 0: latest opportunity heuristic
-    // 1: shortest return heuristic
-    // 2: utilization quotient heuristic
+// 0: latest opportunity heuristic
+// 1: shortest return heuristic
+// 2: utilization quotient heuristic
     int replacementMethod = par("replacementMethod");
 
-    // Iterates through all feasible future commands and build table of predictions
+// Iterates through all feasible future commands and build table of predictions
 
     /**
      * vector of vectors of {0: number of future commands,
@@ -500,7 +532,7 @@ ReplacementData* UAVNode::endOfOperation()
     double tempFromY = y;
     double tempFromZ = z;
 
-    // Preliminary max feasible and energy prediction
+// Preliminary max feasible and energy prediction
     while (not maxCommandsFeasibleReached) {
         CommandExecEngine *nextCEE = cees.at(nextCommands % cees.size());
 
@@ -529,7 +561,7 @@ ReplacementData* UAVNode::endOfOperation()
             maxCommandsFeasibleReached = true;
         }
     }
-    // At least one command has to be feasible
+// At least one command has to be feasible
     if (nextCommands == 0) return nullptr;
     EV_INFO << __func__ << "(): " << nextCommands << " commands feasible at most." << endl;
 
@@ -537,7 +569,7 @@ ReplacementData* UAVNode::endOfOperation()
      * Replacement Heuristics
      */
 
-    // Replacement planning
+// Replacement planning
     ReplacementData *result = new ReplacementData();
     result->nodeToReplace = this;
     CommandExecEngine *lastCEEofMission;

@@ -77,13 +77,8 @@ void MissionControl::handleMessage(cMessage *msg)
     else if (msg->isName("commandCompleted")) {
         CmdCompletedMsg *ccmsg = check_and_cast<CmdCompletedMsg *>(msg);
         NodeShadow* nodeShadow = managedNodeShadows.get(ccmsg->getSourceNodeIndex());
-        //EV_INFO << __func__ << "(): commandCompleted message received for " << nodeShadow->getNode()->getFullName() << endl;
+        EV_INFO << __func__ << "(): commandCompleted message received for " << nodeShadow->getNode()->getFullName() << endl;
 
-        //TODO: too simple. Should e.g. not happen for ReplacingNode
-//        if (nodeShadow->isStatusProvisioning()) {
-//            EV_INFO << "Node " << nodeShadow->getNode()->getFullName() << " switching over to nodeStatus MISSION" << endl;
-//            nodeShadow->setStatus(NodeStatus::MISSION);
-//        }
         if (ccmsg->getReplacementDataAvailable()) {
             handleReplacementMessage(ccmsg->getReplacementData());
         }
