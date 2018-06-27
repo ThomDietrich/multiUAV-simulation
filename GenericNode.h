@@ -75,7 +75,7 @@ protected:
     double txRange;
 
     /// Timestamp when the last time-related node state update happened
-    simtime_t lastUpdate;
+    simtime_t lastUpdate = 0;
 
     /// Contains future Command Execution Engines
     CEEQueue cees;

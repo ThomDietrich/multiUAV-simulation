@@ -393,14 +393,19 @@ void UAVNode::updateState()
 
     //update sublabel with maneuver and battery info
     std::ostringstream strs;
-    strs << std::setprecision(1) << std::fixed << speed << " m/s";
-    strs << " | " << (-1) * commandExecEngine->getConsumptionPerSecond() << " A";
-    strs << " | " << battery.getRemainingPercentage() << " %";
+    strs << std::setprecision(1) << std::fixed;
+    if (speed != 0) {
+        strs << speed << " m/s" << " | ";
+    }
+    if (commandExecEngine->getConsumptionPerSecond() != 0) {
+        strs << (-1) * commandExecEngine->getConsumptionPerSecond() << " A" << " | ";
+    }
+    strs << battery.getRemainingPercentage() << " %";
     //strs << " | ";
     //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
     //strs << " s left";
     sublabelNode->setText(strs.str());
-    par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
+    par("stateSummary").setStringValue(std::string(commandExecEngine->getCeeTypeString()) + " | " + strs.str());
 }
 
 /**
@@ -698,7 +703,7 @@ float UAVNode::energyToNearestCN(double fromX, double fromY, double fromZ)
  * @param fromMethod 0: random  1: mean  2: predictionQuantile
  * @return The current used by the UAV, in [mAh]
  */
-float UAVNode::getHoverConsumption(float duration, int fromMethod, float quantile)
+float UAVNode::getHoverConsumption(float duration, int fromMethod)
 {
     if (duration == 0) return 0;
 
@@ -734,7 +739,7 @@ float UAVNode::getHoverConsumption(float duration, int fromMethod, float quantil
  * @param fromMethod 0: random  1: mean  2: predictionQuantile
  * @return The energy used by the UAV in [mAh]
  */
-float UAVNode::getMovementConsumption(float angle, float duration, int fromMethod, float quantile)
+float UAVNode::getMovementConsumption(float angle, float duration, int fromMethod)
 {
     if (duration < 0.001) return 0;
 
@@ -787,7 +792,7 @@ float UAVNode::getMovementConsumption(float angle, float duration, int fromMetho
  * @param the ascent/decline angle, range: -90..+90°
  * @return the speed of the UAV in [m/s]
  */
-float UAVNode::getSpeed(float angle, int fromMethod, float quantile)
+float UAVNode::getSpeed(float angle, int fromMethod)
 {
     float mean = 0;
     float stddev = 0;

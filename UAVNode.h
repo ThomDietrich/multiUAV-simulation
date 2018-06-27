@@ -45,9 +45,9 @@ public:
     virtual ~UAVNode();
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual double estimateCommandsDuration();
-    static float getHoverConsumption(float duration, int fromMethod = 0, float quantile = 0.95);
-    static float getMovementConsumption(float angle, float duration, int fromMethod = 0, float quantile = 0.95);
-    static float getSpeed(float angle, int fromMethod = 1, float quantile = 0.95);
+    float getHoverConsumption(float duration, int fromMethod = 0);
+    float getMovementConsumption(float angle, float duration, int fromMethod = 0);
+    float getSpeed(float angle, int fromMethod = 1);
 
     //TODO part of hack111 to make the replacing node known to the Exchange command
     GenericNode* replacingNode = nullptr;

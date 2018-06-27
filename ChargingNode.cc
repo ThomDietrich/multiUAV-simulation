@@ -573,7 +573,9 @@ void ChargingNode::charge()
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
             continue;
         }
-        double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
+        //double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
+        if (lastUpdate == 0) continue;
+        double durationSeconds = (simTime() - lastUpdate).dbl();
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
         double chargeMeanCurrent = chargeAmount * 3600 / durationSeconds / 1000;
