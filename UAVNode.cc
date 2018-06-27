@@ -255,13 +255,13 @@ void UAVNode::selectNextCommand()
         }
     }
 
-// Activate next CEE
+    // Activate next CEE
     commandExecEngine = cees.front();
     commandExecEngine->setFromCoordinates(getX(), getY(), getZ());
     commandExecEngine->initializeCEE();
     cees.pop_front();
 
-// Reinject command (if no non-mission command)
+    // Reinject command (if no non-mission command)
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {
         cees.push_back(commandExecEngine);
     }
@@ -274,7 +274,7 @@ void UAVNode::collectStatistics()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("collectStatistics(): Command Engine missing.");
 
-// Only collect if executed CEEs available
+    // Only collect if executed CEEs available
     if (not commandExecEngine->isActive()) return;
 
     double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
@@ -368,18 +368,18 @@ void UAVNode::updateState()
         receivedMission_valid = false;
     }
 
-//distance to move, based on simulation time passed since last update
+    //distance to move, based on simulation time passed since last update
     double stepSize = (simTime() - lastUpdate).dbl();
     commandExecEngine->updateState(stepSize);
 
-//update sublabel with maneuver and battery info
+    //update sublabel with maneuver and battery info
     std::ostringstream strs;
     strs << std::setprecision(1) << std::fixed << speed << " m/s";
     strs << " | " << (-1) * commandExecEngine->getConsumptionPerSecond() << " A";
     strs << " | " << battery.getRemainingPercentage() << " %";
-//strs << " | ";
-//(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
-//strs << " s left";
+    //strs << " | ";
+    //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
+    //strs << " s left";
     sublabelNode->setText(strs.str());
     par("stateSummary").setStringValue(labelNode->getText() + " | " + strs.str());
 }
@@ -388,9 +388,9 @@ void UAVNode::updateState()
  * Check whether or not the current CEE has reached its completion.
  * Depending on the command compares the current position and state of the node with the abort criterion of the command.
  */
-bool UAVNode::commandCompleted()
+bool UAVNode::isCommandCompleted()
 {
-    if (commandExecEngine == nullptr) throw cRuntimeError("commandCompleted(): Command Engine missing.");
+    if (commandExecEngine == nullptr) throw cRuntimeError("isCommandCompleted(): Command Engine missing.");
     return commandExecEngine->isCommandCompleted();
 }
 
@@ -511,12 +511,12 @@ ReplacementData* UAVNode::endOfOperation()
         return nullptr;
     }
 
-// 0: latest opportunity heuristic
-// 1: shortest return heuristic
-// 2: utilization quotient heuristic
+    // 0: latest opportunity heuristic
+    // 1: shortest return heuristic
+    // 2: utilization quotient heuristic
     int replacementMethod = par("replacementMethod");
 
-// Iterates through all feasible future commands and build table of predictions
+    // Iterates through all feasible future commands and build table of predictions
 
     /**
      * vector of vectors of {0: number of future commands,
@@ -532,7 +532,7 @@ ReplacementData* UAVNode::endOfOperation()
     double tempFromY = y;
     double tempFromZ = z;
 
-// Preliminary max feasible and energy prediction
+    // Preliminary max feasible and energy prediction
     while (not maxCommandsFeasibleReached) {
         CommandExecEngine *nextCEE = cees.at(nextCommands % cees.size());
 
@@ -561,7 +561,7 @@ ReplacementData* UAVNode::endOfOperation()
             maxCommandsFeasibleReached = true;
         }
     }
-// At least one command has to be feasible
+    // At least one command has to be feasible
     if (nextCommands == 0) return nullptr;
     EV_INFO << __func__ << "(): " << nextCommands << " commands feasible at most." << endl;
 
@@ -569,7 +569,7 @@ ReplacementData* UAVNode::endOfOperation()
      * Replacement Heuristics
      */
 
-// Replacement planning
+    // Replacement planning
     ReplacementData *result = new ReplacementData();
     result->nodeToReplace = this;
     CommandExecEngine *lastCEEofMission;
@@ -845,14 +845,14 @@ float UAVNode::energyForCEE(CommandExecEngine* cee)
         EV_WARN << __func__ << "(): non-mission command encountered before reaching depletion level. No end of operation predictable..." << endl;
         return FLT_MAX;
     }
-//TODO remove the following if the above works
+    //TODO remove the following if the above works
     if (cee->isCeeType(CeeType::CHARGE) || cee->isCeeType(CeeType::EXCHANGE)) {
         throw cRuntimeError("endOfOperation(): charge or exchange command encountered");
     }
 
-// Get consumption for next command
-//cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
-//cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
+    // Get consumption for next command
+    //cee->setFromCoordinates(cee->getX0(), cee->getY0(), cee->getZ0());
+    //cee->setToCoordinates(cee->getX1(), cee->getY1(), cee->getZ1());
     cee->initializeCEE();
     return cee->predictFullConsumptionQuantile();
 }

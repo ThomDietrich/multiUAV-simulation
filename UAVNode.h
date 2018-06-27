@@ -65,7 +65,7 @@ protected:
     virtual void selectNextCommand() override;
     virtual void initializeState() override;
     virtual void updateState() override;
-    virtual bool commandCompleted() override;
+    virtual bool isCommandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;

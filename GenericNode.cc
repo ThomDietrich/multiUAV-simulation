@@ -184,7 +184,7 @@ void GenericNode::handleMessage(cMessage *msg)
         updateState();
         stepSize = nextNeededUpdate();
         stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
-        if (commandCompleted()) {
+        if (isCommandCompleted()) {
             msg->setName("nextCommand");
             stepSize = 0;
         }
