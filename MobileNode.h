@@ -71,6 +71,13 @@ protected:
     double utilizationEnergyOverdrawMission = 0;
     double utilizationEnergyOverdrawMaintenance = 0;
 
+    int utilizationCountMissions = 0;
+    int utilizationCountManeuversMission = 0;
+    int utilizationCountManeuversMaintenance = 0;
+    int utilizationCountChargeState = 0;
+    int utilizationCountOverdrawnAfterMission = 0;
+    int utilizationCountIdleState = 0;
+
 public:
     MobileNode();
     virtual ~MobileNode();
@@ -79,6 +86,7 @@ public:
 
 protected:
     virtual void initialize(int stage) override;
+    virtual void finish() override;
     virtual void refreshDisplay() const override;
     virtual void handleMessage(cMessage *msg) override;
     static ChargingNode* findNearestCN(double nodeX, double nodeY, double nodeZ);

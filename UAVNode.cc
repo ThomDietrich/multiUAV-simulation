@@ -59,17 +59,6 @@ void UAVNode::initialize(int stage)
     }
 }
 
-void UAVNode::finish()
-{
-    recordScalar("utilizationEnergyOverdrawMaintenance", utilizationEnergyOverdrawMaintenance);
-    recordScalar("utilizationEnergyOverdrawMission", utilizationEnergyOverdrawMission);
-    recordScalar("utilizationEnergyMaintenance", utilizationEnergyMaintenance);
-    recordScalar("utilizationEnergyMission", utilizationEnergyMission);
-    recordScalar("utilizationSecMaintenance", utilizationSecMaintenance);
-    recordScalar("utilizationSecMission", utilizationSecMission);
-    recordScalar("utilizationSecIdle", utilizationSecIdle);
-}
-
 void UAVNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
@@ -83,7 +72,7 @@ void UAVNode::handleMessage(cMessage *msg)
         cees.push_back(cee);
         selectNextCommand();
         initializeState();
-        EV_INFO << "UAV initialized as idle node." << endl;
+        EV_INFO << "UAV initialized (Idle state) at simulation begin." << endl;
         delete msg;
         msg = nullptr;
         return;
@@ -280,6 +269,7 @@ void UAVNode::collectStatistics()
     double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
     double thisCeeEnergy = fabs(commandExecEngine->getConsumptionPerSecond() * thisCeeDuration);
 
+    // time and consumption
     if (commandExecEngine->isCeeType(CeeType::IDLE)) {
         ASSERT(thisCeeEnergy == 0);
         utilizationSecIdle += thisCeeDuration;
@@ -293,6 +283,35 @@ void UAVNode::collectStatistics()
         utilizationSecMaintenance += thisCeeDuration;
         utilizationEnergyMaintenance += thisCeeEnergy;
         utilizationEnergyOverdrawMaintenance += battery.getAndResetOverdraw();
+    }
+
+    // Count point-to-point and hovering maneuvers
+    if (commandExecEngine->isCeeType(CeeType::WAYPOINT) || commandExecEngine->isCeeType(CeeType::HOLDPOSITION)) {
+        if (commandExecEngine->isPartOfMission()) {
+            utilizationCountManeuversMission++;
+        }
+        else {
+            utilizationCountManeuversMaintenance++;
+        }
+    }
+
+    //Count states and lifecycles
+    if (commandExecEngine->isCeeType(CeeType::CHARGE)) {
+        utilizationCountChargeState++;
+    }
+    else if (commandExecEngine->isCeeType(CeeType::IDLE)) {
+        utilizationCountIdleState++;
+    }
+    else if (commandExecEngine->isCeeType(CeeType::WAYPOINT)) {
+        ASSERT(cees.size() > 0);
+
+        if (cees.front()->isCeeType(CeeType::CHARGE)) {
+            utilizationCountMissions++;
+
+            if (battery.getRemaining() == 0) {
+                utilizationCountOverdrawnAfterMission++;
+            }
+        }
     }
 }
 

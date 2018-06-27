@@ -90,8 +90,31 @@ void MobileNode::initialize(int stage)
             WATCH(utilizationEnergyMaintenance);
             WATCH(utilizationEnergyOverdrawMission);
             WATCH(utilizationEnergyOverdrawMaintenance);
+            WATCH(utilizationCountMissions);
+            WATCH(utilizationCountManeuversMission);
+            WATCH(utilizationCountManeuversMaintenance);
+            WATCH(utilizationCountChargeState);
+            WATCH(utilizationCountOverdrawnAfterMission);
+            WATCH(utilizationCountIdleState);
             break;
     }
+}
+
+void MobileNode::finish()
+{
+    recordScalar("utilizationEnergyOverdrawMaintenance", utilizationEnergyOverdrawMaintenance);
+    recordScalar("utilizationEnergyOverdrawMission", utilizationEnergyOverdrawMission);
+    recordScalar("utilizationEnergyMaintenance", utilizationEnergyMaintenance);
+    recordScalar("utilizationEnergyMission", utilizationEnergyMission);
+    recordScalar("utilizationSecMaintenance", utilizationSecMaintenance);
+    recordScalar("utilizationSecMission", utilizationSecMission);
+    recordScalar("utilizationSecIdle", utilizationSecIdle);
+    recordScalar("utilizationCountMissions", utilizationCountMissions);
+    recordScalar("utilizationCountManeuversMission", utilizationCountManeuversMission);
+    recordScalar("utilizationCountManeuversMaintenance", utilizationCountManeuversMaintenance);
+    recordScalar("utilizationCountChargeState", utilizationCountChargeState);
+    recordScalar("utilizationCountOverdrawnAfterMission", utilizationCountOverdrawnAfterMission);
+    recordScalar("utilizationCountIdleState", utilizationCountIdleState);
 }
 
 void MobileNode::refreshDisplay() const
