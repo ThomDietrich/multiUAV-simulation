@@ -152,10 +152,13 @@ void GenericNode::handleMessage(cMessage *msg)
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission(), false);
         if (activeInField) {
             EV_INFO << "UAV initialized for provisioning " << endl;
+            commandExecEngine->setCommandCompleted();
             delete msg;
+            msg=nullptr;
             return;
         }
         else {
+            collectStatistics();
             EV_INFO << "UAV initialized for provisioning and on its way." << endl;
             selectNextCommand();
             initializeState();

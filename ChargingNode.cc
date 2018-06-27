@@ -511,8 +511,6 @@ void ChargingNode::clearChargingSpots()
             // Send wait message to node
             MobileNode* mobileNode = objectsCharging[i]->getNode();
             send(new cMessage("wait"), getOutputGateTo(mobileNode));
-            // Send a message to the node which signalizes that the charge process is finished
-            send(new cMessage("nextCommand"), getOutputGateTo(mobileNode));
             // Push fully charged nodes to the corresponding list
             objectsFinished.push_back(objectsCharging[i]->getNode());
             objectsCharging.erase(objectsCharging.begin() + i);
