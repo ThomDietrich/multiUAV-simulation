@@ -194,7 +194,7 @@ NodeShadow* ManagedNodeShadows::get(int index)
     return managedNodes.at(index);
 }
 
-NodeShadow * ManagedNodeShadows::get(GenericNode * node)
+NodeShadow* ManagedNodeShadows::get(GenericNode* node)
 {
     int index = node->getIndex();
     return get(index);
@@ -240,7 +240,7 @@ NodeShadow* ManagedNodeShadows::getFirst(NodeStatus currentStatus)
 /**
  * Get the node with the highest charge that is available for missions.
  */
-NodeShadow * ManagedNodeShadows::getHighestCharged()
+NodeShadow* ManagedNodeShadows::getHighestCharged()
 {
     NodeShadow* highestChargedNode = nullptr;
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
@@ -271,7 +271,7 @@ NodeShadow * ManagedNodeShadows::getHighestCharged()
     return highestChargedNode;
 }
 
-NodeShadow * ManagedNodeShadows::getNodeRequestingReplacement(cMessage * msg)
+NodeShadow* ManagedNodeShadows::getNodeRequestingReplacement(cMessage* msg)
 {
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
         if (it->second->compareReplacementMsg(msg)) {
