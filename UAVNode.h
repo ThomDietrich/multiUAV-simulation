@@ -27,7 +27,6 @@
 
 using namespace omnetpp;
 
-
 /**
  * A mobile node that follows a predefined track.
  */
@@ -66,7 +65,7 @@ protected:
     virtual void selectNextCommand() override;
     virtual void initializeState() override;
     virtual void updateState() override;
-    virtual bool commandCompleted() override;
+    virtual bool isCommandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;
@@ -86,6 +85,10 @@ private:
     float estimateEnergy(double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
     double estimateDuration(double fromX, double fromY, double fromZ, double toX, double toY, double toZ);
     float quantile = 0.95;
+    bool receivedMission_valid = false;
+    int receivedMission_missionId;
+    bool receivedMission_commandsRepeat;
+    CommandQueue receivedMission_missionCommands;
 };
 
 #endif

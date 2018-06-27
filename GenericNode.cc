@@ -148,14 +148,24 @@ void GenericNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
     if (msg->isName("startProvision")) {
-        collectStatistics();
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission(), false);
-        selectNextCommand();
-        initializeState();
-        EV_INFO << "UAV initialized for provisioning and on its way." << endl;
-        msg->setName("update");
-        stepSize = 0;
+        if (activeInField) {
+            EV_INFO << "UAV initialized for provisioning " << endl;
+            commandExecEngine->setCommandCompleted();
+            delete msg;
+            msg=nullptr;
+            return;
+        }
+        else {
+            collectStatistics();
+            EV_INFO << "UAV initialized for provisioning and on its way." << endl;
+            selectNextCommand();
+            initializeState();
+            activeInField = true;
+            msg->setName("update");
+            stepSize = 0;
+        }
     }
     else if (msg->isName("startMission")) {
         collectStatistics();
@@ -174,7 +184,7 @@ void GenericNode::handleMessage(cMessage *msg)
         updateState();
         stepSize = nextNeededUpdate();
         stepSize = (timeStep == 0 || stepSize < timeStep) ? stepSize : timeStep;
-        if (commandCompleted()) {
+        if (isCommandCompleted()) {
             msg->setName("nextCommand");
             stepSize = 0;
         }

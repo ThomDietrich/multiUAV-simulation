@@ -64,7 +64,7 @@ public:
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
     virtual void clearCommands() override;
     virtual void updateState() override;
-    virtual bool commandCompleted() override;
+    virtual bool isCommandCompleted() override;
     virtual double nextNeededUpdate() override;
     virtual void collectStatistics() override;
     virtual ReplacementData* endOfOperation() override;

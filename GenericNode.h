@@ -198,7 +198,7 @@ protected:
     virtual void handleMessage(cMessage *msg) override;
     virtual void refreshDisplay() const override;
     virtual void updateState() = 0;
-    virtual bool commandCompleted() = 0;
+    virtual bool isCommandCompleted() = 0;
     virtual void selectNextCommand() = 0;
     virtual void collectStatistics() = 0;
 

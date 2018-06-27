@@ -62,7 +62,7 @@ public:
         return status;
     }
 
-    const char* getStatusString() const
+    const char* getStatusString(NodeStatus status) const
     {
         switch (status) {
             case NodeStatus::DEAD:
@@ -84,6 +84,11 @@ public:
         }
     }
 
+    const char* getStatusString() const
+    {
+        return getStatusString(status);
+    }
+
     bool hasReplacementData() const
     {
         return (this->replacementData != nullptr);
@@ -91,7 +96,7 @@ public:
 
     ReplacementData* getReplacementData() const
     {
-        if (not hasReplacementData())  {
+        if (not hasReplacementData()) {
             std::string error_msg = std::string(node->getFullName()) + ": no replacementData available, NodeShadow::getReplacementData() should not be called.";
             throw cRuntimeError(error_msg.c_str());
         }
@@ -130,7 +135,7 @@ public:
 
     cMessage* getReplacementMsg() const
     {
-        if (not hasReplacementMsg())  {
+        if (not hasReplacementMsg()) {
             std::string error_msg = std::string(node->getFullName()) + ": no replacementMsg available, NodeShadow::getReplacementMsg() should not be called.";
             throw cRuntimeError(error_msg.c_str());
         }
@@ -160,7 +165,8 @@ public:
     int getReplacingNodeIndex() const
     {
         if (not hasReplacingNode()) {
-            std::string error_msg = std::string(node->getFullName()) + ": no replacingNode available, NodeShadow::getReplacingNodeIndex() should not be called.";
+            std::string error_msg = std::string(node->getFullName())
+                    + ": no replacingNode available, NodeShadow::getReplacingNodeIndex() should not be called.";
             throw cRuntimeError(error_msg.c_str());
         }
         return this->replacementData->replacingNode->getIndex();

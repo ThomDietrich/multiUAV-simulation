@@ -14,6 +14,7 @@
 //
 
 #include "MissionControlDataMap.h"
+#include <omnetpp.h>
 
 NodeShadow::NodeShadow(GenericNode* node)
 {
@@ -28,8 +29,7 @@ NodeShadow::~NodeShadow()
 
 void NodeShadow::setReplacementData(ReplacementData* replacementData)
 {
-    if(this->replacementData != nullptr)
-        delete this->replacementData;
+    if (this->replacementData != nullptr) delete this->replacementData;
     this->replacementData = replacementData;
 }
 
@@ -40,7 +40,91 @@ void NodeShadow::setReplacementMsg(cMessage* replacementMsg)
 
 void NodeShadow::setStatus(NodeStatus status)
 {
-    this->status = status;
+    if (this->status != status) {
+        switch (this->status) {
+            case NodeStatus::DEAD:
+                EV_WARN << "No status change from DEAD possible!!!";
+                break;
+            case NodeStatus::IDLE:
+                if (NodeStatus::RESERVED == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_WARN << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::RESERVED:
+                if (NodeStatus::PROVISIONING == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::PROVISIONING:
+                if (NodeStatus::MISSION == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::MISSION:
+                if (NodeStatus::MAINTENANCE == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else if (NodeStatus::CHARGING == status) {
+                    EV_TRACE << "Status change from " << this->getStatusString() << " to " << getStatusString(status)
+                            << " ignored (probably a delayed message from charging node)." << endl;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::MAINTENANCE:
+                if (NodeStatus::CHARGING == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            case NodeStatus::CHARGING:
+                if (NodeStatus::IDLE == status || NodeStatus::RESERVED == status) {
+                    EV_INFO << "Changing node shadow " << getNode()->getFullName() << " from status " << this->getStatusString() << " to "
+                            << getStatusString(status) << endl;
+                    this->status = status;
+                }
+                else {
+                    EV_ERROR << "No status change from " << this->getStatusString() << " to " << getStatusString(status) << " possible!!!" << endl;
+                }
+                break;
+            default:
+                throw cRuntimeError("Unknown node status");
+        }
+    }
 }
 
 void NodeShadow::setReplacingNode(GenericNode* replacingNode)

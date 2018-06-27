@@ -50,6 +50,7 @@ Battery::Battery(float capacity, float remaining) :
 {
     this->infinite = (capacity == 0) ? true : false;
     if (remaining > capacity) EV_WARN << "Battery initialized with remaining > capacity" << endl;
+    if (remaining < 0) throw cRuntimeError("Remaining less than 0 is not possible.");
 }
 
 Battery::~Battery()
@@ -82,8 +83,16 @@ bool Battery::charge(float amount)
  */
 bool Battery::discharge(float amount)
 {
+    if (not std::isfinite(amount)) {
+        std::string error_msg = std::string("Amount is not finite: ") + std::to_string(amount);
+        throw cRuntimeError(error_msg.c_str());
+    }
     if (infinite) return true;
     remaining -= amount;
+    if (not std::isfinite(remaining)) {
+        std::string error_msg = std::string("Remaining is not finite: ") + std::to_string(remaining);
+        throw cRuntimeError(error_msg.c_str());
+    }
     if (remaining < 0) {
         overdraw += remaining * (-1);
         remaining = 0;

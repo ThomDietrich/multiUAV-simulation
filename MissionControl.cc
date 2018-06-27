@@ -67,7 +67,9 @@ void MissionControl::handleMessage(cMessage *msg)
             send(nodeStartMission, "gate$o", nodeShadow->getNodeIndex());
 
             // Mark node accordingly
+            nodeShadow->setStatus(NodeStatus::RESERVED);
             nodeShadow->setStatus(NodeStatus::PROVISIONING);
+            nodeShadow->setStatus(NodeStatus::MISSION);
 
             EV_INFO << __func__ << "(): Mission " << missionId << " assigned to node " << nodeShadow->getNode()->getFullName() << " (PROVISIONING)." << endl;
         }
@@ -75,13 +77,8 @@ void MissionControl::handleMessage(cMessage *msg)
     else if (msg->isName("commandCompleted")) {
         CmdCompletedMsg *ccmsg = check_and_cast<CmdCompletedMsg *>(msg);
         NodeShadow* nodeShadow = managedNodeShadows.get(ccmsg->getSourceNodeIndex());
-        //EV_INFO << __func__ << "(): commandCompleted message received for " << nodeShadow->getNode()->getFullName() << endl;
+        EV_INFO << __func__ << "(): commandCompleted message received for " << nodeShadow->getNode()->getFullName() << endl;
 
-        //TODO: too simple. Should e.g. not happen for ReplacingNode
-        if (nodeShadow->isStatusProvisioning()) {
-            EV_INFO << "Node " << nodeShadow->getNode()->getFullName() << " switching over to nodeStatus MISSION" << endl;
-            nodeShadow->setStatus(NodeStatus::MISSION);
-        }
         if (ccmsg->getReplacementDataAvailable()) {
             handleReplacementMessage(ccmsg->getReplacementData());
         }
@@ -92,11 +89,9 @@ void MissionControl::handleMessage(cMessage *msg)
         nodeReplaced->clearReplacementMsg();
         nodeReplaced->clearReplacementData();
         nodeReplaced->setStatus(NodeStatus::MAINTENANCE);
-        EV_INFO << "Node " << nodeReplaced->getNode()->getFullName() << " switching over to nodeStatus MAINTENANCE" << endl;
 
         NodeShadow* nodeReplacing = managedNodeShadows.get(ecmsg->getReplacingNodeIndex());
         nodeReplacing->setStatus(NodeStatus::MISSION);
-        EV_INFO << "Node " << nodeReplacing->getNode()->getFullName() << " switching over to nodeStatus MISSION" << endl;
     }
     else if (msg->isName("chargingUpdate")) {
         UpdateChargingMsg* ucmsg = check_and_cast<UpdateChargingMsg*>(msg);
@@ -175,7 +170,6 @@ void MissionControl::handleMessage(cMessage *msg)
                 else
                     nodeShadow->setStatus(NodeStatus::IDLE);
             }
-            EV_INFO << "mobileNodeResponse:" << nodeShadow->getNode()->getFullName() << ": status:" << nodeShadow->getStatusString() << endl;
         }
         else {
             std::string message = "No mobile node found for message: ";
