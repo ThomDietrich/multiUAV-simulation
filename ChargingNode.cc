@@ -205,7 +205,7 @@ void ChargingNode::updateState()
     }
 }
 
-bool ChargingNode::commandCompleted()
+bool ChargingNode::isCommandCompleted()
 {
     return false;
 }
