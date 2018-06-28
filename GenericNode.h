@@ -87,6 +87,7 @@ protected:
     bool commandsRepeat = false;
 
     /// Unique identifier for a mission
+    /// Poor man's hack: -1=noMission, -2=Idle
     int missionId = -1;
 
     /// If true the node is actively executing commands.

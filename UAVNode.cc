@@ -67,17 +67,22 @@ void UAVNode::finish()
 
     if (commandExecEngine->isCeeType(CeeType::EXCHANGE) && battery.isEmpty()) {
         EV_WARN << "Finish Checks: UAV is in Exchange CEE and depleted." << endl;
+        utilizationFail = true;
     }
     if (commandExecEngine->isCeeType(CeeType::IDLE) && not battery.isFull()) {
         EV_WARN << "Finish Checks: UAV is in Idle CEE but not fully charged." << endl;
+        utilizationFail = true;
     }
     if (commandExecEngine->isCeeType(CeeType::CHARGE) && commandExecEngine->getConsumptionPerSecond() == 0) {
         EV_WARN << "Finish Checks: UAV is in Charge CEE but not charging." << endl;
+        utilizationFail = true;
     }
 
     if (missionId >= 0) {
         EV_INFO << "Finish Checks: UAV was currently servicing mission " << missionId << endl;
     }
+
+    if (utilizationFail && missionId >= 0) throw cRuntimeError("Nope!");
 
     MobileNode::finish();
 }
@@ -273,6 +278,10 @@ void UAVNode::selectNextCommand()
     commandExecEngine->setFromCoordinates(getX(), getY(), getZ());
     commandExecEngine->initializeCEE();
     cees.pop_front();
+
+    // Unset mission ID after mission
+    if (not commandExecEngine->isPartOfMission() && not commandExecEngine->isCeeType(CeeType::IDLE)) missionId = -1;
+    if (not commandExecEngine->isPartOfMission() && commandExecEngine->isCeeType(CeeType::IDLE)) missionId = -2;
 
     // Reinject command (if no non-mission command)
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {

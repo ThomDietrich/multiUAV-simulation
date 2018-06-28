@@ -80,6 +80,8 @@ protected:
     int utilizationCountChargeState = 0;
     int utilizationCountOverdrawnAfterMission = 0;
     int utilizationCountIdleState = 0;
+    //
+    bool utilizationFail = false;
 
 public:
     MobileNode();

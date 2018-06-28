@@ -102,6 +102,8 @@ void MobileNode::initialize(int stage)
             WATCH(utilizationCountChargeState);
             WATCH(utilizationCountOverdrawnAfterMission);
             WATCH(utilizationCountIdleState);
+            //
+            WATCH(utilizationFail);
             break;
     }
 }
@@ -126,6 +128,8 @@ void MobileNode::finish()
     recordScalar("utilizationCountChargeState", utilizationCountChargeState);
     recordScalar("utilizationCountOverdrawnAfterMission", utilizationCountOverdrawnAfterMission);
     recordScalar("utilizationCountIdleState", utilizationCountIdleState);
+    //
+    recordScalar("utilizationFail", utilizationFail);
 }
 
 void MobileNode::refreshDisplay() const
