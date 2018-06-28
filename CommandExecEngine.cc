@@ -119,12 +119,14 @@ double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod) cons
     double dy = y1 - y0;
     double dz = z1 - z0;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    if (distance < 1.e-10) {
+        return 0;
+    }
     double duration = distance / speed;
-    if (distance < 1.e-10) distance = 0;
     double completeConsumption = node->getMovementConsumption(climbAngle, distance / speed, fromMethod);
     //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s, fromMethod" << fromMethod << ", Consumption expected = " << completeConsumption << "mAh" << endl;
 
-    ASSERT(completeConsumption >= 0 && (completeConsumption / duration) < 1000);
+    ASSERT(completeConsumption > 0 && (completeConsumption / duration) < 1000);
 
     if (normalized) {
         return completeConsumption / duration;
