@@ -65,6 +65,20 @@ void UAVNode::finish()
             << (commandExecEngine->isActive() ? std::to_string(commandExecEngine->getDuration()) : "(CEE not active)") << endl;
     collectStatistics();
 
+    if (commandExecEngine->isCeeType(CeeType::EXCHANGE) && battery.isEmpty()) {
+        EV_WARN << "Finish Checks: UAV is in Exchange CEE and depleted." << endl;
+    }
+    if (commandExecEngine->isCeeType(CeeType::IDLE) && not battery.isFull()) {
+        EV_WARN << "Finish Checks: UAV is in Idle CEE but not fully charged." << endl;
+    }
+    if (commandExecEngine->isCeeType(CeeType::CHARGE) && commandExecEngine->getConsumptionPerSecond() == 0) {
+        EV_WARN << "Finish Checks: UAV is in Charge CEE but not charging." << endl;
+    }
+
+    if (missionId >= 0) {
+        EV_INFO << "Finish Checks: UAV was currently servicing mission " << missionId << endl;
+    }
+
     MobileNode::finish();
 }
 
