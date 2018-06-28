@@ -111,26 +111,34 @@ void ChargingNode::handleMessage(cMessage* msg)
             scheduleAt(simTime(), msg);
             active = true;
         }
+        else {
+            delete msg;
+            msg = nullptr;
+        }
     }
     else if (msg->isName("forecastTargetRequest")) {
         ForecastTargetRequest *ftmsg = check_and_cast<ForecastTargetRequest *>(msg);
         double forecastDuration = getForecastRemainingToTarget(ftmsg->getRemaining(), ftmsg->getCapacity(), ftmsg->getTargetPercentage());
 
+        ForecastResponse *frmsg = new ForecastResponse("forecastResponse");
+        frmsg->setPointInTime(simTime() + forecastDuration);
+        frmsg->setReachedPercentage(ftmsg->getTargetPercentage());
+        send(frmsg, getOutputGateTo(frmsg->getSenderModule()));
+
         delete msg;
-        ForecastResponse *msg = new ForecastResponse("forecastResponse");
-        msg->setPointInTime(simTime() + forecastDuration);
-        msg->setReachedPercentage(ftmsg->getTargetPercentage());
-        send(msg, getOutputGateTo(msg->getSenderModule()));
+        msg = nullptr;
     }
     else if (msg->isName("forecastPointInTimeRequest")) {
         ForecastPointInTimeRequest *fpitmsg = check_and_cast<ForecastPointInTimeRequest *>(msg);
         double forecastPercentage = getForecastRemainingToPointInTime(fpitmsg->getRemaining(), fpitmsg->getCapacity(), fpitmsg->getPointInTime());
 
+        ForecastResponse *frmsg = new ForecastResponse("forecastResponse");
+        frmsg->setPointInTime(fpitmsg->getPointInTime());
+        frmsg->setReachedPercentage(forecastPercentage);
+        send(frmsg, getOutputGateTo(frmsg->getSenderModule()));
+
         delete msg;
-        ForecastResponse *msg = new ForecastResponse("forecastResponse");
-        msg->setPointInTime(fpitmsg->getPointInTime());
-        msg->setReachedPercentage(forecastPercentage);
-        send(msg, getOutputGateTo(msg->getSenderModule()));
+        msg = nullptr;
     }
     else if (msg->isName("mobileNodeRequest")) {
         MobileNodeRequest *mnmsg = check_and_cast<MobileNodeRequest *>(msg);
@@ -149,12 +157,17 @@ void ChargingNode::handleMessage(cMessage* msg)
         }
 
         send(answerMsg, getOutputGateTo(msg->getSenderModule()));
+
         delete msg;
+        msg = nullptr;
     }
     else if (msg->isName("mobileNodeExit")) {
         MobileNode* sender = check_and_cast<MobileNode*>(msg->getSenderModule());
         removeFromChargingNode(sender);
         updateState();
+
+        delete msg;
+        msg = nullptr;
     }
     else {
         GenericNode::handleMessage(msg);
@@ -364,7 +377,7 @@ void ChargingNode::appendToObjectsWaiting(MobileNode* mobileNode, double targetP
     // substract consumption which will occur between reservation and the charging process
     double chargeTime = chargeAlgorithm->calculateChargeTime(mobileNode->getBattery()->getRemaining() - consumption, mobileNode->getBattery()->getCapacity(),
             targetPercentage);
-    ASSERT(chargeTime>0);
+    ASSERT(chargeTime > 0);
     ChargingNodeSpotElement* element = new ChargingNodeSpotElement(mobileNode, chargeTime, getEstimatedWaitingSeconds(), targetPercentage);
 
     // set estimatedArrival and reservationTime if not 0, otherwise simTime() will be used as default value

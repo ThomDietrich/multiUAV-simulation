@@ -54,7 +54,7 @@ protected:
     std::deque<ChargingNodeSpotElement*> objectsCharging;
     std::deque<MobileNode*> objectsFinished;
     IChargeAlgorithm* chargeAlgorithm;
-    bool active;
+    bool active = false;
     bool prioritizeFastCharge;
 public:
     ChargingNode();

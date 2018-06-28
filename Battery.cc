@@ -85,13 +85,15 @@ bool Battery::discharge(float amount)
 {
     if (not std::isfinite(amount)) {
         std::string error_msg = std::string("Amount is not finite: ") + std::to_string(amount);
-        throw cRuntimeError(error_msg.c_str());
+        EV_ERROR << error_msg << endl;
+        amount = 0;
     }
     if (infinite) return true;
     remaining -= amount;
     if (not std::isfinite(remaining)) {
         std::string error_msg = std::string("Remaining is not finite: ") + std::to_string(remaining);
-        throw cRuntimeError(error_msg.c_str());
+        EV_ERROR << error_msg << endl;
+        remaining = 0;
     }
     if (remaining < 0) {
         overdraw += remaining * (-1);
