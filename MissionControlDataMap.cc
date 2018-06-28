@@ -204,21 +204,28 @@ NodeShadow* ManagedNodeShadows::get(GenericNode* node)
  * Choose a free node from the managedNodes map that is closest to the given coordinates.
  * Selection happens by comparing all available notes with the given status and their distance to the given coordinates.
  */
-NodeShadow* ManagedNodeShadows::getClosest(NodeStatus currentStatus, float x, float y, float z)
+NodeShadow* ManagedNodeShadows::getClosest(NodeStatus requestedStatus, float x, float y, float z)
 {
-    NodeShadow* candidate = nullptr;
-    double candidateDistance = DBL_MAX;
+    std::vector<NodeShadow*> candidates;
+    double shortestDistance = DBL_MAX;
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
         double distance = sqrt(
                 pow(it->second->getNode()->getX() - x, 2) + pow(it->second->getNode()->getY() - y, 2) + pow(it->second->getNode()->getZ() - z, 2));
-        if (it->second->isStatus(currentStatus) && distance < candidateDistance) {
-            candidate = it->second;
-            candidateDistance = distance;
+        if (it->second->isStatus(requestedStatus)) {
+            if (distance < shortestDistance) {
+                // new shortest distance
+                candidates.clear();
+                shortestDistance = distance;
+            }
+            if (distance == shortestDistance) {
+                candidates.push_back(it->second);
+            }
         }
     }
-//    throw cRuntimeError("getNode(): No available Nodes found. This case is not handled yet.");
-    return candidate;
+    if (candidates.empty()) return nullptr;
 
+    unsigned int theChosenIndex = getEnvir()->getRNG(0)->intRand(candidates.size());
+    return candidates.at(theChosenIndex);
 }
 
 /**
