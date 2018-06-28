@@ -93,7 +93,7 @@ void WaypointCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double WaypointCEE::getOverallDuration()
+double WaypointCEE::getOverallDuration() const
 {
     double dx = x1 - x0;
     double dy = y1 - y0;
@@ -103,7 +103,7 @@ double WaypointCEE::getOverallDuration()
     return distance / speed;
 }
 
-double WaypointCEE::getRemainingTime()
+double WaypointCEE::getRemainingTime() const
 {
     double dx = x1 - node->x;
     double dy = y1 - node->y;
@@ -113,7 +113,7 @@ double WaypointCEE::getRemainingTime()
     return distance / speed;
 }
 
-double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod)
+double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     double dx = x1 - x0;
     double dy = y1 - y0;
@@ -130,7 +130,7 @@ double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod)
     }
 }
 
-char* WaypointCEE::getCeeTypeString()
+char* WaypointCEE::getCeeTypeString() const
 {
     return (char*) "Waypoint";
 }
@@ -185,17 +185,17 @@ void TakeoffCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double TakeoffCEE::getOverallDuration()
+double TakeoffCEE::getOverallDuration() const
 {
     return fabs(z1 - z0) / speed;
 }
 
-double TakeoffCEE::getRemainingTime()
+double TakeoffCEE::getRemainingTime() const
 {
     return fabs(z1 - node->z) / speed;
 }
 
-double TakeoffCEE::getProbableConsumption(bool normalized, int fromMethod)
+double TakeoffCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     double duration = fabs(z1 - z0) / speed;
     double completeConsumption = node->getMovementConsumption(climbAngle, duration, fromMethod);
@@ -207,7 +207,7 @@ double TakeoffCEE::getProbableConsumption(bool normalized, int fromMethod)
     }
 }
 
-char* TakeoffCEE::getCeeTypeString()
+char* TakeoffCEE::getCeeTypeString() const
 {
     return (char*) "Take Off";
 }
@@ -252,17 +252,17 @@ void HoldPositionCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double HoldPositionCEE::getOverallDuration()
+double HoldPositionCEE::getOverallDuration() const
 {
     return (this->command->getHoldSeconds());
 }
 
-double HoldPositionCEE::getRemainingTime()
+double HoldPositionCEE::getRemainingTime() const
 {
     return (this->holdPositionTill - simTime()).dbl();
 }
 
-double HoldPositionCEE::getProbableConsumption(bool normalized, int fromMethod)
+double HoldPositionCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     double duration = this->command->getHoldSeconds();
     double completeConsumption = node->getHoverConsumption(duration, fromMethod);
@@ -274,7 +274,7 @@ double HoldPositionCEE::getProbableConsumption(bool normalized, int fromMethod)
     }
 }
 
-char* HoldPositionCEE::getCeeTypeString()
+char* HoldPositionCEE::getCeeTypeString() const
 {
     return (char*) "Hold Position";
 }
@@ -319,25 +319,25 @@ void ChargeCEE::updateState(double stepSize)
 {
 }
 
-double ChargeCEE::getOverallDuration()
+double ChargeCEE::getOverallDuration() const
 {
     // ToDo: should and can this integrate the forecast from charging station?
     throw cRuntimeError("ChargeCEE has no determined ending time");
     return 1;
 }
 
-double ChargeCEE::getRemainingTime()
+double ChargeCEE::getRemainingTime() const
 {
     throw cRuntimeError("ChargeCEE has no determined ending time");
     return 1;
 }
 
-double ChargeCEE::getProbableConsumption(bool normalized, int fromMethod)
+double ChargeCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     return 0;
 }
 
-char* ChargeCEE::getCeeTypeString()
+char* ChargeCEE::getCeeTypeString() const
 {
     return (char*) "Charge";
 }
@@ -380,19 +380,19 @@ void ExchangeCEE::updateState(double stepSize)
     node->battery.discharge(consumptionPerSecond * stepSize);
 }
 
-double ExchangeCEE::getOverallDuration()
+double ExchangeCEE::getOverallDuration() const
 {
     throw cRuntimeError("ExchangeCEE has no determined ending time");
     return 1;
 }
 
-double ExchangeCEE::getRemainingTime()
+double ExchangeCEE::getRemainingTime() const
 {
     throw cRuntimeError("ExchangeCEE has no determined ending time");
     return 1;
 }
 
-double ExchangeCEE::getProbableConsumption(bool normalized, int fromMethod)
+double ExchangeCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     //TODO duration unknown
     if (normalized == false) EV_WARN << __func__ << "(): non-normalized not supported for ExchangeCEE" << endl;
@@ -401,7 +401,7 @@ double ExchangeCEE::getProbableConsumption(bool normalized, int fromMethod)
     return node->getHoverConsumption(duration, 1);
 }
 
-char* ExchangeCEE::getCeeTypeString()
+char* ExchangeCEE::getCeeTypeString() const
 {
     return (char*) "Exchange";
 }
@@ -506,24 +506,24 @@ void IdleCEE::updateState(double stepSize)
     node->getBattery()->discharge(consumptionPerSecond * stepSize);
 }
 
-double IdleCEE::getOverallDuration()
+double IdleCEE::getOverallDuration() const
 {
     throw cRuntimeError("IdleCEE has no determined ending time");
     return 1;
 }
 
-double IdleCEE::getRemainingTime()
+double IdleCEE::getRemainingTime() const
 {
     throw cRuntimeError("IdleCEE has no determined ending time");
     return 1;
 }
 
-double IdleCEE::getProbableConsumption(bool normalized, int fromMethod)
+double IdleCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     return 0;
 }
 
-char* IdleCEE::getCeeTypeString()
+char* IdleCEE::getCeeTypeString() const
 {
     return (char*) "Idle";
 }

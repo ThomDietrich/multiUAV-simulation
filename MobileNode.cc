@@ -281,7 +281,7 @@ void MobileNode::drawCommandPreview()
     CEEQueue currentAndFutureCEEs = cees;
     currentAndFutureCEEs.push_front(commandExecEngine);
 
-    for (auto it = currentAndFutureCEEs.begin(); it != currentAndFutureCEEs.end(); ++it) {
+    for (auto it = currentAndFutureCEEs.cbegin(); it != currentAndFutureCEEs.cend(); ++it) {
         if (commandPreviewCommandCount != 0 && countDrawnCommands == commandPreviewCommandCount) break;
 
         CommandExecEngine* cee = *it;

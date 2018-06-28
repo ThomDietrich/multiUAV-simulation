@@ -78,7 +78,7 @@ public:
         this->commandId = commandId;
     }
 
-    virtual Command* extractCommand() = 0;
+    virtual Command* extractCommand() const = 0;
 
     /**
      * Adopt the coordinates the command will be executed from, needed for consumption prediction.
@@ -102,27 +102,27 @@ public:
         this->z1 = z;
     }
 
-    double getX0()
+    double getX0() const
     {
         return x0;
     }
-    double getY0()
+    double getY0() const
     {
         return y0;
     }
-    double getZ0()
+    double getZ0() const
     {
         return z0;
     }
-    double getX1()
+    double getX1() const
     {
         return x1;
     }
-    double getY1()
+    double getY1() const
     {
         return y1;
     }
-    double getZ1()
+    double getZ1() const
     {
         return z1;
     }
@@ -169,7 +169,7 @@ public:
     /**
      * Returns whether or not a replacement node has to be requested for this CEE.
      */
-    virtual bool isReplacementNeeded()
+    virtual bool isReplacementNeeded() const
     {
         return replacementNeeded;
     }
@@ -177,7 +177,7 @@ public:
     /**
      *
      */
-    bool isActive()
+    bool isActive() const
     {
         return timeExecutionStart != 0;
     }
@@ -187,7 +187,7 @@ public:
      * This function has to be called before getDuration() or getRemainingTime().
      * @return true if duration/deadline is known
      */
-    virtual bool hasDeterminedDuration()
+    virtual bool hasDeterminedDuration() const
     {
         return true;
     }
@@ -195,12 +195,12 @@ public:
     /**
      * Get the overall duration for the CEE in seconds.
      */
-    virtual double getOverallDuration() = 0;
+    virtual double getOverallDuration() const = 0;
 
     /**
      * Get the duration so far, for an CEE in execution
      */
-    double getDuration()
+    double getDuration() const
     {
         if (timeExecutionStart == 0) throw cRuntimeError("getDuration(): CEE not yet started");
         return (simTime() - timeExecutionStart).dbl();
@@ -210,7 +210,7 @@ public:
      * Get the remaining time the CEE is still active.
      * Is the same as getOverallDuration() before execution of the CEE.
      */
-    virtual double getRemainingTime() = 0;
+    virtual double getRemainingTime() const = 0;
 
     /**
      * Generate one probable energy consumption by the CEE.
@@ -221,7 +221,7 @@ public:
      * @param fromMethod 0: random  1: mean  2: predictionQuantile
      * @return statistical consumption, in [mAh] (normalized == false) or [mAh/s] (normalized == true)
      */
-    virtual double getProbableConsumption(bool normalized = true, int fromMethod = 2) = 0;
+    virtual double getProbableConsumption(bool normalized = true, int fromMethod = 2) const = 0;
 
     /**
      * Predict the overall consumption for the full command execution procedure
@@ -229,24 +229,24 @@ public:
      * @param fromMethod 0: random  1: mean  2: predictionQuantile
      * @return The energy to be consumed for the whole CEE, in [mAh]
      */
-    virtual double predictFullConsumption(int fromMethod = 2)
+    virtual double predictFullConsumption(int fromMethod = 2) const
     {
         return getProbableConsumption(false, fromMethod);
     }
 
-    virtual double predictFullConsumptionQuantile()
+    virtual double predictFullConsumptionQuantile() const
     {
         return getProbableConsumption(false, 2);
     }
-    virtual double predictFullConsumptionMean()
+    virtual double predictFullConsumptionMean() const
     {
         return getProbableConsumption(false, 1);
     }
-    virtual double predictFullConsumptionRandom()
+    virtual double predictFullConsumptionRandom() const
     {
         return getProbableConsumption(false, 0);
     }
-    virtual double predictNormConsumptionRandom()
+    virtual double predictNormConsumptionRandom() const
     {
         return getProbableConsumption(true, 0);
     }
@@ -254,12 +254,12 @@ public:
     /**
      *
      */
-    CeeType getCeeType()
+    CeeType getCeeType() const
     {
         return type;
     }
 
-    bool isCeeType(CeeType ceeType)
+    bool isCeeType(CeeType ceeType) const
     {
         return (this->type == ceeType);
     }
@@ -267,13 +267,13 @@ public:
     /**
      *
      */
-    virtual char* getCeeTypeString() = 0;
+    virtual char* getCeeTypeString() const = 0;
 
     /**
      *
      * @return normalized consumption, in [mAh/s]
      */
-    double getConsumptionPerSecond()
+    double getConsumptionPerSecond() const
     {
         return consumptionPerSecond;
     }
@@ -343,12 +343,12 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getOverallDuration() override;
-    double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
-    char* getCeeTypeString() override;
+    double getOverallDuration() const override;
+    double getRemainingTime() const override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
+    char* getCeeTypeString() const override;
 
-    WaypointCommand* extractCommand() override
+    WaypointCommand* extractCommand() const override
     {
         return command;
     }
@@ -370,12 +370,12 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getOverallDuration() override;
-    double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
-    char* getCeeTypeString() override;
+    double getOverallDuration() const override;
+    double getRemainingTime() const override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
+    char* getCeeTypeString() const override;
 
-    TakeoffCommand* extractCommand() override
+    TakeoffCommand* extractCommand() const override
     {
         return command;
     }
@@ -397,12 +397,12 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getOverallDuration() override;
-    double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
-    char* getCeeTypeString() override;
+    double getOverallDuration() const override;
+    double getRemainingTime() const override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
+    char* getCeeTypeString() const override;
 
-    HoldPositionCommand* extractCommand() override
+    HoldPositionCommand* extractCommand() const override
     {
         return command;
     }
@@ -421,16 +421,16 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getOverallDuration() override;
-    double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
-    char* getCeeTypeString() override;
+    double getOverallDuration() const override;
+    double getRemainingTime() const override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
+    char* getCeeTypeString() const override;
 
-    ChargeCommand* extractCommand() override
+    ChargeCommand* extractCommand() const override
     {
         return command;
     }
-    bool hasDeterminedDuration() override
+    bool hasDeterminedDuration() const override
     {
         return false;
     }
@@ -449,10 +449,10 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getOverallDuration() override;
-    double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
-    char* getCeeTypeString() override;
+    double getOverallDuration() const override;
+    double getRemainingTime() const override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
+    char* getCeeTypeString() const override;
 
     void performEntryActions() override;
     void performExitActions() override;
@@ -460,11 +460,11 @@ public:
 
     bool dataTransferPerformed = false;
 
-    ExchangeCommand* extractCommand() override
+    ExchangeCommand* extractCommand() const override
     {
         return command;
     }
-    bool hasDeterminedDuration() override
+    bool hasDeterminedDuration() const override
     {
         return false;
     }
@@ -483,16 +483,16 @@ public:
     void initializeCEE() override;
     void setNodeParameters() override;
     void updateState(double stepSize) override;
-    double getOverallDuration() override;
-    double getRemainingTime() override;
-    double getProbableConsumption(bool normalized = true, int fromMethod = 2) override;
-    char* getCeeTypeString() override;
+    double getOverallDuration() const override;
+    double getRemainingTime() const override;
+    double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
+    char* getCeeTypeString() const override;
 
-    IdleCommand* extractCommand() override
+    IdleCommand* extractCommand() const override
     {
         return command;
     }
-    bool hasDeterminedDuration() override
+    bool hasDeterminedDuration() const override
     {
         return false;
     }
