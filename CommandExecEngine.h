@@ -202,7 +202,7 @@ public:
      */
     double getDuration() const
     {
-        if (timeExecutionStart == 0) throw cRuntimeError("getDuration(): CEE not yet started");
+        if (not isActive()) throw cRuntimeError("getDuration(): CEE not yet started");
         return (simTime() - timeExecutionStart).dbl();
     }
 
@@ -279,7 +279,16 @@ public:
     }
 
     /**
-     * Note: This method is only provided for the Charging Station and is not supposed to be used otherwise.
+     *
+     * @return consumption of this CEE so far, in [mAh]
+     */
+    double getConsumptionTotal() const
+    {
+        if (not isActive()) throw cRuntimeError("getDuration(): CEE not yet started");
+        return consumptionPerSecond * getDuration();
+    }
+
+    /**
      *
      * @param a new value for normalized consumption, in [mAh/s]
      */

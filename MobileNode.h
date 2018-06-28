@@ -61,16 +61,19 @@ protected:
     double speed; //speed (3D) in [m/s]
     Battery battery; //energy storage
 
+    // Performance metrics
     double utilizationSecMission = 0;
     double utilizationSecMaintenance = 0;
+    double utilizationSecCharge = 0;
     double utilizationSecIdle = 0;
-
+    //
     double utilizationEnergyMission = 0;
     double utilizationEnergyMaintenance = 0;
-
+    double utilizationEnergyCharge = 0;
+    //
     double utilizationEnergyOverdrawMission = 0;
     double utilizationEnergyOverdrawMaintenance = 0;
-
+    //
     int utilizationCountMissions = 0;
     int utilizationCountManeuversMission = 0;
     int utilizationCountManeuversMaintenance = 0;

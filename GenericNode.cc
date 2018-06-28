@@ -158,8 +158,8 @@ void GenericNode::handleMessage(cMessage *msg)
             return;
         }
         else {
-            collectStatistics();
             EV_INFO << "UAV initialized for provisioning and on its way." << endl;
+            collectStatistics();
             selectNextCommand();
             initializeState();
             activeInField = true;
@@ -168,12 +168,12 @@ void GenericNode::handleMessage(cMessage *msg)
         }
     }
     else if (msg->isName("startMission")) {
-        collectStatistics();
         activeInField = true;
         MissionMsg *mmmsg = check_and_cast<MissionMsg *>(msg);
         if (not mmmsg->getMission().empty()) loadCommands(mmmsg->getMission());
         commandsRepeat = mmmsg->getMissionRepeat();
         missionId = mmmsg->getMissionId();
+        collectStatistics();
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized and on its way." << endl;

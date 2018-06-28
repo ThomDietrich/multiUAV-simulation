@@ -59,6 +59,15 @@ void UAVNode::initialize(int stage)
     }
 }
 
+void UAVNode::finish()
+{
+    EV_INFO << "Running final statistics collection for " << this->getFullName() << ", in CEE for seconds: "
+            << (commandExecEngine->isActive() ? std::to_string(commandExecEngine->getDuration()) : "(CEE not active)") << endl;
+    collectStatistics();
+
+    MobileNode::finish();
+}
+
 void UAVNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
@@ -70,6 +79,7 @@ void UAVNode::handleMessage(cMessage *msg)
         cee->setCommandId(-2);
         cee->setPartOfMission(false);
         cees.push_back(cee);
+        //collectStatistics(); // No CEE active before this step
         selectNextCommand();
         initializeState();
         EV_INFO << "UAV initialized (Idle state) at simulation begin." << endl;
@@ -259,20 +269,29 @@ void UAVNode::selectNextCommand()
             << commandExecEngine->getZ1() << "))" << endl;
 }
 
+/**
+ * Collect statistics about the currently running CEE.
+ * Execute at end of CEE and end of operation!
+ */
 void UAVNode::collectStatistics()
 {
     if (commandExecEngine == nullptr) throw cRuntimeError("collectStatistics(): Command Engine missing.");
 
-    // Only collect if executed CEEs available
+    // Only collect if executed CEE is active
     if (not commandExecEngine->isActive()) return;
 
-    double thisCeeDuration = (commandExecEngine->hasDeterminedDuration()) ? commandExecEngine->getOverallDuration() : commandExecEngine->getDuration();
-    double thisCeeEnergy = fabs(commandExecEngine->getConsumptionPerSecond() * thisCeeDuration);
+    double thisCeeDuration = commandExecEngine->getDuration();
+    double thisCeeEnergy = commandExecEngine->getConsumptionTotal();
 
-    // time and consumption
+    // time and consumption (incl. overdraw)
     if (commandExecEngine->isCeeType(CeeType::IDLE)) {
         ASSERT(thisCeeEnergy == 0);
         utilizationSecIdle += thisCeeDuration;
+    }
+    else if (commandExecEngine->isCeeType(CeeType::CHARGE)) {
+        ASSERT(thisCeeEnergy < 0);
+        utilizationSecCharge += thisCeeDuration;
+        utilizationEnergyCharge += (-1) * thisCeeEnergy;
     }
     else if (commandExecEngine->isPartOfMission()) {
         utilizationSecMission += thisCeeDuration;
@@ -296,11 +315,11 @@ void UAVNode::collectStatistics()
     }
 
     //Count states and lifecycles
-    if (commandExecEngine->isCeeType(CeeType::CHARGE)) {
-        utilizationCountChargeState++;
-    }
-    else if (commandExecEngine->isCeeType(CeeType::IDLE)) {
+    if (commandExecEngine->isCeeType(CeeType::IDLE)) {
         utilizationCountIdleState++;
+    }
+    else if (commandExecEngine->isCeeType(CeeType::CHARGE)) {
+        utilizationCountChargeState++;
     }
     else if (commandExecEngine->isCeeType(CeeType::WAYPOINT)) {
         ASSERT(cees.size() > 0);

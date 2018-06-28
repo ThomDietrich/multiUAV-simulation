@@ -152,7 +152,7 @@ for (repMethod in repMs) {
   for (sim_run in sim_runs) {
     for (index in 0:uavs_count) {
       df_subset <- subset(df.all, repM == repMethod & simRun == sim_run & uavIndex == index
-                          & uavMetric %in% c('utilizationSecMaintenance', 'utilizationSecMission', 'utilizationSecIdle')
+                          & uavMetric %in% c('utilizationSecMaintenance', 'utilizationSecMission', 'utilizationSecCharge', 'utilizationSecIdle')
       )
       print(sum(df_subset$uavMetricValue))
     }
@@ -195,14 +195,17 @@ for (repMethod in repMs) {
       repM =                 as.integer(repMethod),
       uavIndex =             as.integer(index),
       #
-      energyOverdrawMaintenance = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyOverdrawMaintenance')$valueMean),
-      energyOverdrawMission = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyOverdrawMission')$valueMean),
-      energyMaintenance = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyMaintenance')$valueMean),
-      energyMission = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyMission')$valueMean),
-      #
-      secMaintenance = as.numeric(subset(df_subset, uavMetric == 'utilizationSecMaintenance')$valueMean),
       secMission = as.numeric(subset(df_subset, uavMetric == 'utilizationSecMission')$valueMean),
+      secMaintenance = as.numeric(subset(df_subset, uavMetric == 'utilizationSecMaintenance')$valueMean),
+      secCharge = as.numeric(subset(df_subset, uavMetric == 'utilizationSecCharge')$valueMean),
       secIdle = as.numeric(subset(df_subset, uavMetric == 'utilizationSecIdle')$valueMean),
+      #
+      energyMission = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyMission')$valueMean),
+      energyMaintenance = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyMaintenance')$valueMean),
+      energyCharge = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyCharge')$valueMean),
+      #
+      energyOverdrawMission = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyOverdrawMission')$valueMean),
+      energyOverdrawMaintenance = as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyOverdrawMaintenance')$valueMean),
       #
       countMissions = as.numeric(subset(df_subset, uavMetric == 'utilizationCountMissions')$valueMean),
       countManeuversMission = as.numeric(subset(df_subset, uavMetric == 'utilizationCountManeuversMission')$valueMean),

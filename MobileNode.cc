@@ -83,13 +83,19 @@ void MobileNode::initialize(int stage)
             int capacity = int(par("batteryCapacity"));
             int charge = int(par("batteryRemaining"));
             battery = (capacity == 0) ? Battery() : Battery(capacity, charge);
+            //
             WATCH(utilizationSecMission);
             WATCH(utilizationSecMaintenance);
+            WATCH(utilizationSecCharge);
             WATCH(utilizationSecIdle);
+            //
             WATCH(utilizationEnergyMission);
             WATCH(utilizationEnergyMaintenance);
+            WATCH(utilizationEnergyCharge);
+            //
             WATCH(utilizationEnergyOverdrawMission);
             WATCH(utilizationEnergyOverdrawMaintenance);
+            //
             WATCH(utilizationCountMissions);
             WATCH(utilizationCountManeuversMission);
             WATCH(utilizationCountManeuversMaintenance);
@@ -102,13 +108,18 @@ void MobileNode::initialize(int stage)
 
 void MobileNode::finish()
 {
-    recordScalar("utilizationEnergyOverdrawMaintenance", utilizationEnergyOverdrawMaintenance);
-    recordScalar("utilizationEnergyOverdrawMission", utilizationEnergyOverdrawMission);
-    recordScalar("utilizationEnergyMaintenance", utilizationEnergyMaintenance);
-    recordScalar("utilizationEnergyMission", utilizationEnergyMission);
-    recordScalar("utilizationSecMaintenance", utilizationSecMaintenance);
     recordScalar("utilizationSecMission", utilizationSecMission);
+    recordScalar("utilizationSecMaintenance", utilizationSecMaintenance);
+    recordScalar("utilizationSecCharge", utilizationSecCharge);
     recordScalar("utilizationSecIdle", utilizationSecIdle);
+    //
+    recordScalar("utilizationEnergyMission", utilizationEnergyMission);
+    recordScalar("utilizationEnergyMaintenance", utilizationEnergyMaintenance);
+    recordScalar("utilizationEnergyCharge", utilizationEnergyCharge);
+    //
+    recordScalar("utilizationEnergyOverdrawMission", utilizationEnergyOverdrawMission);
+    recordScalar("utilizationEnergyOverdrawMaintenance", utilizationEnergyOverdrawMaintenance);
+    //
     recordScalar("utilizationCountMissions", utilizationCountMissions);
     recordScalar("utilizationCountManeuversMission", utilizationCountManeuversMission);
     recordScalar("utilizationCountManeuversMaintenance", utilizationCountManeuversMaintenance);

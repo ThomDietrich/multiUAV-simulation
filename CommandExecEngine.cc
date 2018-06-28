@@ -119,11 +119,15 @@ double WaypointCEE::getProbableConsumption(bool normalized, int fromMethod) cons
     double dy = y1 - y0;
     double dz = z1 - z0;
     double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    double duration = distance / speed;
     if (distance < 1.e-10) distance = 0;
     double completeConsumption = node->getMovementConsumption(climbAngle, distance / speed, fromMethod);
     //EV_INFO << "Distance expected = " << sqrt(dx * dx + dy * dy + dz * dz) << "m, Time expected = " << duration << "s, fromMethod" << fromMethod << ", Consumption expected = " << completeConsumption << "mAh" << endl;
+
+    ASSERT(completeConsumption >= 0 && (completeConsumption / duration) < 1000);
+
     if (normalized) {
-        return completeConsumption / (distance / speed);
+        return completeConsumption / duration;
     }
     else {
         return completeConsumption;
@@ -199,6 +203,9 @@ double TakeoffCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
     double duration = fabs(z1 - z0) / speed;
     double completeConsumption = node->getMovementConsumption(climbAngle, duration, fromMethod);
+
+    ASSERT(completeConsumption >= 0 && (completeConsumption / duration) < 1000);
+
     if (normalized) {
         return completeConsumption / duration;
     }
@@ -235,7 +242,7 @@ void HoldPositionCEE::initializeCEE()
     this->holdPositionTill = simTime() + command->getHoldSeconds();
 
     // draw probable value for consumption of this CEE
-    consumptionPerSecond = getProbableConsumption(true, 0);
+    consumptionPerSecond = predictNormConsumptionRandom();
 }
 
 void HoldPositionCEE::setNodeParameters()
@@ -266,6 +273,9 @@ double HoldPositionCEE::getProbableConsumption(bool normalized, int fromMethod) 
 {
     double duration = this->command->getHoldSeconds();
     double completeConsumption = node->getHoverConsumption(duration, fromMethod);
+
+    ASSERT(completeConsumption >= 0 && (completeConsumption / duration) < 1000);
+
     if (normalized) {
         return completeConsumption / duration;
     }
@@ -394,11 +404,15 @@ double ExchangeCEE::getRemainingTime() const
 
 double ExchangeCEE::getProbableConsumption(bool normalized, int fromMethod) const
 {
-    //TODO duration unknown
     if (normalized == false) EV_WARN << __func__ << "(): non-normalized not supported for ExchangeCEE" << endl;
 
+    //TODO duration unknown
     int duration = 1;
-    return node->getHoverConsumption(duration, 1);
+    double completeConsumption = node->getHoverConsumption(duration, 1);
+
+    ASSERT(completeConsumption >= 0 && (completeConsumption / duration) < 1000);
+
+    return completeConsumption;
 }
 
 char* ExchangeCEE::getCeeTypeString() const

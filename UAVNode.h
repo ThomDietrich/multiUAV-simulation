@@ -56,6 +56,7 @@ public:
 
 protected:
     virtual void initialize(int stage) override;
+    virtual void finish() override;
     virtual void handleMessage(cMessage *msg) override;
     virtual int numInitStages() const override
     {
