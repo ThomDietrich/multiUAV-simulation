@@ -25,7 +25,7 @@
 <stringAttribute key="org.omnetpp.launch.NED_PATH" value="${opp_ned_path:/multiUAV-simulation}"/>
 <intAttribute key="org.omnetpp.launch.NUM_CONCURRENT_PROCESSES" value="8"/>
 <stringAttribute key="org.omnetpp.launch.OPP_CPU_TIME_LIMIT" value=""/>
-<stringAttribute key="org.omnetpp.launch.OPP_SIM_TIME_LIMIT" value="28800s"/>
+<stringAttribute key="org.omnetpp.launch.OPP_SIM_TIME_LIMIT" value="8h"/>
 <stringAttribute key="org.omnetpp.launch.RECORD_EVENTLOG" value=""/>
 <stringAttribute key="org.omnetpp.launch.RECORD_SCALARS" value=""/>
 <stringAttribute key="org.omnetpp.launch.RECORD_VECTORS" value=""/>

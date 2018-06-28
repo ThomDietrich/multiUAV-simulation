@@ -24,6 +24,7 @@ out/
 # ignore backup and temp files as well as cache
 *.bak
 *~
+.cmdenv-log
 /cache
 /3rdparty
 /tmp/
