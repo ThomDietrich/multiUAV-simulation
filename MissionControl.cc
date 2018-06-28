@@ -16,6 +16,7 @@
 #ifdef WITH_OSG
 #include "MissionControl.h"
 #include <boost/algorithm/string.hpp>
+#include "msgs/MobileNodeRequest_m.h"
 
 Define_Module(MissionControl);
 

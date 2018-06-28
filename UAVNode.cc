@@ -61,8 +61,8 @@ void UAVNode::initialize(int stage)
 
 void UAVNode::finish()
 {
-    EV_INFO << "Running final statistics collection for " << this->getFullName() << ", in CEE for seconds: "
-            << (commandExecEngine->isActive() ? std::to_string(commandExecEngine->getDuration()) : "(CEE not active)") << endl;
+    //EV_INFO << "Running final statistics collection for " << this->getFullName() << ", in CEE for seconds: "
+    //        << (commandExecEngine->isActive() ? std::to_string(commandExecEngine->getDuration()) : "(CEE not active)") << endl;
     collectStatistics();
 
     if (commandExecEngine->isCeeType(CeeType::EXCHANGE) && battery.isEmpty()) {
