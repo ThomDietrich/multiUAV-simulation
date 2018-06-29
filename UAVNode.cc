@@ -22,6 +22,9 @@
 #include "OsgEarthScene.h"
 #include "ChannelController.h"
 
+#include "msgs/MissionMsg_m.h"
+#include "msgs/ExchangeCompletedMsg_m.h"
+
 using namespace omnetpp;
 
 Define_Module(UAVNode);
@@ -73,8 +76,8 @@ void UAVNode::finish()
         EV_WARN << "Finish Checks: UAV is in Idle CEE but not fully charged." << endl;
         utilizationFail = true;
     }
-    if (commandExecEngine->isCeeType(CeeType::CHARGE) && commandExecEngine->getConsumptionPerSecond() == 0) {
-        EV_WARN << "Finish Checks: UAV is in Charge CEE but not charging." << endl;
+    if (commandExecEngine->isCeeType(CeeType::CHARGE) && commandExecEngine->getConsumptionPerSecond() == 0 && commandExecEngine->getDuration() > 2 * timeStep) {
+        EV_WARN << "Finish Checks: UAV is in Charge CEE but not charging, since " << std::to_string(commandExecEngine->getDuration()) << " seconds" << endl;
         utilizationFail = true;
     }
 

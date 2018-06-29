@@ -115,7 +115,7 @@ protected:
     void fillChargingSpots();
     void clearChargingSpots();
     void rearrangeChargingSpots();
-    void charge();
+    void chargeAllChargingSpots();
     double getEstimatedWaitingSeconds();
 };
 

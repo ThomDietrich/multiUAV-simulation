@@ -16,6 +16,14 @@
 #ifdef WITH_OSG
 #include "ChargingNode.h"
 
+#include "msgs/ForecastPointInTimeRequest_m.h"
+#include "msgs/ForecastTargetRequest_m.h"
+#include "msgs/ForecastResponse_m.h"
+#include "msgs/UpdateChargingMsg_m.h"
+#include "msgs/MobileNodeRequest_m.h"
+#include "msgs/MobileNodeResponse_m.h"
+#include "msgs/ReserveSpotMsg_m.h"
+
 Define_Module(ChargingNode);
 
 ChargingNode::ChargingNode()
@@ -189,10 +197,9 @@ void ChargingNode::updateState()
         EV_WARN << "The battery of the Charging Station is exhausted!";
         return;
     }
-    if (not objectsCharging.empty()) {
-        charge();
-        clearChargingSpots();
-    }
+
+    chargeAllChargingSpots();
+    clearChargingSpots();
     fillChargingSpots();
     rearrangeChargingSpots();
 
@@ -577,15 +584,16 @@ void ChargingNode::rearrangeChargingSpots()
 /**
  * Charges the nodes placed on the charging spots depending on the last update.
  */
-void ChargingNode::charge()
+void ChargingNode::chargeAllChargingSpots()
 {
     for (unsigned int i = 0; i < objectsCharging.size(); i++) {
         if (not this->isPhysicallyPresent(objectsCharging[i]->getNode())) {
             continue;
         }
-        //double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
-        if (lastUpdate == 0) continue;
-        double durationSeconds = (simTime() - lastUpdate).dbl();
+        double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
+        ASSERT(durationSeconds < 0);
+        if (durationSeconds < 1.e-10) continue;
+
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
                 objectsCharging[i]->getNode()->getBattery()->getCapacity(), durationSeconds);
         double chargeMeanCurrent = chargeAmount * 3600 / durationSeconds / 1000;
