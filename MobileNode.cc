@@ -149,20 +149,7 @@ void MobileNode::refreshDisplay() const
 void MobileNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
-    if (msg->isName("wait")) {
-        EV_INFO << __func__ << "(): wait message received" << endl;
-
-        // Prepare Idle Command and IdleCEE for fully charged node
-        IdleCommand *command = new IdleCommand();
-        IdleCEE *cee = new IdleCEE(this, command);
-        cee->setFromCoordinates(x, y, z);
-        cee->setToCoordinates(x, y, z);
-        cees.push_front(cee);
-
-        delete msg;
-        msg = nullptr;
-    }
-    else if (msg->isName("mobileNodeExit")) {
+    if (msg->isName("mobileNodeExit")) {
         ChargeCEE *cee = check_and_cast<ChargeCEE *>(commandExecEngine);
         ChargingNode *cn = cee->extractCommand()->getChargingNode();
         delete msg;

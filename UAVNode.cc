@@ -633,7 +633,9 @@ ReplacementData* UAVNode::endOfOperation()
         EV_WARN << "endOfOperation(): 0 commands feasible." << endl;
         return nullptr;
     }
-    EV_INFO << __func__ << "(): " << nextCommands << " commands feasible at most." << endl;
+    else {
+        EV_INFO << __func__ << "(): " << nextCommands << " commands feasible at most." << endl;
+    }
 
     /**
      * Replacement Heuristics
