@@ -157,9 +157,27 @@ void MobileNode::handleMessage(cMessage *msg)
         IdleCEE *cee = new IdleCEE(this, command);
         cee->setFromCoordinates(x, y, z);
         cee->setToCoordinates(x, y, z);
-        cees.push_front(cee);
+        cee->setNoReplacementNeeded();
+        cee->setPartOfMission(false);
+        cees.push_back(cee);
 
         delete msg;
+        msg = nullptr;
+    }
+    else if (msg->isName("nextCommand")) {
+
+        // Check if further commands are available
+        if (not hasCommandsInQueue()) {
+            EV_WARN << commandExecEngine->extractCommand()->getMessageName() << " command completed. Queue empty. Add Idle!" << endl;
+            IdleCommand* idleCommand = new IdleCommand();
+            IdleCEE* idleCEE = new IdleCEE(this, idleCommand);
+            idleCEE->setFromCoordinates(x, y, z);
+            idleCEE->setToCoordinates(x, y, z);
+            idleCEE->setNoReplacementNeeded();
+            idleCEE->setPartOfMission(false);
+            cees.push_back(idleCEE);
+        }
+        GenericNode::handleMessage(msg);
         msg = nullptr;
     }
     else if (msg->isName("mobileNodeExit")) {
