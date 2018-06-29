@@ -52,15 +52,25 @@ void MissionControl::initialize()
 
 void MissionControl::finish()
 {
+    int missioncount = 0;
     cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
     for (SubmoduleIterator it(network); !it.end(); ++it) {
         cModule *module = *it;
         if (module->isName("uav")) {
             UAVNode *node = check_and_cast<UAVNode *>(module);
-            if (node->getMissionId() >= 0)
-            EV_INFO << "Finish Checks: Mission " << node->getMissionId() << " currently under service by " << node->getFullName() << endl;
+            if (node->getMissionId() >= 0) {
+                //EV_INFO << "Finish Checks: Mission " << node->getMissionId() << " currently under service by " << node->getFullName() << endl;
+                missioncount++;
+            }
         }
     }
+    if (missioncount == missionQueue.size()) {
+        EV_INFO << "Finish Checks: All " << missioncount << " Missions accounted for." << endl;
+    }
+    else {
+        EV_ERROR << "Finish Check: Mission count mismatch! (" << missioncount << "/" << missionQueue.size() << ")" << endl;
+    }
+
 }
 
 void MissionControl::handleMessage(cMessage *msg)
