@@ -591,7 +591,7 @@ void ChargingNode::chargeAllChargingSpots()
             continue;
         }
         double durationSeconds = (simTime() - std::max(lastUpdate, objectsCharging[i]->getPointInTimeWhenChargingStarted())).dbl();
-        ASSERT(durationSeconds < 0);
+        ASSERT(durationSeconds >= 0);
         if (durationSeconds < 1.e-10) continue;
 
         double chargeAmount = chargeAlgorithm->calculateChargeAmount(objectsCharging[i]->getNode()->getBattery()->getRemaining(),
