@@ -162,7 +162,7 @@ void MobileNode::handleMessage(cMessage *msg)
         GenericNode::handleMessage(msg);
         msg = nullptr;
 
-        if (commandPreview) drawCommandPreview();
+        if (commandPreview && getEnvir()->isGUI()) drawCommandPreview();
     }
 
     if (msg != nullptr) {
