@@ -521,9 +521,6 @@ void ChargingNode::clearChargingSpots()
             EV_INFO << objectsCharging[i]->getNode()->getFullName() << " is removed from charging spot - charged to target: "
                     << objectsCharging[i]->getNode()->getBattery()->getRemainingPercentage() << "/" << objectsCharging[i]->getTargetCapacityPercentage() << "%"
                     << endl;
-            // Send wait message to node
-            MobileNode* mobileNode = objectsCharging[i]->getNode();
-            send(new cMessage("wait"), getOutputGateTo(mobileNode));
             // Push fully charged nodes to the corresponding list
             objectsFinished.push_back(objectsCharging[i]->getNode());
             objectsCharging.erase(objectsCharging.begin() + i);

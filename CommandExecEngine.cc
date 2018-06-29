@@ -470,7 +470,16 @@ void ExchangeCEE::performExitActions()
         chargeCEE->setPartOfMission(false);
         chargeCEE->setNoReplacementNeeded();
 
+        IdleCommand* idleCommand = new IdleCommand();
+        IdleCEE* idleCEE = new IdleCEE(node, idleCommand);
+        idleCEE->setToCoordinates(cn->getX(), cn->getY(), cn->getZ());
+        idleCEE->setFromCoordinates(cn->getX(), cn->getY(), cn->getZ());
+        idleCEE->setPartOfMission(false);
+        idleCEE->setNoReplacementNeeded();
+
+
         // Add WaypointCEE and ChargeCEE to the CEEs queue
+        node->cees.push_front(idleCEE);
         node->cees.push_front(chargeCEE);
         node->cees.push_front(goToChargingNodeCEE);
 
@@ -543,3 +552,4 @@ char* IdleCEE::getCeeTypeString() const
 {
     return (char*) "Idle";
 }
+

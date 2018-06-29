@@ -187,6 +187,7 @@ public:
     virtual void loadCommands(CommandQueue commands, bool isMission = true) = 0;
     virtual void clearCommands();
     virtual CommandQueue* extractCommands();
+    virtual CommandQueue* extractAllCommands();
 
     virtual cGate* getOutputGateTo(cModule *cMod);
 
