@@ -237,11 +237,14 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     CommandQueue commands;
     commands.push_back(new WaypointCommand(nodeShadow->getReplacementData()->x, nodeShadow->getReplacementData()->y, nodeShadow->getReplacementData()->z));
     simtime_t timeOfReplacement = nodeShadow->getReplacementTime();
+    CommandQueue* extractedCommands = replacingUavNode->extractAllCommands();
     replacingUavNode->clearCommands();
     replacingUavNode->loadCommands(commands);
     double timeForProvisioning = replacingUavNode->estimateCommandsDuration();
     timeOfProvisioning = timeOfReplacement - timeForProvisioning;
     replacingUavNode->clearCommands();
+    replacingUavNode->loadCommands(*extractedCommands, false);
+    delete extractedCommands;
 
     cMessage *replacementMsg = new cMessage("provisionReplacement");
 

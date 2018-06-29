@@ -154,7 +154,7 @@ void GenericNode::handleMessage(cMessage *msg)
             EV_INFO << "UAV initialized for provisioning " << endl;
             commandExecEngine->setCommandCompleted();
             delete msg;
-            msg=nullptr;
+            msg = nullptr;
             return;
         }
         else {
@@ -278,6 +278,22 @@ CommandQueue* GenericNode::extractCommands()
         if (cee->isPartOfMission()) {
             commands->push_back(cee->extractCommand());
         }
+    }
+    return commands;
+}
+
+/**
+ * Extracts commands of the current CEEs loaded.
+ * Removes non-Mission commands and keeps the current order in place.
+ *
+ * @return An execution neutral list of commands
+ */
+CommandQueue* GenericNode::extractAllCommands()
+{
+    CommandQueue* commands = new CommandQueue();
+    for (auto it = cees.begin(); it != cees.end(); it++) {
+        CommandExecEngine *cee = *it;
+        commands->push_back(cee->extractCommand());
     }
     return commands;
 }

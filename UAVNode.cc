@@ -629,7 +629,10 @@ ReplacementData* UAVNode::endOfOperation()
         }
     }
     // At least one command has to be feasible
-    if (nextCommands == 0) return nullptr;
+    if (nextCommands == 0) {
+        EV_WARN << "endOfOperation(): 0 commands feasible." << endl;
+        return nullptr;
+    }
     EV_INFO << __func__ << "(): " << nextCommands << " commands feasible at most." << endl;
 
     /**
