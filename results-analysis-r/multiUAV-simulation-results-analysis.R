@@ -101,7 +101,7 @@ tikzLocation = "./tikz/"
 logdata_folder <- "../results/"
 
 #overall OMNeT++ simulation time in seconds
-simtimeSec <- 8 * 3600
+simtimeSec <- 48 * 3600
 
 df.all <- data.frame()
 
@@ -114,15 +114,11 @@ for (filename in list.files(logdata_folder,"*.sca")) {
   filename.numUAVs <- NA
   
   filename.basename <- str_replace(filename, "(.*?)-.*", "\\1")
-  if (grep("replM=", filename)) {
-    filename.replM <- str_replace(filename, ".*-replM=(\\d).*", "\\1")
-  }
-  if (grep("quant=", filename)) {
-    filename.quant <- str_replace(filename, ".*-quant=(\\d).*", "\\1")
-  }
-  if (grep("numUAVs=", filename)) {
-    filename.numUAVs <- str_replace(filename, ".*-numUAVs=(\\d).*", "\\1")
-  }
+  
+  filename.replM   <- ifelse(grepl("replM=", filename), str_replace(filename, ".*-replM=(\\d).*", "\\1"), NA)
+  filename.quant   <- ifelse(grepl("quant=", filename), str_replace(filename, ".*-quant=(\\d).*", "\\1"), NA)
+  filename.numUAVs <- ifelse(grepl("numUAVs=", filename), str_replace(filename, ".*-numUAVs=(\\d).*", "\\1"), NA)
+  
   filename.repeat <- str_replace(filename, ".*-#(\\d+).*", "\\1")
   
   cat("Load File ... ")

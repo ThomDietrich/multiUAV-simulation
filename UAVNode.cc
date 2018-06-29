@@ -79,7 +79,8 @@ void UAVNode::finish()
     }
 
     if (missionId >= 0) {
-        EV_INFO << "Finish Checks: UAV was currently servicing mission " << missionId << endl;
+        //EV_INFO << "Finish Checks: UAV was currently servicing mission " << missionId << endl;
+        EV_WARN << "Finish Checks: UAV was currently servicing mission " << std::to_string(missionId) << endl;
     }
 
     if (utilizationFail && missionId >= 0) throw cRuntimeError("Nope!");
