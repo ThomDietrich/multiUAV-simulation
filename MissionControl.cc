@@ -50,6 +50,19 @@ void MissionControl::initialize()
     scheduleAt(par("startTime"), start);
 }
 
+void MissionControl::finish()
+{
+    cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
+    for (SubmoduleIterator it(network); !it.end(); ++it) {
+        cModule *module = *it;
+        if (module->isName("uav")) {
+            UAVNode *node = check_and_cast<UAVNode *>(module);
+            if (node->getMissionId() >= 0)
+            EV_INFO << "Finish Checks: Mission " << node->getMissionId() << " currently under service by " << node->getFullName() << endl;
+        }
+    }
+}
+
 void MissionControl::handleMessage(cMessage *msg)
 {
     if (msg->isName("startScheduling")) {

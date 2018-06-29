@@ -179,6 +179,10 @@ public:
     {
         return climbAngle;
     }
+    int getMissionId() const
+    {
+        return missionId;
+    }
     CommandExecEngine* getCommandExecEngine() const
     {
         return commandExecEngine;

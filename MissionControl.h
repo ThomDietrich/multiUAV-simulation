@@ -43,8 +43,9 @@ private:
     ManagedNodeShadows managedNodeShadows;
     std::deque<CommandQueue> missionQueue;
 protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
+    virtual void initialize() override;
+    virtual void finish() override;
+    virtual void handleMessage(cMessage *msg) override;
     virtual CommandQueue loadCommandsFromWaypointsFile(const char *fileName);
     virtual void handleReplacementMessage(ReplacementData replData);
     virtual void requestChargedNodesInformation(double remainingBattery);

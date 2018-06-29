@@ -81,11 +81,6 @@ void UAVNode::finish()
         utilizationFail = true;
     }
 
-    if (missionId >= 0) {
-        //EV_INFO << "Finish Checks: UAV was currently servicing mission " << missionId << endl;
-        EV_WARN << "Finish Checks: UAV was currently servicing mission " << std::to_string(missionId) << endl;
-    }
-
     if (utilizationFail && missionId >= 0) throw cRuntimeError("Nope!");
 
     MobileNode::finish();
@@ -284,8 +279,8 @@ void UAVNode::selectNextCommand()
     cees.pop_front();
 
     // Unset mission ID after mission
-    if (not commandExecEngine->isPartOfMission() && not commandExecEngine->isCeeType(CeeType::IDLE)) missionId = -1;
-    if (not commandExecEngine->isPartOfMission() && commandExecEngine->isCeeType(CeeType::IDLE)) missionId = -2;
+    //if (not commandExecEngine->isPartOfMission() && not commandExecEngine->isCeeType(CeeType::IDLE)) missionId = -1;
+    //if (not commandExecEngine->isPartOfMission() && commandExecEngine->isCeeType(CeeType::IDLE)) missionId = -2;
 
     // Reinject command (if no non-mission command)
     if (commandsRepeat && (commandExecEngine->isPartOfMission()) && not (commandExecEngine->isCeeType(CeeType::TAKEOFF))) {

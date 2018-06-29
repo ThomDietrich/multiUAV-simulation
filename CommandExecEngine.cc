@@ -482,6 +482,7 @@ void ExchangeCEE::performExitActions()
         node->cees.push_front(idleCEE);
         node->cees.push_front(chargeCEE);
         node->cees.push_front(goToChargingNodeCEE);
+        node->missionId = -1;
 
         EV_INFO << __func__ << "(): GoToChargingNode and Charge CEE added to node." << endl;
     }
@@ -512,8 +513,7 @@ bool IdleCEE::isCommandCompleted()
 
 void IdleCEE::initializeCEE()
 {
-    // draw probable value for consumption of this CEE
-    consumptionPerSecond = predictNormConsumptionRandom();
+    consumptionPerSecond = 0;
 }
 
 void IdleCEE::setNodeParameters()
