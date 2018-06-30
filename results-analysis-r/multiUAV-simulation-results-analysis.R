@@ -29,13 +29,11 @@ graphics.off()
 #####################################################################
 # Settings ##########################################################
 
-minSamplesForMean <- 30
-transitionSampleSeconds <- 3
+logdata_folder <- "../results/"
+tikzLocation = "./tikz/"
 
-# Normalization
-batteryVoltageCustomCopter   <- 3 * 3.7 # 11.1
-batteryVoltageSoloCopter <- 4 * 3.7 # 14.8
-referenceVoltage         <- 4 * 3.7
+#overall OMNeT++ simulation time in seconds
+simtimeSec <- 12 * 3600
 
 # http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
 #graphCol1 <- "steelblue"
@@ -55,9 +53,8 @@ graphCol4 <- "#780116" #myred
 #####################################################################
 # Install packages, load libraries ##################################
 
-library(data.table)
-library(xtable)
-list.of.packages <- c("Hmisc", "geosphere", "ggplot2", "cowplot", "tikzDevice", "TTR", "xts", "forecast", "stringr")
+list.of.packages <- c("Hmisc", "geosphere", "ggplot2", "cowplot", "tikzDevice", "TTR", "xts", "forecast",
+                      "data.table", "xtable", "stringr")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 sapply(list.of.packages, require, character.only = TRUE)
@@ -93,15 +90,8 @@ theme_custom <- function () {
 theme_set(theme_custom())
 
 options(tikzDefaultEngine = "xetex")
-tikzLocation = "./tikz/"
 
 #####################################################################
-# Load functions files ##############################################
-
-logdata_folder <- "../results/"
-
-#overall OMNeT++ simulation time in seconds
-simtimeSec <- 48 * 3600
 
 df.all <- data.frame()
 
@@ -124,15 +114,16 @@ for (filename in list.files(logdata_folder,"*.sca")) {
   cat("Load File ... ")
   lines <- readLines(paste(logdata_folder, filename, sep=""))
   #head(lines)
-  lines.scalar <- grep("scalar OsgEarthNet.uav", lines, value=TRUE)
+  lines.scalar <- grep("scalar OsgEarthNet", lines, value=TRUE)
   #head(lines.scalar)
   
   cat("Parse Scalars ... ")
   for (line in lines.scalar) {
-    uav.index <- str_replace(line, "scalar OsgEarthNet.uav\\[(\\d+)\\].*", "\\1")
-    uav.metric <- str_replace(line, "scalar OsgEarthNet.uav\\[\\d+\\] (\\w*).*", "\\1")
-    uav.metric.value <-str_replace(line, "scalar OsgEarthNet.uav\\[\\d+\\] \\w* (.*)", "\\1")
-    #print(paste(uav.index, uav.metric, uav.metric.value, sep = " --- "))
+    node.type <- str_replace(line, "scalar OsgEarthNet\\.(.*?)\\[\\d+\\].*", "\\1")
+    index <- str_replace(line, "scalar OsgEarthNet.*?\\[(\\d+)\\].*", "\\1")
+    metric <- str_replace(line, "scalar OsgEarthNet.*?\\[\\d+\\] (\\w*).*", "\\1")
+    value <-str_replace(line, "scalar OsgEarthNet.*?\\[\\d+\\] \\w* (.*)", "\\1")
+    #print(paste(index, metric, value, sep = " --- "))
     
     logdata.line <- data.frame(
       basename =         as.factor(filename.basename),
@@ -140,9 +131,10 @@ for (filename in list.files(logdata_folder,"*.sca")) {
       quant =            as.integer(filename.quant),
       numUAVs =          as.integer(filename.numUAVs),
       simRun =           as.integer(filename.repeat),
-      uavIndex =         as.integer(uav.index),
-      uavMetric =        as.factor(uav.metric),
-      uavMetricValue =   as.numeric(uav.metric.value)
+      nodeType =         as.factor(node.type),
+      index =            as.integer(index),
+      metric =           as.factor(metric),
+      value =            as.numeric(value)
     )
     logdata.file <- rbind(logdata.file, logdata.line)
   }
@@ -150,29 +142,40 @@ for (filename in list.files(logdata_folder,"*.sca")) {
   df.all <- rbind(df.all, logdata.file)
 }
 
+# Noteworthy general data
 head(df.all)
-
-sim_runs <- unique(df.all$simRun)
 replMs <- unique(df.all$replM)
-metrics <- levels(factor(df.all$uavMetric))
-uavs_count <- max(df.all$uavIndex)
+quant <- unique(df.all$quant)
+numUAVs <- unique(df.all$numUAVs)
+
+# Split types
+df.all.uav <- subset(df.all, nodeType == 'uav')
+df.all.cs <- subset(df.all, nodeType == 'cs')
+
+#####################################################################
+
+uavs_count <- max(df.all.uav$index)
+sim_runs <- unique(df.all.uav$simRun)
+metrics <- levels(factor(df.all.uav$metric))
 
 
+cat("Remove run+UAVs with 'fail' metric ... ")
 
-cat("Remove UAVs with 'fail' metric ... ")
-
-uavs_all <- subset(df.all, uavMetric == 'utilizationFail')
-uavs_all_failed <- subset(df.all, uavMetric == 'utilizationFail' & uavMetricValue != 0)
+uavs_all <- subset(df.all.uav, metric == 'utilizationFail')
+uavs_all_failed <- subset(df.all.uav, metric == 'utilizationFail' & value != 0)
 
 if (nrow(uavs_all_failed) > 0) {
   warning(paste(nrow(uavs_all_failed), "of", nrow(uavs_all), "UAVs over all simulation runs ended in 'fail' state", sep=" "))
 }
 
-for(i in 1:nrow(uavs_all_failed)) {
-  row <- uavs_all_failed[i,]
-  #print(row)
-  df.all <- df.all[!(df.all$replM==row$replM & df.all$simRun==row$simRun & df.all$uavIndex==row$uavIndex),]
+if (nrow(uavs_all_failed) > 0) {
+  for(i in 1:nrow(uavs_all_failed)) {
+    row <- uavs_all_failed[i,]
+    #print(row)
+    df.all.uav <- df.all.uav[!(df.all.uav$replM==row$replM & df.all.uav$simRun==row$simRun & df.all.uav$index==row$index),]
+  }
 }
+remove(uavs_all, uavs_all_failed)
 
 
 
@@ -181,83 +184,95 @@ tolerance = 0.1
 for (replMethod in replMs) {
   for (sim_run in sim_runs) {
     for (index in 0:uavs_count) {
-      df_subset <- subset(df.all, replM == replMethod & simRun == sim_run & uavIndex == index
-                          & uavMetric %in% c('utilizationSecMaintenance', 'utilizationSecMission', 'utilizationSecCharge', 'utilizationSecIdle')
+      df_subset <- subset(df.all.uav, replM == replMethod & simRun == sim_run & index == index
+                          & metric %in% c('utilizationSecMaintenance', 'utilizationSecMission', 'utilizationSecCharge', 'utilizationSecIdle')
       )
       if (nrow(df_subset) > 0) {
-        #print(sum(df_subset$uavMetricValue))
-        if (abs(simtimeSec - sum(df_subset$uavMetricValue)) > tolerance) warning("Simtime missmatch!")
+        #print(sum(df_subset$value))
+        if (abs(simtimeSec - sum(df_subset$value)) > tolerance) warning("Simtime missmatch!")
       }
     }
   }
 }
 
-
+#####################################################################
 
 cat("Combining SimRuns ... ")
-df.red.simrun <- data.frame()
+df.comb <- data.frame()
 
 for (replMethod in replMs) {
   for (index in 0:uavs_count) {
     for (metric in metrics) {
-      df_subset <- subset(df.all, replM == replMethod & uavIndex == index & uavMetric == metric)
-      metric_value.mean <- sum(df_subset$uavMetricValue)
-      metric_value.stddev <- sqrt(var(df_subset$uavMetricValue))
+      df_subset <- subset(df.all.uav, replM == replMethod & index == index & metric == metric)
+      metric_value.mean <- sum(df_subset$value)
+      metric_value.stddev <- sqrt(var(df_subset$value))
       #print(paste(replMethod, uav, metric, metric_value.mean, metric_value.stddev, sep = " -- "))
       df <- data.frame(
         basename =    levels(df_subset$basename),
-        replM =        as.integer(replMethod),
-        uavIndex =    as.integer(index),
-        uavMetric =   as.factor(metric),
-        valueMean =   as.numeric(metric_value.mean),
+        replM =       as.integer(replMethod),
+        index =       as.integer(index),
+        metric =      as.factor(metric),
+        value =       as.numeric(metric_value.mean),
         valueStddev = as.numeric(metric_value.stddev)
       )
-      df.red.simrun <- rbind(df.red.simrun, df)
+      df.comb <- rbind(df.comb, df)
     }    
   }
 }
 #remove(replMethod, uav, metric, df_subset, metric_value.mean, metric_value.stddev, df)
 
+#TEMPORARY
+df.comb <- df.all.uav
 
 
 cat("Summarizing Metrics per UAV... ")
 df.red <- data.frame()
 
 for (replMethod in replMs) {
-  for (index in 0:uavs_count) {
-    df_subset <- subset(df.red.simrun, replM == replMethod & uavIndex == index)
-    df <- data.frame(
-      basename =             levels(df_subset$basename),
-      replM =                 as.integer(replMethod),
-      uavIndex =             as.integer(index),
-      #
-      secMission =                  as.numeric(subset(df_subset, uavMetric == 'utilizationSecMission')$valueMean),
-      secMaintenance =              as.numeric(subset(df_subset, uavMetric == 'utilizationSecMaintenance')$valueMean),
-      secCharge =                   as.numeric(subset(df_subset, uavMetric == 'utilizationSecCharge')$valueMean),
-      secIdle =                     as.numeric(subset(df_subset, uavMetric == 'utilizationSecIdle')$valueMean),
-      #
-      energyMission =               as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyMission')$valueMean),
-      energyMaintenance =           as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyMaintenance')$valueMean),
-      energyCharge =                as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyCharge')$valueMean),
-      #
-      energyOverdrawMission =       as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyOverdrawMission')$valueMean),
-      energyOverdrawMaintenance =   as.numeric(subset(df_subset, uavMetric == 'utilizationEnergyOverdrawMaintenance')$valueMean),
-      #
-      countMissions =               as.numeric(subset(df_subset, uavMetric == 'utilizationCountMissions')$valueMean),
-      countManeuversMission =       as.numeric(subset(df_subset, uavMetric == 'utilizationCountManeuversMission')$valueMean),
-      countManeuversMaintenance =   as.numeric(subset(df_subset, uavMetric == 'utilizationCountManeuversMaintenance')$valueMean),
-      countChargeState =            as.numeric(subset(df_subset, uavMetric == 'utilizationCountChargeState')$valueMean),
-      countOverdrawnAfterMission =  as.numeric(subset(df_subset, uavMetric == 'utilizationCountOverdrawnAfterMission')$valueMean),
-      countIdleState =              as.numeric(subset(df_subset, uavMetric == 'utilizationCountIdleState')$valueMean)
-    )
-    df.red <- rbind(df.red, df)
-  }    
+  for (sim_run in sim_runs) {
+    for (uav_index in 0:uavs_count) {
+      df_subset <- subset(df.comb, replM == replMethod & simRun == sim_run & index == uav_index)
+      df <- data.frame(
+        basename =    levels(df_subset$basename),
+        replM =       as.integer(replMethod),
+        simRun =      as.integer(sim_run),
+        index =       as.integer(uav_index),
+        #
+        secMission =                  as.numeric(subset(df_subset, metric == 'utilizationSecMission')$value),
+        secMaintenance =              as.numeric(subset(df_subset, metric == 'utilizationSecMaintenance')$value),
+        secCharge =                   as.numeric(subset(df_subset, metric == 'utilizationSecCharge')$value),
+        secIdle =                     as.numeric(subset(df_subset, metric == 'utilizationSecIdle')$value),
+        #
+        energyMission =               as.numeric(subset(df_subset, metric == 'utilizationEnergyMission')$value),
+        energyMaintenance =           as.numeric(subset(df_subset, metric == 'utilizationEnergyMaintenance')$value),
+        energyCharge =                as.numeric(subset(df_subset, metric == 'utilizationEnergyCharge')$value),
+        #
+        energyOverdrawMission =       as.numeric(subset(df_subset, metric == 'utilizationEnergyOverdrawMission')$value),
+        energyOverdrawMaintenance =   as.numeric(subset(df_subset, metric == 'utilizationEnergyOverdrawMaintenance')$value),
+        #
+        countMissions =               as.numeric(subset(df_subset, metric == 'utilizationCountMissions')$value),
+        countManeuversMission =       as.numeric(subset(df_subset, metric == 'utilizationCountManeuversMission')$value),
+        countManeuversMaintenance =   as.numeric(subset(df_subset, metric == 'utilizationCountManeuversMaintenance')$value),
+        countChargeState =            as.numeric(subset(df_subset, metric == 'utilizationCountChargeState')$value),
+        countOverdrawnAfterMission =  as.numeric(subset(df_subset, metric == 'utilizationCountOverdrawnAfterMission')$value),
+        countIdleState =              as.numeric(subset(df_subset, metric == 'utilizationCountIdleState')$value)
+      )
+      df.red <- rbind(df.red, df)
+    }
+  }
 }
 
+#####################################################################
+# Diagrams ##########################################################
+cat("Drawing Diagrams ... ")
+
+starting_cs <- as.factor(df.red$index %% 3)
+
+# Test correlation with starting position (CS 0,1, or 2)
+ggplot(df.red, aes(starting_cs, secIdle)) + geom_boxplot() + geom_jitter(width = 0.2)
 
 
-cat("Draw ... ")
-
+# Diagrams
 ggplot(df.red) +
   geom_bin2d(aes(x = 100 / (secMission + secMaintenance) * secMission, y = 100 / (secMission + secMaintenance) * secMaintenance)) +
   labs(x="Time in Mission", y="Time in Maintenance")
@@ -267,10 +282,10 @@ ggplot(df.red) +
   labs(x="Energy in Mission", y="Energy in Maintenance")
 
 
-ggplot(subset(df.red, replM==0)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance)) + ylim(50000, 200000) + xlim(50000, 250000)
-ggplot(subset(df.red, replM==1)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance)) + ylim(50000, 200000) + xlim(50000, 250000)
-ggplot(subset(df.red, replM==2)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance)) + ylim(50000, 200000) + xlim(50000, 250000)
+ggplot(subset(df.red, replM==0)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
+ggplot(subset(df.red, replM==1)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
+ggplot(subset(df.red, replM==2)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
 
-ggplot(subset(df.red, replM==0)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(25, 80) + xlim(25, 70)
-ggplot(subset(df.red, replM==1)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(25, 80) + xlim(25, 70)
-ggplot(subset(df.red, replM==2)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(25, 80) + xlim(25, 70)
+ggplot(subset(df.red, replM==0)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
+ggplot(subset(df.red, replM==1)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
+ggplot(subset(df.red, replM==2)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)

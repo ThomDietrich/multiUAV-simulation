@@ -76,6 +76,14 @@ void ChargingNode::initialize(int stage)
     }
 }
 
+void ChargingNode::finish()
+{
+    recordScalar("usedPower", usedPower);
+    recordScalar("chargedPower", chargedPower);
+    recordScalar("chargedMobileNodes", chargedMobileNodes);
+    recordScalar("reservations", reservations);
+}
+
 ReplacementData* ChargingNode::endOfOperation()
 {
     return 0;

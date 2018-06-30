@@ -59,6 +59,7 @@ protected:
 public:
     ChargingNode();
     virtual ~ChargingNode();
+    virtual void finish() override;
     virtual void selectNextCommand() override;
     virtual void initializeState() override;
     virtual void loadCommands(CommandQueue commands, bool isMission = true) override;
@@ -95,7 +96,7 @@ public:
         return usedPower;
     }
 
-    int getChargedUaVs() const
+    int getChargedUAVs() const
     {
         return chargedMobileNodes;
     }
