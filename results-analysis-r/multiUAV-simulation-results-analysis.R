@@ -31,6 +31,7 @@ graphics.off()
 
 logdata_folder <- "../results/"
 tikzLocation = "./tikz/"
+tikzLocation = "d:/ownCloudKainet/Dokumente/Promotion/Dissertation/tikz/"
 
 #overall OMNeT++ simulation time in seconds
 simtimeSec <- 12 * 3600
@@ -158,6 +159,9 @@ uavs_count <- max(df.all.uav$index)
 sim_runs <- unique(df.all.uav$simRun)
 metrics <- levels(factor(df.all.uav$metric))
 
+cs_count <- max(df.all.cs$index)
+metrics.cs <- levels(factor(df.all.cs$metric))
+
 
 cat("Remove run+UAVs with 'fail' metric ... ")
 
@@ -224,9 +228,10 @@ for (replMethod in replMs) {
 #TEMPORARY
 df.comb <- df.all.uav
 
+#####################################################################
 
-cat("Summarizing Metrics per UAV... ")
-df.red <- data.frame()
+cat("Summarizing Metrics per UAV ... ")
+df.red.uav <- data.frame()
 
 for (replMethod in replMs) {
   for (sim_run in sim_runs) {
@@ -257,35 +262,109 @@ for (replMethod in replMs) {
         countOverdrawnAfterMission =  as.numeric(subset(df_subset, metric == 'utilizationCountOverdrawnAfterMission')$value),
         countIdleState =              as.numeric(subset(df_subset, metric == 'utilizationCountIdleState')$value)
       )
-      df.red <- rbind(df.red, df)
+      df.red.uav <- rbind(df.red.uav, df)
+    }
+  }
+}
+
+cat("Summarizing Metrics per CS ... ")
+df.red.cs <- data.frame()
+
+for (replMethod in replMs) {
+  for (sim_run in sim_runs) {
+    for (cs_index in 0:cs_count) {
+      df_subset <- subset(df.all.cs, replM == replMethod & simRun == sim_run & index == cs_index)
+      df <- data.frame(
+        basename =    levels(df_subset$basename),
+        replM =       as.factor(replMethod),
+        simRun =      as.integer(sim_run),
+        index =       as.factor(cs_index),
+        #
+        usedPower =                as.numeric(subset(df_subset, metric == 'usedPower')$value),
+        chargedPower =             as.numeric(subset(df_subset, metric == 'chargedPower')$value),
+        chargedMobileNodes =       as.integer(subset(df_subset, metric == 'chargedMobileNodes')$value),
+        chargedMobileNodesOthers = as.integer(sum(subset(df.all.cs, replM == replMethod & simRun == sim_run & metric == 'chargedMobileNodes')$value) - subset(df_subset, metric == 'chargedMobileNodes')$value),
+        chargedMobileNodesAll =    as.integer(sum(subset(df.all.cs, replM == replMethod & simRun == sim_run & metric == 'chargedMobileNodes')$value)),
+        reservations =             as.integer(subset(df_subset, metric == 'reservations')$value)
+      )
+      df.red.cs <- rbind(df.red.cs, df)
     }
   }
 }
 
 #####################################################################
-# Diagrams ##########################################################
-cat("Drawing Diagrams ... ")
+# Independence CS/UAV ###############################################
 
-starting_cs <- as.factor(df.red$index %% 3)
+
+map_id_to_location <- function(id) c('\\textbf{CS1:} Tennis court Ritzeb\\"uhl\\ ', '\\textbf{CS2:} Sports field Manebach', '\\textbf{CS3:} Hotel Gabelbach')[as.integer(id)]
+starting_cs <- map_id_to_location(1 + (df.red.uav$index %% 3))
+
+secMission.quota <- 100 / (df.red.uav$secMission + df.red.uav$secMaintenance + df.red.uav$secCharge) * df.red.uav$secMission
+
+tikz(paste(tikzLocation, "8_initial_location_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.9, height=2)
+
+ggplot(df.red.uav, aes(x = starting_cs, y = secMission.quota)) +
+  geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.1) +
+  geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=1) +
+  theme(axis.title.x = element_blank()) +
+  labs(x="Charging Station", y="Time in Mission [\\%]")
+
+dev.off()
+
+tikz(paste(tikzLocation, "8_cs_popularity_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.9, height=1.75)
+
+ggplot(df.red.cs, aes(x = map_id_to_location(index), y = chargedMobileNodes)) +
+  geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.6) +
+  geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=1) +
+  theme(axis.title.x = element_blank()) +
+  labs(x="Charging Station", y="Served UAVs")
+
+dev.off()
+
+
+#####################################################################
+# Random Diagram Testing ############################################
 
 # Test correlation with starting position (CS 0,1, or 2)
-ggplot(df.red, aes(starting_cs, secIdle)) + geom_boxplot() + geom_jitter(width = 0.2)
+locations <- c('CS0 Tennis court Ritzebühl', 'CS1 Sports field Manebach', 'CS2 Hotel Gabelbach')
+starting_cs <- df.red.uav$index %% 3
+starting_cs <- as.factor(locations[starting_cs + 1])
+
+
+ggplot(df.red.uav, aes(starting_cs, countManeuversMission)) + geom_boxplot() + geom_jitter(width = 0.2)
+ggplot(df.red.uav, aes(starting_cs, countIdleState)) + geom_boxplot() + geom_jitter(width = 0.2)
+ggplot(df.red.uav, aes(starting_cs, secMission)) + geom_boxplot() + geom_jitter(width = 0.2)
+ggplot(df.red.uav, aes(starting_cs, secIdle)) + geom_boxplot() + geom_jitter(width = 0.1)
+ggplot(df.red.uav, aes(starting_cs, secMission + secMaintenance + secCharge)) + geom_boxplot() + geom_jitter(width = 0.1)
+
+ggplot(df.red.uav, aes(starting_cs, 100 / (secMission + secMaintenance) * secMission)) + geom_boxplot() + geom_jitter(width = 0.1)
+ggplot(df.red.uav, aes(starting_cs, 100 / (secMission + secMaintenance + secCharge) * secMission)) + geom_boxplot() + geom_jitter(width = 0.1)
+ggplot(df.red.uav, aes(starting_cs, 100 / (secMission + secMaintenance + secCharge + secIdle) * secMission)) + geom_boxplot() + geom_jitter(width = 0.1)
+
+
+
+# Statistics about CS
+ggplot(df.red.cs, aes(replM, chargedMobileNodesAll)) + geom_boxplot() + geom_jitter(width = 0.1)
+ggplot(df.red.cs, aes(index, chargedMobileNodes)) + geom_boxplot() + geom_jitter(width = 0.1)
+
+ggplot(df.red.cs, aes(replM, chargedMobileNodesAll)) + geom_point()
+ggplot(subset(df.red.cs, index==0 | index==1 | index==2), aes(replM, chargedPower)) + geom_point()
 
 
 # Diagrams
-ggplot(df.red) +
+ggplot(df.red.uav) +
   geom_bin2d(aes(x = 100 / (secMission + secMaintenance) * secMission, y = 100 / (secMission + secMaintenance) * secMaintenance)) +
   labs(x="Time in Mission", y="Time in Maintenance")
 
-ggplot(df.red) +
+ggplot(df.red.uav) +
   geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) +
   labs(x="Energy in Mission", y="Energy in Maintenance")
 
 
-ggplot(subset(df.red, replM==0)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
-ggplot(subset(df.red, replM==1)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
-ggplot(subset(df.red, replM==2)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
+ggplot(subset(df.red.uav, replM==0)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
+ggplot(subset(df.red.uav, replM==1)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
+ggplot(subset(df.red.uav, replM==2)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))
 
-ggplot(subset(df.red, replM==0)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
-ggplot(subset(df.red, replM==1)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
-ggplot(subset(df.red, replM==2)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
+ggplot(subset(df.red.uav, replM==0)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
+ggplot(subset(df.red.uav, replM==1)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
+ggplot(subset(df.red.uav, replM==2)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
