@@ -282,7 +282,7 @@ public:
      *
      * @return consumption of this CEE so far, in [mAh]
      */
-    double getConsumptionTotal() const
+    virtual double getConsumptionTotal() const
     {
         if (not isActive()) throw cRuntimeError("getDuration(): CEE not yet started");
         return consumptionPerSecond * getDuration();
@@ -424,6 +424,7 @@ class ChargeCEE : public CommandExecEngine {
 protected:
     UAVNode *node;
     ChargeCommand *command;
+    float batteryRemainingExecutionStart;
 public:
     ChargeCEE(UAVNode *boundNode, ChargeCommand *command);
     bool isCommandCompleted() override;
@@ -434,6 +435,8 @@ public:
     double getRemainingTime() const override;
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
     char* getCeeTypeString() const override;
+
+    double getConsumptionTotal() const override;
 
     ChargeCommand* extractCommand() const override
     {

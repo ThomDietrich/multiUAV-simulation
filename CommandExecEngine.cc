@@ -325,6 +325,7 @@ void ChargeCEE::setNodeParameters()
 //    cMessage *request = new cMessage("startCharge");
 //    node->send(request, node->getOutputGateTo(command->getChargingNode()));
     timeExecutionStart = simTime();
+    batteryRemainingExecutionStart = node->battery.getRemaining();
 }
 
 void ChargeCEE::updateState(double stepSize)
@@ -352,6 +353,18 @@ double ChargeCEE::getProbableConsumption(bool normalized, int fromMethod) const
 char* ChargeCEE::getCeeTypeString() const
 {
     return (char*) "Charge";
+}
+
+/**
+ * Specialized version for the Charging CEE.
+ * Returns amount in [mAh] as negative consumption!
+ */
+double ChargeCEE::getConsumptionTotal() const
+{
+    if (not isActive()) throw cRuntimeError("getDuration(): CEE not yet started");
+    float difference = node->battery.getRemaining() - batteryRemainingExecutionStart;
+    ASSERT(difference > 0);
+    return (-1) * difference;
 }
 
 /**
@@ -552,4 +565,3 @@ char* IdleCEE::getCeeTypeString() const
 {
     return (char*) "Idle";
 }
-
