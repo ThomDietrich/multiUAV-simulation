@@ -33,9 +33,6 @@ logdata_folder <- "../results/"
 tikzLocation = "./tikz/"
 tikzLocation = "d:/ownCloudKainet/Dokumente/Promotion/Dissertation/tikz/"
 
-#overall OMNeT++ simulation time in seconds
-simtimeSec <- 12 * 3600
-
 # http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
 #graphCol1 <- "steelblue"
 #graphCol2 <- "goldenrod"
@@ -91,6 +88,23 @@ theme_custom <- function () {
 theme_set(theme_custom())
 
 options(tikzDefaultEngine = "xetex")
+
+#####################################################################
+# Simulation runtime estimation #####################################
+
+{
+  repetitions <- 16
+  iterations.replM <- 1
+  iterations.quant <- 3
+  iterations.numUAVs <- 1
+  hours <- 48
+  
+  birke_faktor <-(47 / 60) / 16 / (3 * 1 * 1 * 16)
+  
+  simulation_runtime_hours <- repetitions * iterations.replM * iterations.quant * iterations.numUAVs * hours * birke_faktor
+  
+  cat(paste("Expected runtime:", round(simulation_runtime_hours, digits = 1), "hours"))
+}
 
 #####################################################################
 
@@ -182,52 +196,51 @@ if (nrow(uavs_all_failed) > 0) {
 remove(uavs_all, uavs_all_failed)
 
 
-
+simtimeSec <- 0
 cat("Proofchecking Simtime ... ")
 tolerance = 0.1
 for (replMethod in replMs) {
   for (sim_run in sim_runs) {
-    for (index in 0:uavs_count) {
-      df_subset <- subset(df.all.uav, replM == replMethod & simRun == sim_run & index == index
+    for (uav_index in 0:uavs_count) {
+      df_subset <- subset(df.all.uav, replM == replMethod & simRun == sim_run & index == uav_index
                           & metric %in% c('utilizationSecMaintenance', 'utilizationSecMission', 'utilizationSecCharge', 'utilizationSecIdle')
       )
       if (nrow(df_subset) > 0) {
         #print(sum(df_subset$value))
-        if (abs(simtimeSec - sum(df_subset$value)) > tolerance) warning("Simtime missmatch!")
+        if (simtimeSec == 0) {
+          simtimeSec = as.integer(0.5 + sum(df_subset$value))
+          cat(paste("Simulation time:", simtimeSec))
+        }
+        else if (abs(simtimeSec - sum(df_subset$value)) > tolerance) stop("Simtime missmatch!")
       }
     }
   }
 }
 
 #####################################################################
-
-cat("Combining SimRuns ... ")
-df.comb <- data.frame()
-
-for (replMethod in replMs) {
-  for (index in 0:uavs_count) {
-    for (metric in metrics) {
-      df_subset <- subset(df.all.uav, replM == replMethod & index == index & metric == metric)
-      metric_value.mean <- sum(df_subset$value)
-      metric_value.stddev <- sqrt(var(df_subset$value))
-      #print(paste(replMethod, uav, metric, metric_value.mean, metric_value.stddev, sep = " -- "))
-      df <- data.frame(
-        basename =    levels(df_subset$basename),
-        replM =       as.integer(replMethod),
-        index =       as.integer(index),
-        metric =      as.factor(metric),
-        value =       as.numeric(metric_value.mean),
-        valueStddev = as.numeric(metric_value.stddev)
-      )
-      df.comb <- rbind(df.comb, df)
-    }    
-  }
-}
-#remove(replMethod, uav, metric, df_subset, metric_value.mean, metric_value.stddev, df)
-
-#TEMPORARY
-df.comb <- df.all.uav
-
+#
+#cat("Combining SimRuns ... ")
+#df.comb <- data.frame()
+#
+#for (replMethod in replMs) {
+#  for (index in 0:uavs_count) {
+#    for (metric in metrics) {
+#      df_subset <- subset(df.all.uav, replM == replMethod & index == index & metric == metric)
+#      metric_value.mean <- sum(df_subset$value)
+#      metric_value.stddev <- sqrt(var(df_subset$value))
+#      #print(paste(replMethod, uav, metric, metric_value.mean, metric_value.stddev, sep = " -- "))
+#      df <- data.frame(
+#        basename =    levels(df_subset$basename),
+#        replM =       as.integer(replMethod),
+#        index =       as.integer(index),
+#        metric =      as.factor(metric),
+#        value =       as.numeric(metric_value.mean),
+#        valueStddev = as.numeric(metric_value.stddev)
+#      )
+#      df.comb <- rbind(df.comb, df)
+#    }    
+#  }
+#}
 #####################################################################
 
 cat("Summarizing Metrics per UAV ... ")
@@ -236,7 +249,7 @@ df.red.uav <- data.frame()
 for (replMethod in replMs) {
   for (sim_run in sim_runs) {
     for (uav_index in 0:uavs_count) {
-      df_subset <- subset(df.comb, replM == replMethod & simRun == sim_run & index == uav_index)
+      df_subset <- subset(df.all.uav, replM == replMethod & simRun == sim_run & index == uav_index)
       df <- data.frame(
         basename =    levels(df_subset$basename),
         replM =       as.integer(replMethod),
@@ -295,38 +308,102 @@ for (replMethod in replMs) {
 #####################################################################
 # Independence CS/UAV ###############################################
 
+df <- subset(df.red.uav, replM==0)
 
-map_id_to_location <- function(id) c('\\textbf{CS1:} Tennis court Ritzeb\\"uhl\\ ', '\\textbf{CS2:} Sports field Manebach', '\\textbf{CS3:} Hotel Gabelbach')[as.integer(id)]
-starting_cs <- map_id_to_location(1 + (df.red.uav$index %% 3))
+map_id_to_location <- function(id) c('\\ \\textbf{CS1:} Tennis court Ritzeb\\"uhl', '\\ \\textbf{CS2:} Sports field Manebach', '\\ \\textbf{CS3:} Hotel Gabelbach')[as.integer(id)]
+starting_cs <- as.factor(map_id_to_location(1 + (df$index %% 3)))
 
-secMission.quota <- 100 / (df.red.uav$secMission + df.red.uav$secMaintenance + df.red.uav$secCharge) * df.red.uav$secMission
+secMission.quota <- 100 / (df$secMission + df$secMaintenance + df$secCharge) * df$secMission
 
-tikz(paste(tikzLocation, "8_initial_location_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.9, height=2)
+tikz(paste(tikzLocation, "8_initial_location_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.99, height=2.0)
 
-ggplot(df.red.uav, aes(x = starting_cs, y = secMission.quota)) +
-  geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.1) +
-  geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=1) +
-  theme(axis.title.x = element_blank()) +
-  labs(x="Charging Station", y="Time in Mission [\\%]")
+ggplot(df, aes(x = starting_cs, y = secMission)) +
+  geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.3) +
+  geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=0) +
+  coord_flip() +
+  scale_x_discrete(limits = rev(levels(starting_cs))) +
+  theme(axis.title.y = element_blank(), axis.text.x = element_blank()) +
+  labs(x="Charging Station", y="Time in Mission [%]")
 
 dev.off()
 
-tikz(paste(tikzLocation, "8_cs_popularity_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.9, height=1.75)
+df <- subset(df.red.cs, replM==0)
 
-ggplot(df.red.cs, aes(x = map_id_to_location(index), y = chargedMobileNodes)) +
+tikz(paste(tikzLocation, "8_cs_popularity_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.99, height=2.0)
+
+ggplot(df, aes(x = map_id_to_location(index), y = chargedMobileNodes)) +
   geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.6) +
-  geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=1) +
-  theme(axis.title.x = element_blank()) +
+  geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=0) +
+  coord_flip() +
+  scale_x_discrete(limits = rev(levels(starting_cs))) +
+  theme(axis.title.y = element_blank()) +
   labs(x="Charging Station", y="Served UAVs")
 
 dev.off()
 
 
 #####################################################################
+# General Performance Data ##########################################
+# only replM==0
+
+df <- subset(df.red.uav, replM==0)
+life_cycles_uav.mean <- mean(df$countMissions)
+life_cycles_uav.stddev <- sqrt(var(df$countMissions))
+
+cat(paste("Life cycles per UAV", life_cycles_uav.mean, life_cycles_uav.stddev))
+
+cons_energy_per_uav.overall <- mean(df$energyMission + df$energyMaintenance)
+cons_energy_per_uav.perhour <- mean(df$energyMission + df$energyMaintenance) / (simtimeSec / 3600)
+cons_energy_per_uav.permission <- mean((df$energyMission + df$energyMaintenance) / df$countMissions)
+
+cat(paste("Energy consumption per UAV", cons_energy_per_uav.overall, cons_energy_per_uav.perhour, cons_energy_per_uav.permission))
+
+
+
+ratios.time <- data.frame(
+  class = "time",
+  metric = as.factor(c("Mission", "Maintenance", "Charge", "Idle")),
+  value = as.numeric(c(mean(df$secMission), mean(df$secMaintenance), mean(df$secCharge), mean(df$secIdle)))
+)
+ratios.time$metric2 <- factor(ratios.time$metric, rev(c("Mission", "Maintenance", "Charge", "Idle")))
+ratios.time$percentage = round(100 * ratios.time$value/sum(ratios.time$value),digits=1)
+
+ratios.energy <- data.frame(
+  class = "energy",
+  metric = as.factor(c("Mission", "Maintenance", "Charge", "Idle")),
+  value = as.numeric(c(mean(df$energyMission), mean(df$energyMaintenance), mean(df$energyCharge), 0))
+)
+ratios.energy$metric2 <- factor(ratios.energy$metric, rev(c("Mission", "Maintenance", "Charge", "Idle")))
+ratios.energy$percentage = round(100 * ratios.energy$value/sum(ratios.energy$value),digits=1)
+
+#TEMPORARY
+ratios <- ratios.time
+ratios <- rbind(ratios.time, ratios.energy)
+
+
+tikz(paste(tikzLocation, "8_life_cycle_time_ratio_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.9, height=1.3)
+
+ggplot(ratios, aes(x=class, fill=metric2, y=percentage, label=percentage)) +
+  geom_col() +
+  #geom_text(color=graphCol3_darkdark, size=rel(3), position=position_stack(vjust=0.5)) +
+  geom_text(size=rel(3), position=position_stack(vjust=0.5)) +
+  coord_flip() +
+  scale_x_discrete(limits = (levels(metric))) +
+  theme(axis.text.y=element_blank()) +
+  #theme(legend.position="bottom", legend.title = element_blank(), legend.justification = "left") +
+  theme(legend.title=element_blank()) +
+  #scale_fill_brewer(name="Life Cycle State", guide=guide_legend(reverse=TRUE)) +
+  scale_fill_manual(name="Life Cycle State", guide=guide_legend(reverse=TRUE),
+                    values=c(graphCol3, graphCol2_dark, graphCol2, graphCol1)) + 
+  scale_y_continuous(breaks=seq(0, 100, 10)) +
+  labs(x="Life Cycle State", y="Utilization Time Quota [\\%]")
+
+dev.off()
+#####################################################################
 # Random Diagram Testing ############################################
 
 # Test correlation with starting position (CS 0,1, or 2)
-locations <- c('CS0 Tennis court Ritzebühl', 'CS1 Sports field Manebach', 'CS2 Hotel Gabelbach')
+locations <- c('CS0 Tennis court Ritzebuehl', 'CS1 Sports field Manebach', 'CS2 Hotel Gabelbach')
 starting_cs <- df.red.uav$index %% 3
 starting_cs <- as.factor(locations[starting_cs + 1])
 
@@ -368,3 +445,11 @@ ggplot(subset(df.red.uav, replM==2)) + geom_bin2d(aes(x = energyMission, y = ene
 ggplot(subset(df.red.uav, replM==0)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
 ggplot(subset(df.red.uav, replM==1)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
 ggplot(subset(df.red.uav, replM==2)) + geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) + ylim(0, 100) + xlim(0, 100)
+
+
+
+
+#####################################################################
+#####################################################################
+cat("F I N I S H E D")
+
