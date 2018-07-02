@@ -198,6 +198,15 @@ public:
     virtual double getOverallDuration() const = 0;
 
     /**
+     * Get the overall duration for the CEE in seconds.
+     * Lower speed safety margin considered for movement commands
+     */
+    virtual double getOverallDurationQuantile() const
+    {
+        return getOverallDuration();
+    }
+
+    /**
      * Get the duration so far, for an CEE in execution
      */
     double getDuration() const
@@ -353,6 +362,7 @@ public:
     void setNodeParameters() override;
     void updateState(double stepSize) override;
     double getOverallDuration() const override;
+    double getOverallDurationQuantile() const override;
     double getRemainingTime() const override;
     double getProbableConsumption(bool normalized = true, int fromMethod = 2) const override;
     char* getCeeTypeString() const override;

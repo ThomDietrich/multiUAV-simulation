@@ -438,10 +438,10 @@ void UAVNode::updateState()
     if (speed != 0) {
         strs << speed << " m/s" << " | ";
     }
+    strs << ((battery.getRemainingPercentage() < 10) ? "0" : "") << battery.getRemainingPercentage() << " %";
     if (commandExecEngine->getConsumptionPerSecond() != 0) {
-        strs << (-1) * commandExecEngine->getConsumptionPerSecond() << " A" << " | ";
+        strs << " | " << (-1) * commandExecEngine->getConsumptionPerSecond() << " A";
     }
-    strs << battery.getRemainingPercentage() << " %";
     //strs << " | ";
     //(commandExecEngine->hasDeterminedDuration()) ? strs << commandExecEngine->getRemainingTime() : strs << "...";
     //strs << " s left";
@@ -867,7 +867,7 @@ float UAVNode::getSpeed(float angle, int fromMethod)
             float stddev1 = ANGLE2SPEED[idx][2];
 
             mean = mean0 + (mean1 - mean0) / (angle1 - angle0) * (angle - angle0);
-            stddev = abs(stddev0 + (stddev1 - stddev0) / (angle1 - angle0) * (angle - angle0));
+            stddev = abs(stddev0 + (stddev1 - stddev0) / (angle1 - angle0) * (angle - angle0)) / 10;
             break;
         }
     }
@@ -883,7 +883,7 @@ float UAVNode::getSpeed(float angle, int fromMethod)
         speed = mean;
     }
     else {
-        speed = boost::math::quantile(boost::math::normal(mean, stddev), quantile);
+        speed = boost::math::quantile(boost::math::normal(mean, stddev), 1 - quantile);
     }
 
     return speed;

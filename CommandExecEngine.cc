@@ -103,6 +103,17 @@ double WaypointCEE::getOverallDuration() const
     return distance / speed;
 }
 
+double WaypointCEE::getOverallDurationQuantile() const
+{
+    double dx = x1 - x0;
+    double dy = y1 - y0;
+    double dz = z1 - z0;
+    double distance = sqrt(dx * dx + dy * dy + dz * dz);
+    if (distance < 1.e-10) distance = 0;
+    float pessimisticSpeed = (node->getSpeed(climbAngle, 2));
+    return distance / pessimisticSpeed;
+}
+
 double WaypointCEE::getRemainingTime() const
 {
     double dx = x1 - node->x;
