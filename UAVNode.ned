@@ -21,7 +21,8 @@ simple UAVNode extends MobileNode
         double predictionQuantile = default(0.95);       // the quantile [0..1] for normal dist quantile calculation
         int replacementMethod = default(0);              // 0: latest opportunity heuristic
                                                          // 1: shortest return heuristic
-                                                         // 2: utilization quotient heuristic
+                                                         // 2: bi-objective tradeoff heuristic
+        double weightedSumWeight = default(0.5);         // The weight for the bi-objective optimization (0..1, 0==H1, 1==H0) 
 }
 
 //

@@ -554,7 +554,7 @@ double UAVNode::estimateCommandsDuration()
 
 #define HEURISTIC_LATEST_OPPOTUNITY 0
 #define HEURISTIC_SHORTEST_RETURN 1
-#define HEURISTIC_UTILIZATION_QUOTIENT 2
+#define HEURISTIC_BIOBJECTIVE 2
 
 /**
  * Iterates over all future CEEs and predicts their consumptions.
@@ -576,10 +576,11 @@ ReplacementData* UAVNode::endOfOperation()
         return nullptr;
     }
 
-    // 0: latest opportunity heuristic
-    // 1: shortest return heuristic
-    // 2: utilization quotient heuristic
+    // omnet.ini NED parameters
     int replacementMethod = par("replacementMethod");
+    float weightedSumWeight = par("weightedSumWeight").doubleValue();
+    ASSERT(replacementMethod >= 0 && replacementMethod <= 2);
+    ASSERT(weightedSumWeight >= 0 && weightedSumWeight <= 1);
 
     // Iterates through all feasible future commands and build table of predictions
 
@@ -644,23 +645,26 @@ ReplacementData* UAVNode::endOfOperation()
     result->nodeToReplace = this;
     CommandExecEngine *lastCEEofMission;
 
+    ASSERT((int) nextCEEsMatrix.back().at(IDX_FUTURE_CMDS) == nextCommands);
+    int maxCommandsFeasible = nextCommands;
+
     switch (replacementMethod) {
         case HEURISTIC_LATEST_OPPOTUNITY: {
-            int maxCommandsFeasible = (int) nextCEEsMatrix.back().at(IDX_FUTURE_CMDS);
             lastCEEofMission = cees.at((maxCommandsFeasible - 1) % cees.size());
 
-            float duration = nextCEEsMatrix.back().at(IDX_CMD_DURATION);
-            result->timeOfReplacement = simTime() + duration;
+            float latestOpportunityDuration = nextCEEsMatrix.back().at(IDX_CMD_DURATION);
+            result->timeOfReplacement = simTime() + latestOpportunityDuration;
 
-            EV_INFO << __func__ << "(): latest opportunity heuristic: " << nextCommands << " commands feasible." << endl;
-        }
+            EV_INFO << __func__ << "(): latest opportunity heuristic: " << maxCommandsFeasible << " commands feasible." << endl;
             break;
+        }
+
         case HEURISTIC_SHORTEST_RETURN: {
             float shortestReturnPathReturnEnergy = FLT_MAX;
             int shortestReturnPathMissionCommands = 0;
             float shortestReturnPathMissionDuration = 0;
 
-            for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
+            for (auto it = nextCEEsMatrix.cbegin(); it != nextCEEsMatrix.cend(); ++it) {
                 if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
                     shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
                     shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
@@ -672,51 +676,56 @@ ReplacementData* UAVNode::endOfOperation()
             result->timeOfReplacement = simTime() + shortestReturnPathMissionDuration;
 
             EV_INFO << __func__ << "(): shortest return heuristic: " << shortestReturnPathMissionCommands << " commands feasible." << endl;
-        }
             break;
-        case HEURISTIC_UTILIZATION_QUOTIENT: {
-            //find shortest
+        }
+
+        case HEURISTIC_BIOBJECTIVE: {
+            float bestWeightedSum = (-1) * FLT_MAX;
+            int bestPathMissionCommands = 0;
+            float bestPathMissionDuration = 0;
+
+            //For comparison with shortest return heuristic
             float shortestReturnPathReturnEnergy = FLT_MAX;
             int shortestReturnPathMissionCommands = 0;
-            float shortestReturnPathMissionDuration = 0;
 
-            for (auto it = nextCEEsMatrix.begin(); it != nextCEEsMatrix.end(); ++it) {
+            for (auto it = nextCEEsMatrix.cbegin(); it != nextCEEsMatrix.cend(); ++it) {
+
+                float energyCommandsTillHere = battery.getMissing() + it->at(IDX_CMD_ENERGY);
+                float energyReturnFromHere = it->at(IDX_RETURN_ENERGY);
+                float weightedSum = weightedSumWeight * energyCommandsTillHere - (1 - weightedSumWeight) * energyReturnFromHere;
+
+                // Search bi-objective maximum
+                if (weightedSum >= bestWeightedSum) {
+                    bestWeightedSum = weightedSum;
+                    bestPathMissionCommands = it->at(IDX_FUTURE_CMDS);
+                    bestPathMissionDuration = it->at(IDX_CMD_DURATION);
+                }
+
+                // Search shortest return
                 if (it->at(IDX_RETURN_ENERGY) <= shortestReturnPathReturnEnergy) {
                     shortestReturnPathReturnEnergy = it->at(IDX_RETURN_ENERGY);
                     shortestReturnPathMissionCommands = it->at(IDX_FUTURE_CMDS);
-                    shortestReturnPathMissionDuration = it->at(IDX_CMD_DURATION);
                 }
             }
-            ASSERT(shortestReturnPathMissionCommands != 0);
+            ASSERT(bestPathMissionCommands != 0);
+            ASSERT(bestPathMissionCommands >= shortestReturnPathMissionCommands);
+            ASSERT(bestPathMissionCommands <= maxCommandsFeasible);
 
-            int bestQuotientCommands = 0;
-            float bestQuotient = 0.35; // Minimum accepted quotient as initial value
-            float bestQuotientDuration = 0;
+            lastCEEofMission = cees.at((bestPathMissionCommands - 1) % cees.size());
+            result->timeOfReplacement = simTime() + bestPathMissionDuration;
 
-            // calculate quotients
-            for (u_int cmd = shortestReturnPathMissionCommands + 1; cmd < nextCEEsMatrix.size(); ++cmd) {
-                float additionalEnergy = nextCEEsMatrix[cmd].at(IDX_CMD_ENERGY) - shortestReturnPathReturnEnergy;
-                float quotient = nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY) / (additionalEnergy + nextCEEsMatrix[cmd].at(IDX_RETURN_ENERGY));
-                if (quotient < bestQuotient) {
-                    bestQuotient = quotient;
-                    bestQuotientCommands = nextCEEsMatrix[cmd].at(IDX_FUTURE_CMDS);
-                    bestQuotientDuration = nextCEEsMatrix[cmd].at(IDX_CMD_DURATION);
-                }
+            EV_INFO << __func__ << "(): bi-objective tradeoff heuristic: " << bestPathMissionCommands << " commands feasible ";
+            if (shortestReturnPathMissionCommands == maxCommandsFeasible) {
+                EV_INFO << "(no range)" << endl;
             }
-
-            // if no good quotient was found, use shortest (shortest was also latest OR quotient was too bad)
-            if (bestQuotientCommands == 0) {
-                bestQuotientCommands = shortestReturnPathMissionCommands;
-                bestQuotientDuration = shortestReturnPathMissionDuration;
-                EV_INFO << __func__ << "(): utilization quotient heuristic: resorting to shortest return heuristic." << endl;
+            else if (bestPathMissionCommands != shortestReturnPathMissionCommands && bestPathMissionCommands != maxCommandsFeasible) {
+                EV_INFO << "(inside range " << shortestReturnPathMissionCommands << ".." << maxCommandsFeasible << ")" << endl;
             }
-
-            lastCEEofMission = cees.at((bestQuotientCommands - 1) % cees.size());
-            result->timeOfReplacement = simTime() + bestQuotientDuration;
-
-            EV_INFO << __func__ << "(): utilization quotient heuristic: " << bestQuotientCommands << " commands feasible." << endl;
-        }
+            else {
+                EV_INFO << "(range " << shortestReturnPathMissionCommands << ".." << maxCommandsFeasible << ")" << endl;
+            }
             break;
+        }
         default:
             throw omnetpp::cRuntimeError("Invalid replacementMethod selected.");
     }
@@ -836,6 +845,7 @@ float UAVNode::getMovementConsumption(float angle, float duration, int fromMetho
  * This function will return the speed of the node based on real measurement values and the angle the UAV in ascending/declining flight.
  *
  * @param the ascent/decline angle, range: -90..+90°
+ * @param fromMethod 0: random  1: mean  2: predictionQuantile
  * @return the speed of the UAV in [m/s]
  */
 float UAVNode::getSpeed(float angle, int fromMethod)
@@ -867,7 +877,7 @@ float UAVNode::getSpeed(float angle, int fromMethod)
         cModule *network = cSimulation::getActiveSimulation()->getSystemModule();
         do {
             speed = omnetpp::normal(network->getRNG(0), mean, stddev);
-        } while (abs(speed - mean) > 3 * stddev);
+        } while (abs(speed - mean) > 3 * stddev || speed < mean / 3);
     }
     else if (fromMethod == 1) {
         speed = mean;
