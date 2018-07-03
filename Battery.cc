@@ -106,7 +106,7 @@ bool Battery::discharge(float amount)
 /**
  * @return the absolute capacity of the battery, in [mAh]
  */
-float Battery::getCapacity()
+float Battery::getCapacity() const
 {
     return capacity;
 }
@@ -114,7 +114,7 @@ float Battery::getCapacity()
 /**
  * @return difference between maximum capacity and remaining energy, in [mAh]
  */
-float Battery::getMissing()
+float Battery::getMissing() const
 {
     if (infinite) return 0;
     return capacity - remaining;
@@ -123,7 +123,7 @@ float Battery::getMissing()
 /**
  * @return remaining energy, in [mAh]
  */
-float Battery::getRemaining()
+float Battery::getRemaining() const
 {
     if (infinite) return FLT_MAX;
     return remaining;
@@ -132,7 +132,7 @@ float Battery::getRemaining()
 /**
  * @return remaining energy, in percentage
  */
-int Battery::getRemainingPercentage()
+int Battery::getRemainingPercentage() const
 {
     if (infinite) return 100;
     return 100 * remaining / capacity;
@@ -141,7 +141,7 @@ int Battery::getRemainingPercentage()
 /**
  * @return 'true' if energy storage is empty
  */
-bool Battery::isEmpty()
+bool Battery::isEmpty() const
 {
     if (infinite) return false;
     return (remaining <= 0);
@@ -150,7 +150,7 @@ bool Battery::isEmpty()
 /**
  * @return 'true' if energy storage is completely full
  */
-bool Battery::isFull()
+bool Battery::isFull() const
 {
     if (infinite) return true;
     return (remaining >= capacity);

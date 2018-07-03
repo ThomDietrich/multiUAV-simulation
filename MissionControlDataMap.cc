@@ -271,36 +271,50 @@ NodeShadow* ManagedNodeShadows::getHighestCharged()
 }
 
 /**
- * Get the node with the highest charge after the flight to the given coordinates that is available for missions.
+ * Returns the node with the highest charge after the flight to the given coordinates that is available for missions.
  */
-NodeShadow* ManagedNodeShadows::getHighestCharged(float x, float y, float z)
+NodeShadow* ManagedNodeShadows::getHighestChargeAtReplacement(float destX, float destY, float destZ)
 {
-    NodeShadow* result = nullptr;
-    double maximumRemaing = 0; // remaining battery after flight to exchange
+    std::vector<NodeShadow*> candidates;
+    double maxRemainingAtRepl = 0; // remaining battery after flight to exchange
     for (auto it = managedNodes.cbegin(); it != managedNodes.cend(); ++it) {
         if (not (it->second->isStatusCharging() || it->second->isStatusIdle())) {
                 continue;
         }
 
+        UAVNode* node = (UAVNode*) it->second->getNode();
         Battery* tempKnownBattery = it->second->getKnownBattery();
+
+        //TODO: Inaccurate workaround
+        double fullBatteryCapacity = 5200;
+        double remaining = (tempKnownBattery != nullptr) ? tempKnownBattery->getRemaining() : fullBatteryCapacity;
         if (tempKnownBattery == nullptr) {
-            continue;
+            EV_WARN << "Defaulting to a full battery during replacement candidate selection. " //
+                    << "This should only be seen in the beginning of a simulation!" << endl;
         }
 
-        // calculate energy consumption to coordinates
-        WaypointCommand waypointCmd = WaypointCommand(x, y, z);
-        UAVNode* node = (UAVNode*) it->second->getNode();
+        WaypointCommand waypointCmd = WaypointCommand(destX, destY, destZ);
         WaypointCEE waypointCEE = WaypointCEE(node, &waypointCmd);
         waypointCEE.initializeCEE();
         double consumption = waypointCEE.predictFullConsumptionQuantile();
-        double remaining = tempKnownBattery->getRemaining();
+        double remainingAtRepl = remaining - consumption;
 
-        if (result == nullptr || (remaining - consumption) > maximumRemaing) {
-            result = it->second;
-            maximumRemaing = remaining - consumption;
+        if (remainingAtRepl > maxRemainingAtRepl) {
+            // new shortest distance
+            candidates.clear();
+            maxRemainingAtRepl = remainingAtRepl;
+        }
+
+        float tolerance = 1.0;
+        if (fabs(remainingAtRepl - maxRemainingAtRepl) < tolerance) {
+            candidates.push_back(it->second);
         }
     }
-    return result;
+
+    ASSERT(not candidates.empty());
+
+    unsigned int theRandomIndex = getEnvir()->getRNG(0)->intRand(candidates.size());
+    return candidates.at(theRandomIndex);
 }
 
 NodeShadow* ManagedNodeShadows::getNodeRequestingReplacement(cMessage* msg)

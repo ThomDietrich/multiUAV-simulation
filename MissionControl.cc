@@ -17,6 +17,7 @@
 #include "MissionControl.h"
 #include <boost/algorithm/string.hpp>
 #include "msgs/MobileNodeRequest_m.h"
+#include "msgs/MissionMsg_m.h"
 
 Define_Module(MissionControl);
 
@@ -236,15 +237,8 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     else {
         // ToDo: Add highest capacity from config
         this->requestChargedNodesInformation(5400);
-        // Get first free IDLE node
-        NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
-        if (!replacingNodeShadow) {
-            replacingNodeShadow = managedNodeShadows.getHighestCharged(replData.x, replData.y, replData.z);
-            EV_WARN << "no idle node available, retreat to highest charged" << endl;
-        }
-        if (!replacingNodeShadow) {
-            throw cRuntimeError("No nodes available for mission.");
-        }
+        // Get first free IDLE or CHARGING node that will have the most charge upon arrival
+        NodeShadow* replacingNodeShadow = managedNodeShadows.getHighestChargeAtReplacement(replData.x, replData.y, replData.z);
         // Assign as replacing node to this node
         replacingNodeShadow->setStatus(NodeStatus::RESERVED);
         nodeShadow->setReplacementData(new ReplacementData(replData));

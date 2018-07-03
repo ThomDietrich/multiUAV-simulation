@@ -317,13 +317,13 @@ secMission.quota <- 100 / (df$secMission + df$secMaintenance + df$secCharge) * d
 
 tikz(paste(tikzLocation, "8_initial_location_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.99, height=2.0)
 
-ggplot(df, aes(x = starting_cs, y = secMission / 3600)) +
+ggplot(df, aes(x = starting_cs, y = secMission / 60)) +
   geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.3) +
   geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=0) +
   coord_flip() +
   scale_x_discrete(limits = rev(levels(starting_cs))) +
-  theme(axis.title.y = element_blank(), axis.text.x = element_blank()) +
-  labs(x="Charging Station", y="Time in Mission [h]")
+  theme(axis.title.y = element_blank()) +
+  labs(x="Charging Station", y="Time in Missions [min]")
 
 dev.off()
 
@@ -359,21 +359,22 @@ cons_energy_per_uav.permission <- mean((df$energyMission + df$energyMaintenance)
 cat(paste("Energy consumption per UAV", cons_energy_per_uav.overall, cons_energy_per_uav.perhour, cons_energy_per_uav.permission))
 
 
+lifecycle_states <- c("Mission Execution", "Maintenance Flights", "Charge", "Idle")
 
 ratios.time <- data.frame(
   class = "time",
-  metric = as.factor(c("Mission", "Maintenance", "Charge", "Idle")),
+  metric = as.factor(lifecycle_states),
   value = as.numeric(c(mean(df$secMission), mean(df$secMaintenance), mean(df$secCharge), mean(df$secIdle)))
 )
-ratios.time$metric2 <- factor(ratios.time$metric, rev(c("Mission", "Maintenance", "Charge", "Idle")))
+ratios.time$metric2 <- factor(ratios.time$metric, rev(lifecycle_states))
 ratios.time$percentage = round(100 * ratios.time$value/sum(ratios.time$value),digits=1)
 
 ratios.energy <- data.frame(
   class = "energy",
-  metric = as.factor(c("Mission", "Maintenance", "Charge", "Idle")),
+  metric = as.factor(lifecycle_states),
   value = as.numeric(c(mean(df$energyMission), mean(df$energyMaintenance), mean(df$energyCharge), 0))
 )
-ratios.energy$metric2 <- factor(ratios.energy$metric, rev(c("Mission", "Maintenance", "Charge", "Idle")))
+ratios.energy$metric2 <- factor(ratios.energy$metric, rev(lifecycle_states))
 ratios.energy$percentage = round(100 * ratios.energy$value/sum(ratios.energy$value),digits=1)
 
 #TEMPORARY
@@ -394,11 +395,13 @@ ggplot(ratios, aes(x=class, fill=metric2, y=percentage, label=percentage)) +
   theme(legend.title=element_blank()) +
   #scale_fill_brewer(name="Life Cycle State", guide=guide_legend(reverse=TRUE)) +
   scale_fill_manual(name="Life Cycle State", guide=guide_legend(reverse=TRUE),
-                    values=c(graphCol3, graphCol2_dark, graphCol2, graphCol1)) + 
+                    values=c(graphCol3, graphCol2, graphCol2_dark, graphCol1)) + 
   scale_y_continuous(breaks=seq(0, 100, 10)) +
-  labs(x="Life Cycle State", y="Utilization Time Quota [\\%]")
+  labs(x="Life Cycle State", y="Quota [\\%]")
 
 dev.off()
+
+
 #####################################################################
 # Random Diagram Testing ############################################
 
@@ -431,11 +434,11 @@ ggplot(subset(df.red.cs, index==0 | index==1 | index==2), aes(replM, chargedPowe
 # Diagrams
 ggplot(df.red.uav) +
   geom_bin2d(aes(x = 100 / (secMission + secMaintenance) * secMission, y = 100 / (secMission + secMaintenance) * secMaintenance)) +
-  labs(x="Time in Mission", y="Time in Maintenance")
+  labs(x="Time in Mission", y="Time in Maintenance Flights")
 
 ggplot(df.red.uav) +
   geom_bin2d(aes(x = 100 / (energyMission + energyMaintenance) * energyMission, y = 100 / (energyMission + energyMaintenance) * energyMaintenance)) +
-  labs(x="Energy in Mission", y="Energy in Maintenance")
+  labs(x="Energy in Mission", y="Energy in Maintenance Flights")
 
 
 ggplot(subset(df.red.uav, replM==0)) + geom_bin2d(aes(x = energyMission, y = energyMaintenance))

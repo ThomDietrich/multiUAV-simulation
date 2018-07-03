@@ -41,12 +41,12 @@ public:
     virtual ~Battery();
     bool charge(float amount);
     bool discharge(float amount);
-    float getCapacity();
-    float getMissing();
-    float getRemaining();
-    int getRemainingPercentage();
-    bool isEmpty();
-    bool isFull();
+    float getCapacity() const;
+    float getMissing() const;
+    float getRemaining() const;
+    int getRemainingPercentage() const;
+    bool isEmpty() const;
+    bool isFull() const;
     float getAndResetOverdraw();
 };
 
