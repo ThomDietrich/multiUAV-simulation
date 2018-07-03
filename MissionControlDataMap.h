@@ -107,22 +107,22 @@ public:
     {
         return this->status == status;
     }
-
     bool isStatusIdle() const
     {
         return isStatus(NodeStatus::IDLE);
     }
-
+    bool isStatusCharging() const
+    {
+        return isStatus(NodeStatus::CHARGING);
+    }
     bool isStatusReserved() const
     {
         return isStatus(NodeStatus::RESERVED);
     }
-
     bool isStatusMission() const
     {
         return isStatus(NodeStatus::MISSION);
     }
-
     bool isStatusProvisioning() const
     {
         return isStatus(NodeStatus::PROVISIONING);
@@ -193,7 +193,7 @@ public:
     {
         return knownBattery;
     }
-    
+
     void setKnownBattery(Battery* knownBattery = nullptr)
     {
         if (this->knownBattery != nullptr) delete this->knownBattery;

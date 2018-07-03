@@ -251,23 +251,15 @@ NodeShadow* ManagedNodeShadows::getHighestCharged()
 {
     NodeShadow* highestChargedNode = nullptr;
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
-        switch (it->second->getStatus()) {
-            case NodeStatus::PROVISIONING:
-            case NodeStatus::MAINTENANCE:
-            case NodeStatus::RESERVED:
-            case NodeStatus::MISSION:
-            case NodeStatus::DEAD:
-                continue;
-            case NodeStatus::CHARGING:
-            case NodeStatus::IDLE:
-                break;
-            default:
-                throw cRuntimeError("Unknown NodeStatus.");
+        if (not (it->second->isStatusCharging() || it->second->isStatusIdle())) {
+            continue;
         }
+
         Battery* tempKnownBattery = it->second->getKnownBattery();
         if (tempKnownBattery == nullptr) {
             continue;
         }
+
         if (highestChargedNode == nullptr) {
             highestChargedNode = it->second;
         }
@@ -284,38 +276,29 @@ NodeShadow* ManagedNodeShadows::getHighestCharged()
 NodeShadow* ManagedNodeShadows::getHighestCharged(float x, float y, float z)
 {
     NodeShadow* result = nullptr;
-    double resultsRemaingBattery = 0; // remaining battery after flight to exchange
-    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
-        switch (it->second->getStatus()) {
-            case NodeStatus::PROVISIONING:
-            case NodeStatus::MAINTENANCE:
-            case NodeStatus::RESERVED:
-            case NodeStatus::MISSION:
-            case NodeStatus::DEAD:
+    double maximumRemaing = 0; // remaining battery after flight to exchange
+    for (auto it = managedNodes.cbegin(); it != managedNodes.cend(); ++it) {
+        if (not (it->second->isStatusCharging() || it->second->isStatusIdle())) {
                 continue;
-            case NodeStatus::CHARGING:
-            case NodeStatus::IDLE:
-                break;
-            default:
-                throw cRuntimeError("Unknown NodeStatus.");
         }
+
         Battery* tempKnownBattery = it->second->getKnownBattery();
-        if (nullptr == tempKnownBattery) {
+        if (tempKnownBattery == nullptr) {
             continue;
         }
+
         // calculate energy consumption to coordinates
         WaypointCommand waypointCmd = WaypointCommand(x, y, z);
-        UAVNode* node = (UAVNode*)it->second->getNode();
+        UAVNode* node = (UAVNode*) it->second->getNode();
         WaypointCEE waypointCEE = WaypointCEE(node, &waypointCmd);
         waypointCEE.initializeCEE();
         double consumption = waypointCEE.predictFullConsumptionQuantile();
         double remaining = tempKnownBattery->getRemaining();
 
-        if (nullptr == result || (remaining - consumption) > resultsRemaingBattery) {
+        if (result == nullptr || (remaining - consumption) > maximumRemaing) {
             result = it->second;
-            resultsRemaingBattery = remaining - consumption;
+            maximumRemaing = remaining - consumption;
         }
-
     }
     return result;
 }
