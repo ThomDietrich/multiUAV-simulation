@@ -278,6 +278,48 @@ NodeShadow* ManagedNodeShadows::getHighestCharged()
     return highestChargedNode;
 }
 
+/**
+ * Get the node with the highest charge after the flight to the given coordinates that is available for missions.
+ */
+NodeShadow* ManagedNodeShadows::getHighestCharged(float x, float y, float z)
+{
+    NodeShadow* result = nullptr;
+    double resultsRemaingBattery = 0; // remaining battery after flight to exchange
+    for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {
+        switch (it->second->getStatus()) {
+            case NodeStatus::PROVISIONING:
+            case NodeStatus::MAINTENANCE:
+            case NodeStatus::RESERVED:
+            case NodeStatus::MISSION:
+            case NodeStatus::DEAD:
+                continue;
+            case NodeStatus::CHARGING:
+            case NodeStatus::IDLE:
+                break;
+            default:
+                throw cRuntimeError("Unknown NodeStatus.");
+        }
+        Battery* tempKnownBattery = it->second->getKnownBattery();
+        if (nullptr == tempKnownBattery) {
+            continue;
+        }
+        // calculate energy consumption to coordinates
+        WaypointCommand waypointCmd = WaypointCommand(x, y, z);
+        UAVNode* node = (UAVNode*)it->second->getNode();
+        WaypointCEE waypointCEE = WaypointCEE(node, &waypointCmd);
+        waypointCEE.initializeCEE();
+        double consumption = waypointCEE.predictFullConsumptionQuantile();
+        double remaining = tempKnownBattery->getRemaining();
+
+        if (nullptr == result || (remaining - consumption) > resultsRemaingBattery) {
+            result = it->second;
+            resultsRemaingBattery = remaining - consumption;
+        }
+
+    }
+    return result;
+}
+
 NodeShadow* ManagedNodeShadows::getNodeRequestingReplacement(cMessage* msg)
 {
     for (auto it = managedNodes.begin(); it != managedNodes.end(); ++it) {

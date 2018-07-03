@@ -220,6 +220,7 @@ public:
     NodeShadow* getFirst(NodeStatus currentStatus);
     NodeShadow* getClosest(NodeStatus currentStatus, float x, float y, float z);
     NodeShadow* getHighestCharged();
+    NodeShadow* getHighestCharged(float x, float y, float z);
     NodeShadow* getNodeRequestingReplacement(cMessage *msg); //TODO: Replace!
     int size() const
     {

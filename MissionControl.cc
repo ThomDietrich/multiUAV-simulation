@@ -239,7 +239,7 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
         // Get first free IDLE node
         NodeShadow* replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
         if (!replacingNodeShadow) {
-            replacingNodeShadow = managedNodeShadows.getHighestCharged();
+            replacingNodeShadow = managedNodeShadows.getHighestCharged(replData.x, replData.y, replData.z);
             EV_WARN << "no idle node available, retreat to highest charged" << endl;
         }
         if (!replacingNodeShadow) {
