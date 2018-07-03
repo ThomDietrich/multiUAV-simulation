@@ -317,13 +317,13 @@ secMission.quota <- 100 / (df$secMission + df$secMaintenance + df$secCharge) * d
 
 tikz(paste(tikzLocation, "8_initial_location_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.99, height=2.0)
 
-ggplot(df, aes(x = starting_cs, y = secMission)) +
+ggplot(df, aes(x = starting_cs, y = secMission / 3600)) +
   geom_jitter(width=0.05, color=graphCol3_dark, alpha=0.3) +
   geom_boxplot(width=0.6, color=graphCol1, fill=alpha("white", 0.6), outlier.alpha=0) +
   coord_flip() +
   scale_x_discrete(limits = rev(levels(starting_cs))) +
   theme(axis.title.y = element_blank(), axis.text.x = element_blank()) +
-  labs(x="Charging Station", y="Time in Mission [%]")
+  labs(x="Charging Station", y="Time in Mission [h]")
 
 dev.off()
 

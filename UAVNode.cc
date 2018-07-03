@@ -592,7 +592,7 @@ ReplacementData* UAVNode::endOfOperation()
      * element 0 initialized with 0s
      */
     std::vector<std::vector<float>> nextCEEsMatrix;
-    nextCEEsMatrix.push_back(std::vector<float> { 0.0, 0.0, FLT_MAX, 0.0 });
+    //nextCEEsMatrix.push_back(std::vector<float> { 0.0, 0.0, FLT_MAX, 0.0 });
 
     double tempFromX = x;
     double tempFromY = y;
