@@ -237,8 +237,28 @@ void MissionControl::handleReplacementMessage(ReplacementData replData)
     else {
         // ToDo: Add highest capacity from config
         this->requestChargedNodesInformation(5400);
-        // Get first free IDLE or CHARGING node that will have the most charge upon arrival
-        NodeShadow* replacingNodeShadow = managedNodeShadows.getHighestChargeAtReplacement(replData.x, replData.y, replData.z);
+
+        NodeShadow* replacingNodeShadow;
+        switch (par("replacementSearchMethod").intValue()) {
+            case 0:
+                // Get free IDLE node closest to exchange location, check charging ones after
+                replacingNodeShadow = managedNodeShadows.getClosest(NodeStatus::IDLE, replData.x, replData.y, replData.z);
+                if (!replacingNodeShadow) {
+                    replacingNodeShadow = managedNodeShadows.getHighestCharged();
+                    EV_WARN << "no idle node available, retreat to highest charged" << endl;
+                }
+                if (!replacingNodeShadow) {
+                    throw cRuntimeError("No nodes available for mission.");
+                }
+                break;
+            case 1:
+                // Get free IDLE or CHARGING node that will have the most charge upon arrival
+                replacingNodeShadow = managedNodeShadows.getHighestChargeAtReplacement(replData.x, replData.y, replData.z);
+                break;
+            default:
+                throw cRuntimeError("Unknown replacementSearchMethod.");
+        }
+
         // Assign as replacing node to this node
         replacingNodeShadow->setStatus(NodeStatus::RESERVED);
         nodeShadow->setReplacementData(new ReplacementData(replData));

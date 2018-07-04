@@ -28,4 +28,9 @@ out/
 /cache
 /3rdparty
 /tmp/
+
+# batch simulation results
 /results/*
+*.out
+*.sca
+*.elog

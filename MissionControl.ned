@@ -22,6 +22,8 @@ simple MissionControl
         @display("i=block/table2");
         double startTime @unit("s") = default(2s);   // time when the mission scheduling to UAVs starts
         string missionFiles = default("BostonParkCircle.waypoints"); // comma separated string with path(s) to file(s) from which missions shall be loaded
+        int replacementSearchMethod = default(0); // 0: Closest
+                                                  // 1: HighestChargeAtReplacement
 
     gates:
         inout gate[];
