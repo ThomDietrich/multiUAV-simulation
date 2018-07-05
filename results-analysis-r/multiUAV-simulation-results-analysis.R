@@ -29,9 +29,9 @@ graphics.off()
 #####################################################################
 # Settings ##########################################################
 
-logdata_folder <- "../results/"
+logdata_folder <- "../results-replacement-new/"
 tikzLocation = "./tikz/"
-tikzLocation = "d:/ownCloudKainet/Dokumente/Promotion/Dissertation/tikz/"
+#tikzLocation = "d:/ownCloudKainet/Dokumente/Promotion/Dissertation/tikz/"
 
 # http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf
 #graphCol1 <- "steelblue"
@@ -95,7 +95,7 @@ options(tikzDefaultEngine = "xetex")
 {
   repetitions <- 16
   iterations.replM <- 1
-  iterations.quant <- 3
+  iterations.quant <- 1
   iterations.numUAVs <- 1
   hours <- 48
   
@@ -358,7 +358,6 @@ cons_energy_per_uav.permission <- mean((df$energyMission + df$energyMaintenance)
 
 cat(paste("Energy consumption per UAV", cons_energy_per_uav.overall, cons_energy_per_uav.perhour, cons_energy_per_uav.permission))
 
-
 lifecycle_states <- c("Mission Execution", "Maintenance Flights", "Charge", "Idle")
 
 ratios.time <- data.frame(
@@ -401,6 +400,17 @@ ggplot(ratios, aes(x=class, fill=metric2, y=percentage, label=percentage)) +
 
 dev.off()
 
+#####################################################################
+# premature battery depletion during maintenance flights
+
+count_missions <- sum(df.red.uav$countMissions)
+count_overdrawn_maint <- sum(df.red.uav$countOverdrawnAfterMission)
+ratio_overdrawn_maint <- 100 / count_missions * count_overdrawn_maint
+energy_overdrawn_mission <- sum(df.red.uav$energyOverdrawMission)
+
+cat("Premature Battery depletion cases")
+cat(paste("Absolute count      & \\num{", count_missions, "} & \\num{", count_overdrawn_maint, "} & \\num{", energy_overdrawn_mission, "} \\\\", sep = ""))
+cat(paste("Ratio               & \\SI{100}{\\percent} & \\SI{", round(ratio_overdrawn_maint,digits = 2), "}{\\percent} & \\SI{0}{\\percent} \\\\", sep = ""))
 
 #####################################################################
 # Random Diagram Testing ############################################
