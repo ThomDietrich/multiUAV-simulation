@@ -29,7 +29,7 @@ graphics.off()
 #####################################################################
 # Settings ##########################################################
 
-logdata_folder <- "../results-replacement-new/"
+logdata_folder <- "../results-quant/"
 tikzLocation = "./tikz/"
 #tikzLocation = "d:/ownCloudKainet/Dokumente/Promotion/Dissertation/tikz/"
 
@@ -93,11 +93,11 @@ options(tikzDefaultEngine = "xetex")
 # Simulation runtime estimation #####################################
 
 {
-  repetitions <- 16
+  repetitions <- 24
   iterations.replM <- 1
   iterations.quant <- 1
   iterations.numUAVs <- 1
-  hours <- 48
+  hours <- 96
   
   birke_faktor <-(47 / 60) / 16 / (3 * 1 * 1 * 16)
   
@@ -120,9 +120,9 @@ for (filename in list.files(logdata_folder,"*.sca")) {
   
   filename.basename <- str_replace(filename, "(.*?)-.*", "\\1")
   
-  filename.replM   <- ifelse(grepl("replM=", filename), str_replace(filename, ".*-replM=(\\d).*", "\\1"), NA)
-  filename.quant   <- ifelse(grepl("quant=", filename), str_replace(filename, ".*-quant=(\\d).*", "\\1"), NA)
-  filename.numUAVs <- ifelse(grepl("numUAVs=", filename), str_replace(filename, ".*-numUAVs=(\\d).*", "\\1"), NA)
+  filename.replM   <- ifelse(grepl("replM=", filename), str_replace(filename, ".*[-,]replM=(\\d).*", "\\1"), NA)
+  filename.quant   <- ifelse(grepl("quant=", filename), str_replace(filename, ".*[-,]quant=(0\\.\\d*).*", "\\1"), NA)
+  filename.numUAVs <- ifelse(grepl("numUAVs=", filename), str_replace(filename, ".*[-,]numUAVs=(\\d).*", "\\1"), NA)
   
   filename.repeat <- str_replace(filename, ".*-#(\\d+).*", "\\1")
   
@@ -143,7 +143,7 @@ for (filename in list.files(logdata_folder,"*.sca")) {
     logdata.line <- data.frame(
       basename =         as.factor(filename.basename),
       replM =            as.integer(filename.replM),
-      quant =            as.integer(filename.quant),
+      quant =            as.numeric(filename.quant),
       numUAVs =          as.integer(filename.numUAVs),
       simRun =           as.integer(filename.repeat),
       nodeType =         as.factor(node.type),
@@ -158,10 +158,11 @@ for (filename in list.files(logdata_folder,"*.sca")) {
 }
 
 # Noteworthy general data
-head(df.all)
+#head(df.all)
 replMs <- unique(df.all$replM)
-quant <- unique(df.all$quant)
+quants <- unique(df.all$quant)
 numUAVs <- unique(df.all$numUAVs)
+repeats <- max(df.all.uav$simRun) + 1
 
 # Split types
 df.all.uav <- subset(df.all, nodeType == 'uav')
@@ -194,6 +195,27 @@ if (nrow(uavs_all_failed) > 0) {
   }
 }
 remove(uavs_all, uavs_all_failed)
+
+if (length(quants) > 1) {
+  cat("Checking Simtime for premature termination ... ")
+  simtimeSec <- 259200
+  
+  for (replMethod in replMs) {
+    for (q in quants) {
+      count <- 0
+      for (run in sim_runs) {
+        df_subset <- subset(df.all.uav, replM == replMethod & quant == q & simRun == run & metric == "simulationTime")
+        this_simtime <- unique(df_subset$value)
+        if (this_simtime != simtimeSec) {
+          print(paste(replMethod, q, run, unique(df_subset$value)))
+          count <- count + 1
+          df.all.uav <- df.all.uav[!(df.all.uav$replM == replMethod & df.all.uav$quant == q & df.all.uav$simRun == run),]
+        }
+      }
+      cat(paste("Quantile", q, "Premature terminations:", count, "\n"))
+    }
+  }
+}
 
 
 simtimeSec <- 0
@@ -247,35 +269,39 @@ cat("Summarizing Metrics per UAV ... ")
 df.red.uav <- data.frame()
 
 for (replMethod in replMs) {
-  for (sim_run in sim_runs) {
-    for (uav_index in 0:uavs_count) {
-      df_subset <- subset(df.all.uav, replM == replMethod & simRun == sim_run & index == uav_index)
-      df <- data.frame(
-        basename =    levels(df_subset$basename),
-        replM =       as.integer(replMethod),
-        simRun =      as.integer(sim_run),
-        index =       as.integer(uav_index),
-        #
-        secMission =                  as.numeric(subset(df_subset, metric == 'utilizationSecMission')$value),
-        secMaintenance =              as.numeric(subset(df_subset, metric == 'utilizationSecMaintenance')$value),
-        secCharge =                   as.numeric(subset(df_subset, metric == 'utilizationSecCharge')$value),
-        secIdle =                     as.numeric(subset(df_subset, metric == 'utilizationSecIdle')$value),
-        #
-        energyMission =               as.numeric(subset(df_subset, metric == 'utilizationEnergyMission')$value),
-        energyMaintenance =           as.numeric(subset(df_subset, metric == 'utilizationEnergyMaintenance')$value),
-        energyCharge =                as.numeric(subset(df_subset, metric == 'utilizationEnergyCharge')$value),
-        #
-        energyOverdrawMission =       as.numeric(subset(df_subset, metric == 'utilizationEnergyOverdrawMission')$value),
-        energyOverdrawMaintenance =   as.numeric(subset(df_subset, metric == 'utilizationEnergyOverdrawMaintenance')$value),
-        #
-        countMissions =               as.numeric(subset(df_subset, metric == 'utilizationCountMissions')$value),
-        countManeuversMission =       as.numeric(subset(df_subset, metric == 'utilizationCountManeuversMission')$value),
-        countManeuversMaintenance =   as.numeric(subset(df_subset, metric == 'utilizationCountManeuversMaintenance')$value),
-        countChargeState =            as.numeric(subset(df_subset, metric == 'utilizationCountChargeState')$value),
-        countOverdrawnAfterMission =  as.numeric(subset(df_subset, metric == 'utilizationCountOverdrawnAfterMission')$value),
-        countIdleState =              as.numeric(subset(df_subset, metric == 'utilizationCountIdleState')$value)
-      )
-      df.red.uav <- rbind(df.red.uav, df)
+  for (q in quants) {
+    for (sim_run in sim_runs) {
+      for (uav_index in 0:uavs_count) {
+        df_subset <- subset(df.all.uav, replM == replMethod & quant == q & simRun == sim_run & index == uav_index)
+        if (nrow(df_subset) == 0) next
+        df <- data.frame(
+          basename =    levels(df_subset$basename),
+          replM =       as.integer(replMethod),
+          quant =       as.numeric(q),
+          simRun =      as.integer(sim_run),
+          index =       as.integer(uav_index),
+          #
+          secMission =                  as.numeric(subset(df_subset, metric == 'utilizationSecMission')$value),
+          secMaintenance =              as.numeric(subset(df_subset, metric == 'utilizationSecMaintenance')$value),
+          secCharge =                   as.numeric(subset(df_subset, metric == 'utilizationSecCharge')$value),
+          secIdle =                     as.numeric(subset(df_subset, metric == 'utilizationSecIdle')$value),
+          #
+          energyMission =               as.numeric(subset(df_subset, metric == 'utilizationEnergyMission')$value),
+          energyMaintenance =           as.numeric(subset(df_subset, metric == 'utilizationEnergyMaintenance')$value),
+          energyCharge =                as.numeric(subset(df_subset, metric == 'utilizationEnergyCharge')$value),
+          #
+          energyOverdrawMission =       as.numeric(subset(df_subset, metric == 'utilizationEnergyOverdrawMission')$value),
+          energyOverdrawMaintenance =   as.numeric(subset(df_subset, metric == 'utilizationEnergyOverdrawMaintenance')$value),
+          #
+          countMissions =               as.numeric(subset(df_subset, metric == 'utilizationCountMissions')$value),
+          countManeuversMission =       as.numeric(subset(df_subset, metric == 'utilizationCountManeuversMission')$value),
+          countManeuversMaintenance =   as.numeric(subset(df_subset, metric == 'utilizationCountManeuversMaintenance')$value),
+          countChargeState =            as.numeric(subset(df_subset, metric == 'utilizationCountChargeState')$value),
+          countOverdrawnAfterMission =  as.numeric(subset(df_subset, metric == 'utilizationCountOverdrawnAfterMission')$value),
+          countIdleState =              as.numeric(subset(df_subset, metric == 'utilizationCountIdleState')$value)
+        )
+        df.red.uav <- rbind(df.red.uav, df)
+      }
     }
   }
 }
@@ -284,31 +310,52 @@ cat("Summarizing Metrics per CS ... ")
 df.red.cs <- data.frame()
 
 for (replMethod in replMs) {
-  for (sim_run in sim_runs) {
-    for (cs_index in 0:cs_count) {
-      df_subset <- subset(df.all.cs, replM == replMethod & simRun == sim_run & index == cs_index)
-      df <- data.frame(
-        basename =    levels(df_subset$basename),
-        replM =       as.factor(replMethod),
-        simRun =      as.integer(sim_run),
-        index =       as.factor(cs_index),
-        #
-        usedPower =                as.numeric(subset(df_subset, metric == 'usedPower')$value),
-        chargedPower =             as.numeric(subset(df_subset, metric == 'chargedPower')$value),
-        chargedMobileNodes =       as.integer(subset(df_subset, metric == 'chargedMobileNodes')$value),
-        chargedMobileNodesOthers = as.integer(sum(subset(df.all.cs, replM == replMethod & simRun == sim_run & metric == 'chargedMobileNodes')$value) - subset(df_subset, metric == 'chargedMobileNodes')$value),
-        chargedMobileNodesAll =    as.integer(sum(subset(df.all.cs, replM == replMethod & simRun == sim_run & metric == 'chargedMobileNodes')$value)),
-        reservations =             as.integer(subset(df_subset, metric == 'reservations')$value)
-      )
-      df.red.cs <- rbind(df.red.cs, df)
+  for (q in quants) {
+    for (sim_run in sim_runs) {
+      for (cs_index in 0:cs_count) {
+        df_subset <- subset(df.all.cs, replM == replMethod & quant == q & simRun == sim_run & index == cs_index)
+        if (nrow(df_subset) == 0) next
+        df <- data.frame(
+          basename =    levels(df_subset$basename),
+          replM =       as.factor(replMethod),
+          quant =       as.numeric(q),
+          simRun =      as.integer(sim_run),
+          index =       as.factor(cs_index),
+          #
+          usedPower =                as.numeric(subset(df_subset, metric == 'usedPower')$value),
+          chargedPower =             as.numeric(subset(df_subset, metric == 'chargedPower')$value),
+          chargedMobileNodes =       as.integer(subset(df_subset, metric == 'chargedMobileNodes')$value),
+          chargedMobileNodesOthers = as.integer(sum(subset(df.all.cs, replM == replMethod & simRun == sim_run & metric == 'chargedMobileNodes')$value) - subset(df_subset, metric == 'chargedMobileNodes')$value),
+          chargedMobileNodesAll =    as.integer(sum(subset(df.all.cs, replM == replMethod & simRun == sim_run & metric == 'chargedMobileNodes')$value)),
+          reservations =             as.integer(subset(df_subset, metric == 'reservations')$value)
+        )
+        df.red.cs <- rbind(df.red.cs, df)
+      }
     }
   }
 }
 
 #####################################################################
+# Quantile Analysis
+
+
+for (q in quants) {
+  df <- subset(df.red.uav, replM==0 & quant==q)
+  count_missions <- sum(df$countMissions)
+  count_overdrawn_maint <- sum(df$countOverdrawnAfterMission)
+  ratio_overdrawn_maint <- 100 / count_missions * count_overdrawn_maint
+  energy_overdrawn_mission <- sum(df$energyOverdrawMission)
+  energy_per_uav.per_lc <- mean((df$energyMission + df$energyMaintenance) / df$countMissions)
+  
+  print(paste("Premature Battery depletion cases", q))
+  print(paste("Count", count_missions, "overdrawn", count_overdrawn_maint))
+  print(paste("Energy per life cycle", energy_per_uav.per_lc))
+}
+
+#####################################################################
 # Independence CS/UAV ###############################################
 
-df <- subset(df.red.uav, replM==0)
+df <- subset(df.red.uav, replM==0 & quant==0.95)
 
 map_id_to_location <- function(id) c('\\ \\textbf{CS1:} Tennis court Ritzeb\\"uhl', '\\ \\textbf{CS2:} Sports field Manebach', '\\ \\textbf{CS3:} Hotel Gabelbach')[as.integer(id)]
 starting_cs <- as.factor(map_id_to_location(1 + (df$index %% 3)))
@@ -327,7 +374,7 @@ ggplot(df, aes(x = starting_cs, y = secMission / 60)) +
 
 dev.off()
 
-df <- subset(df.red.cs, replM==0)
+df <- subset(df.red.uav, replM==0 & quant==0.95)
 
 tikz(paste(tikzLocation, "8_cs_popularity_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.99, height=2.0)
 
@@ -346,17 +393,26 @@ dev.off()
 # General Performance Data ##########################################
 # only replM==0
 
-df <- subset(df.red.uav, replM==0)
+df <- subset(df.red.uav, replM==0 & quant==0.95 & countMissions > 10)
 life_cycles_uav.mean <- mean(df$countMissions)
 life_cycles_uav.stddev <- sqrt(var(df$countMissions))
 
 cat(paste("Life cycles per UAV", life_cycles_uav.mean, life_cycles_uav.stddev))
 
+cat(paste("Replacements per hour", sum(df$countMissions) / repeats / (simtimeSec / 3600)))
+
 cons_energy_per_uav.overall <- mean(df$energyMission + df$energyMaintenance)
 cons_energy_per_uav.perhour <- mean(df$energyMission + df$energyMaintenance) / (simtimeSec / 3600)
 cons_energy_per_uav.permission <- mean((df$energyMission + df$energyMaintenance) / df$countMissions)
+cons_energy_per_uav.permission.stddev <- sqrt(var((df$energyMission + df$energyMaintenance) / df$countMissions))
 
 cat(paste("Energy consumption per UAV", cons_energy_per_uav.overall, cons_energy_per_uav.perhour, cons_energy_per_uav.permission))
+
+cat(paste("Energy consumption per UAV overall per day", cons_energy_per_uav.overall / (simtimeSec / 3600 / 24)))
+
+cat(paste("Energy consumption per life cycle", cons_energy_per_uav.permission, cons_energy_per_uav.permission.stddev))
+
+cat(paste("Energy consumption per day [kWh]", sum(df$energyCharge) / repeats / (simtimeSec / 3600 / 24) / 1000 * 14.8 / 1000))
 
 lifecycle_states <- c("Mission Execution", "Maintenance Flights", "Charge", "Idle")
 
@@ -376,15 +432,14 @@ ratios.energy <- data.frame(
 ratios.energy$metric2 <- factor(ratios.energy$metric, rev(lifecycle_states))
 ratios.energy$percentage = round(100 * ratios.energy$value/sum(ratios.energy$value),digits=1)
 
-#TEMPORARY
 ratios <- ratios.time
-ratios <- rbind(ratios.time, ratios.energy)
+#ratios <- rbind(ratios.time, ratios.energy)
 
 
 tikz(paste(tikzLocation, "8_life_cycle_time_ratio_plot_R.tex", sep = ""), standAlone=TRUE, timestamp = FALSE, width=5.9, height=1.3)
 
 ggplot(ratios, aes(x=class, fill=metric2, y=percentage, label=percentage)) +
-  geom_col() +
+  geom_col(width = 0.5) +
   #geom_text(color=graphCol3_darkdark, size=rel(3), position=position_stack(vjust=0.5)) +
   geom_text(size=rel(3), position=position_stack(vjust=0.5)) +
   coord_flip() +
@@ -396,7 +451,7 @@ ggplot(ratios, aes(x=class, fill=metric2, y=percentage, label=percentage)) +
   scale_fill_manual(name="Life Cycle State", guide=guide_legend(reverse=TRUE),
                     values=c(graphCol3, graphCol2, graphCol2_dark, graphCol1)) + 
   scale_y_continuous(breaks=seq(0, 100, 10)) +
-  labs(x="Life Cycle State", y="Quota [\\%]")
+  labs(x="Life Cycle State", y="Time Ratio [\\%]")
 
 dev.off()
 
@@ -409,8 +464,8 @@ ratio_overdrawn_maint <- 100 / count_missions * count_overdrawn_maint
 energy_overdrawn_mission <- sum(df.red.uav$energyOverdrawMission)
 
 cat("Premature Battery depletion cases")
-cat(paste("Absolute count      & \\num{", count_missions, "} & \\num{", count_overdrawn_maint, "} & \\num{", energy_overdrawn_mission, "} \\\\", sep = ""))
-cat(paste("Ratio               & \\SI{100}{\\percent} & \\SI{", round(ratio_overdrawn_maint,digits = 2), "}{\\percent} & \\SI{0}{\\percent} \\\\", sep = ""))
+cat(paste("Count & \\num{", count_missions, "} & \\num{", count_overdrawn_maint, "} & \\num{", energy_overdrawn_mission, "} \\\\", sep = ""))
+cat(paste("Ratio & \\SI{100}{\\percent} & \\SI{", round(ratio_overdrawn_maint,digits = 2), "}{\\percent} & \\SI{0}{\\percent} \\\\", sep = ""))
 
 #####################################################################
 # Random Diagram Testing ############################################

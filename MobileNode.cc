@@ -130,6 +130,8 @@ void MobileNode::finish()
     recordScalar("utilizationCountIdleState", utilizationCountIdleState);
     //
     recordScalar("utilizationFail", utilizationFail);
+    //
+    recordScalar("simulationTime", simTime().dbl());
 }
 
 void MobileNode::refreshDisplay() const

@@ -255,6 +255,9 @@ void UAVNode::selectNextCommand()
             std::string error_msg = "selectNextCommand(): replacingNode for " + std::string(this->getFullName())
                     + " should be known by now (part of hack111). Battery critical (" + std::to_string(battery.getRemainingPercentage()) + "%)?";
             throw cRuntimeError(error_msg.c_str());
+            //TODO: For simtime analysis
+            //EV_ERROR << error_msg.c_str() << endl;
+            //endSimulation();
         }
 
         // Generate and inject ExchangeCEE, only if not already done
