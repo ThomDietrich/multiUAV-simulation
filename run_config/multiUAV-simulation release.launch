@@ -30,7 +30,7 @@
 <stringAttribute key="org.omnetpp.launch.RECORD_SCALARS" value=""/>
 <stringAttribute key="org.omnetpp.launch.RECORD_VECTORS" value=""/>
 <stringAttribute key="org.omnetpp.launch.REDIRECT_STDOUT" value=""/>
-<stringAttribute key="org.omnetpp.launch.RUN" value="0"/>
+<stringAttribute key="org.omnetpp.launch.RUN" value=""/>
 <stringAttribute key="org.omnetpp.launch.SHARED_LIBS" value="${opp_shared_libs:/multiUAV-simulation}"/>
 <booleanAttribute key="org.omnetpp.launch.SILENT" value="false"/>
 <stringAttribute key="org.omnetpp.launch.STOP_BATCH_ON_ERROR" value=""/>

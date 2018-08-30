@@ -152,11 +152,13 @@ void MobileNode::handleMessage(cMessage *msg)
 {
     double stepSize = 0;
     if (msg->isName("mobileNodeExit")) {
-        ChargeCEE *cee = check_and_cast<ChargeCEE *>(commandExecEngine);
-        ChargingNode *cn = cee->extractCommand()->getChargingNode();
+        if (commandExecEngine->isCeeType(CeeType::CHARGE)) {
+            ChargeCEE *cee = check_and_cast<ChargeCEE *>(commandExecEngine);
+            ChargingNode *cn = cee->extractCommand()->getChargingNode();
+            send(new cMessage("mobileNodeExit"), getOutputGateTo(cn));
+        }
         delete msg;
         msg = nullptr;
-        send(new cMessage("mobileNodeExit"), getOutputGateTo(cn));
     }
     else {
         bool commandPreview = commandPreviewEnabled && (msg->isName("nextCommand") || msg->isName("startProvision") || msg->isName("startMission"));

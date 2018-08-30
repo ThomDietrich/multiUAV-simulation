@@ -18,12 +18,12 @@
 <intAttribute key="org.omnetpp.launch.BATCH_SIZE" value="1"/>
 <intAttribute key="org.omnetpp.launch.BUILD_BEFORE_LAUNCH" value="0"/>
 <stringAttribute key="org.omnetpp.launch.CMDENV_EXPRESS_MODE" value=""/>
-<stringAttribute key="org.omnetpp.launch.CONFIG_NAME" value="mission-Nr-01"/>
+<stringAttribute key="org.omnetpp.launch.CONFIG_NAME" value="mission-Nr-02"/>
 <stringAttribute key="org.omnetpp.launch.EXECUTABLE" value="/multiUAV-simulation/multiUAV-simulation"/>
 <stringAttribute key="org.omnetpp.launch.IMAGE_PATH" value="${opp_image_path:/multiUAV-simulation}"/>
 <stringAttribute key="org.omnetpp.launch.INI_FILES" value="omnetpp.ini"/>
 <stringAttribute key="org.omnetpp.launch.NED_PATH" value="${opp_ned_path:/multiUAV-simulation}"/>
-<intAttribute key="org.omnetpp.launch.NUM_CONCURRENT_PROCESSES" value="4"/>
+<intAttribute key="org.omnetpp.launch.NUM_CONCURRENT_PROCESSES" value="8"/>
 <stringAttribute key="org.omnetpp.launch.OPP_CPU_TIME_LIMIT" value=""/>
 <stringAttribute key="org.omnetpp.launch.OPP_SIM_TIME_LIMIT" value=""/>
 <stringAttribute key="org.omnetpp.launch.RECORD_EVENTLOG" value=""/>
